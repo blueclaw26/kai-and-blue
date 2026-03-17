@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>神経衰弱 - Memory Card Game</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🧠 神経衰弱</h1>
+    <div class="stats">
+      <div class="stat"><span class="stat-label">Moves</span><span id="moves" class="stat-value">0</span></div>
+      <div class="stat"><span class="stat-label">Matches</span><span id="matches" class="stat-value">0 / 8</span></div>
+      <div class="stat"><span class="stat-label">Time</span><span id="timer" class="stat-value">0s</span></div>
+    </div>
+    <div id="grid" class="grid"></div>
+    <button id="restart" class="restart-btn">🔄 Restart</button>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
