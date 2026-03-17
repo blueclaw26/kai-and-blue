@@ -35,7 +35,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          HTMLタグの意味、セマンティックHTML、外部リソースの読み込み
+          <span class="term" data-explain="HTMLの各タグ（h1, p, div, section, a, img等）にはそれぞれ意味がある。見出し、段落、リンクなど。適切なタグを使うことでブラウザや検索エンジンがページの構造を理解できる。">HTMLタグの意味</span><span class="term" data-explain="header, nav, main, footer, sectionのような意味を持つタグを使ってページを構造化すること。divばかり使うのではなく、内容の意味に合ったタグを選ぶ。">セマンティックHTML</span><span class="term" data-explain="Google Fontsやアイコンライブラリなど、外部サーバーにあるファイルをHTMLから読み込むこと。linkタグやscriptタグで指定する。CDN経由で高速に配信される。">外部リソースの読み込み</span>
         </div>
       </div>
 
@@ -65,7 +65,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          Git/GitHubの基本、CI/CDの概念、ホスティングサービス
+          <span class="term" data-explain="Gitはファイルの変更履歴を記録するツール。GitHubはGitの履歴をネット上に保存・共有するサービス。add→commit→pushの3ステップでコードを保存・公開する。">Git/GitHubの基本</span><span class="term" data-explain="CI(継続的インテグレーション)はコードの変更を自動テスト、CD(継続的デリバリー)は自動デプロイ。GitHubにpushするだけでVercelが自動デプロイしてくれるのがCDの例。">CI/CDの概念</span><span class="term" data-explain="作ったWebサイトをインターネットに公開するためのサービス。Vercel, Netlify, GitHub Pagesなど。サーバーの管理を自分でやらなくていい。">ホスティングサービス</span>
         </div>
       </div>
 
@@ -81,7 +81,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          デザインの反復プロセス、ユーザーフィードバックの反映、CSS vs JSの使い分け
+          <span class="term" data-explain="一発で完成を目指すのではなく、作る→見せる→フィードバック→修正のサイクルを繰り返してデザインを改善していく方法。">デザインの反復プロセス</span><span class="term" data-explain="ユーザー（ここではKai）からの感想や要望をデザインに取り込むこと。「ダサい」「見づらい」という直感的な反応も重要なインプット。">フィードバックの反映</span><span class="term" data-explain="CSSだけで実現できることはCSSで、動的な制御が必要な場合はJavaScriptを使う。ツールチップのoverflowの問題のように、CSSの限界をJSで補うパターンもある。">CSS vs JSの使い分け</span>
         </div>
       </div>
     </section>
@@ -103,7 +103,6 @@
         <li><a href="../tech/#html">HTML</a></li>
         <li><a href="../tech/#css">CSS</a></li>
         <li><a href="../tech/#css">CSS Grid</a></li>
-        <li>Google Fonts</li>
         <li><a href="../tech/#vercel">Vercel</a></li>
       </ul>
     </section>
@@ -112,5 +111,21 @@
       <p><a href="../index.html">Kai & Blue</a> — 2026</p>
     </footer>
   </div>
+<script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+</script>
 </body>
 </html>
