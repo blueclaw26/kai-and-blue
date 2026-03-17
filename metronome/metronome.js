@@ -212,9 +212,12 @@
     playClick(time, type);
 
     // Schedule UI update (approximate, not audio-critical)
+    // Capture current values before advanceNote changes them
+    const beatForUI = currentBeat;
+    const subForUI = currentSubBeat;
     const delayMs = (time - audioCtx.currentTime) * 1000;
     setTimeout(() => {
-      highlightBeat(currentBeat, currentSubBeat);
+      highlightBeat(beatForUI, subForUI);
     }, Math.max(0, delayMs));
   }
 
