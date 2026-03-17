@@ -164,9 +164,19 @@
         if (isFinder) {
           fillColor = isDark ? '#000000' : '#ffffff';
         } else if (isDark) {
-          fillColor = `rgb(${Math.floor(r * 0.4)}, ${Math.floor(g * 0.4)}, ${Math.floor(b * 0.4)})`;
+          // Dark module: use the image color but ensure it's dark enough to scan
+          // Clamp each channel to max 100 so dark modules stay dark
+          const dr = Math.min(r, 100);
+          const dg = Math.min(g, 100);
+          const db = Math.min(b, 100);
+          fillColor = `rgb(${dr}, ${dg}, ${db})`;
         } else {
-          fillColor = `rgb(${Math.min(255, Math.floor(r * 0.6 + 100))}, ${Math.min(255, Math.floor(g * 0.6 + 100))}, ${Math.min(255, Math.floor(b * 0.6 + 100))})`;
+          // Light module: use the image color but ensure it's light enough
+          // Push each channel toward 255
+          const lr = Math.max(r, 180);
+          const lg = Math.max(g, 180);
+          const lb = Math.max(b, 180);
+          fillColor = `rgb(${lr}, ${lg}, ${lb})`;
         }
 
         ctx.fillStyle = fillColor;
