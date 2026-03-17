@@ -133,7 +133,7 @@
     const moduleCount = modules.size;
 
     // Sub-pixel grid per module (3x3 = 9 sub-pixels per module)
-    const subGrid = 2;
+    const subGrid = 3;
     const totalPixels = moduleCount * subGrid;
     const pixelSize = size / (totalPixels + subGrid * 4); // margin
     const margin = Math.floor((size - totalPixels * pixelSize) / 2);
@@ -155,8 +155,9 @@
 
     // Bayer-like ordered dithering matrix for 3x3
     const bayerOrder = [
-      [0, 2],
-      [3, 1]
+      [0, 7, 3],
+      [6, 5, 2],
+      [4, 1, 8]
     ];
 
     for (let row = 0; row < moduleCount; row++) {
@@ -191,10 +192,10 @@
         let numDark;
         if (isDark) {
           // QR dark module: 2-4 sub-pixels dark (image modulates intensity)
-          numDark = 2 + Math.round(darkness * 2);
+          numDark = 4 + Math.round(darkness * 5);  // 4-9 out of 9
         } else {
           // QR light module: 0-1 sub-pixels dark (slight image texture only)
-          numDark = Math.round(darkness * 1);
+          numDark = Math.round(darkness * 3);  // 0-3 out of 9
         }
 
         for (let sy = 0; sy < subGrid; sy++) {
