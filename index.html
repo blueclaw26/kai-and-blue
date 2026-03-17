@@ -3,127 +3,66 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kai & Blue — AIと一緒にゼロから作る</title>
+  <title>Kai & Blue</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="container">
     <header>
-      <div class="logo">
-        <span class="logo-kai">Kai</span>
-        <span class="logo-amp">&</span>
-        <span class="logo-blue">Blue</span>
-      </div>
-      <p class="tagline">非エンジニアとAIが、ゼロからモノを作る記録</p>
+      <h1><span class="kai">Kai</span> & <span class="blue">Blue</span></h1>
+      <p class="tagline">コードが書けない人間と、コードが書けるAI。<br>一緒にものを作りながら、開発を学んでいく記録。</p>
     </header>
 
-    <section class="intro">
-      <div class="intro-card">
-        <div class="avatar">🧑‍💻</div>
-        <h2>Kai</h2>
-        <p>非エンジニア。コードは書けないけど、作りたいものはある。<br>AIをパートナーにして、ゼロから開発を学んでいく。</p>
-      </div>
-      <div class="intro-card">
-        <div class="avatar">🔵</div>
-        <h2>Blue</h2>
-        <p>AIアシスタント。Kaiの相棒。<br>コードを書いて、教えて、一緒に考える。24時間稼働。</p>
-      </div>
+    <section class="about">
+      <p>Kaiは化学畑の非エンジニア。BlueはAIアシスタント。二人でゼロから開発を始めて、実際に動くものを作っている。使っている道具はターミナルとAIだけ。完成したものも、まだ途中のものも、全部ここに置いていく。</p>
     </section>
 
-    <section class="works">
-      <h2>🛠 作ったもの</h2>
-      <div class="work-list">
-        <div class="work-item current">
-          <span class="work-number">01</span>
-          <div class="work-info">
-            <h3>このサイト</h3>
-            <p>HTML & CSS で作った最初のWebページ。Vercelで公開中。</p>
-            <div class="work-tags">
-              <span class="tag">HTML</span>
-              <span class="tag">CSS</span>
-              <span class="tag">Vercel</span>
-            </div>
-          </div>
+    <section class="projects">
+      <h2>Projects</h2>
+      <div class="project-grid">
+        <a href="memory-game/index.html" class="project-card">
+          <h3>神経衰弱</h3>
+          <p>絵文字で遊ぶカードゲーム。JavaScriptを覚えるために作った。</p>
+          <span class="tag">JavaScript</span>
+        </a>
+        <div class="project-card">
+          <h3>論文速報Bot</h3>
+          <p>JACSの新着論文を拾って、Discordに日本語で投稿してくれるBot。毎日動いてる。</p>
+          <span class="tag">Python</span>
         </div>
-        <div class="work-item current">
-          <span class="work-number">02</span>
-          <div class="work-info">
-            <h3>論文速報Bot</h3>
-            <p>JACS（米国化学会誌）の最新論文を自動取得し、Discordに日本語で速報投稿するBot。</p>
-            <div class="work-tags">
-              <span class="tag">Python</span>
-              <span class="tag">RSS</span>
-              <span class="tag">Discord</span>
-              <span class="tag">OpenClaw</span>
-            </div>
-          </div>
+        <div class="project-card">
+          <h3>日次レポート自動化</h3>
+          <p>CRMのデータを毎日集計して、Google Sheetsに書き込む仕組み。手作業がなくなった。</p>
+          <span class="tag">API連携</span>
         </div>
-        <div class="work-item current">
-          <span class="work-number">03</span>
-          <div class="work-info">
-            <h3>MiroFish</h3>
-            <p>魚の生態シミュレーション。バックエンド（Python）とフロントエンド（Node/Vite）で構成。</p>
-            <div class="work-tags">
-              <span class="tag">Python</span>
-              <span class="tag">Node.js</span>
-              <span class="tag">Vite</span>
-              <span class="tag">Docker</span>
-            </div>
-          </div>
+        <div class="project-card">
+          <h3>このサイト</h3>
+          <p>最初に作ったもの。HTMLとCSSだけ。デザインは何度か作り直してる。</p>
+          <span class="tag">HTML / CSS</span>
         </div>
-        <div class="work-item current">
-          <span class="work-number">04</span>
-          <div class="work-info">
-            <h3>Pipedrive日次レポート</h3>
-            <p>CRMデータを自動集計し、Google Sheetsに書き込む日次レポート自動化。</p>
-            <div class="work-tags">
-              <span class="tag">Python</span>
-              <span class="tag">Pipedrive API</span>
-              <span class="tag">Google Sheets</span>
-            </div>
-          </div>
+        <div class="project-card ongoing">
+          <span class="badge">ongoing</span>
+          <h3>MiroFish</h3>
+          <p>魚の生態シミュレーション。Python + Vite構成で作り始めたところ。</p>
+          <span class="tag">Python / Vite</span>
         </div>
-        <div class="work-item current">
-          <span class="work-number">05</span>
-          <div class="work-info">
-            <h3><a href="memory-game/index.html">神経衰弱ゲーム</a></h3>
-            <p>絵文字カードの神経衰弱（メモリーゲーム）。JavaScript入門として制作。</p>
-            <div class="work-tags">
-              <span class="tag">HTML</span>
-              <span class="tag">CSS</span>
-              <span class="tag">JavaScript</span>
-            </div>
-          </div>
-        </div>
-        <div class="work-item upcoming">
-          <span class="work-number">06</span>
-          <div class="work-info">
-            <h3>Coming Soon...</h3>
-            <p>次は何を作ろうか？</p>
-          </div>
+        <div class="project-card ongoing">
+          <span class="badge">ongoing</span>
+          <h3>AI Chat UI</h3>
+          <p>自分用のチャットインターフェース。API連携とフロントエンド設計を学ぶ予定。</p>
+          <span class="tag">Next.js</span>
         </div>
       </div>
     </section>
 
     <section class="links">
-      <h2>📎 リンク</h2>
-      <div class="link-list">
-        <a href="#" class="link-item" target="_blank">
-          <span class="link-icon">📝</span>
-          <span>note — 開発日記</span>
-        </a>
-        <a href="https://github.com/blueclaw26" class="link-item" target="_blank">
-          <span class="link-icon">🐙</span>
-          <span>GitHub</span>
-        </a>
-      </div>
+      <a href="https://github.com/blueclaw26" target="_blank">GitHub</a>
     </section>
 
     <footer>
-      <p>Built with ❤️ by Kai & Blue — 2026</p>
-      <p class="footer-sub">Powered by <a href="https://github.com/openclaw/openclaw" target="_blank">OpenClaw</a></p>
+      <p>Kai & Blue — 2026</p>
     </footer>
   </div>
 </body>
