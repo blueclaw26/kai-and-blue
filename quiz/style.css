@@ -220,6 +220,17 @@ body {
   color: #c0392b;
 }
 
+.explanation {
+  margin-top: 12px;
+  padding: 16px;
+  background: #faf8f5;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #4a4a4a;
+  line-height: 1.7;
+  animation: fadeIn 0.3s ease;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }
