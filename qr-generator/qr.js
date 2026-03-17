@@ -132,11 +132,8 @@
     const modules = qrData.modules;
     const moduleCount = modules.size;
 
-    // Sub-pixel grid per module (3x3 = 9 sub-pixels per module)
-    const subGrid = 3;
-    const totalPixels = moduleCount * subGrid;
-    const pixelSize = size / (totalPixels + subGrid * 4); // margin
-    const margin = Math.floor((size - totalPixels * pixelSize) / 2);
+    const moduleSize = Math.floor(size / (moduleCount + 4)); // +4 for margin
+    const margin = Math.floor((size - moduleCount * moduleSize) / 2);
 
     // Get grayscale image data at module resolution
     const tmpCanvas = document.createElement('canvas');
