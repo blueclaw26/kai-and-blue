@@ -68,9 +68,6 @@
     }
   });
 
-    generateArt();
-  });
-
   // Generate on load with default text
   generate();
 
