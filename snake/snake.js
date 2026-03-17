@@ -6,9 +6,14 @@
   const overlay = document.getElementById('overlay');
   const overlayTitle = document.getElementById('overlay-title');
   const overlayMessage = document.getElementById('overlay-message');
+  const overlayBest = document.getElementById('overlay-best');
   const startBtn = document.getElementById('start-btn');
   const scoreEl = document.getElementById('score');
   const highScoreEl = document.getElementById('high-score');
+  const canvasWrapper = document.getElementById('canvas-wrapper');
+  const overlayContent = document.querySelector('.overlay-content');
+  const gameRules = document.querySelector('.game-rules');
+  const controlsInfo = document.querySelector('.controls-info');
 
   // --- Constants ---
   const GRID = 20; // grid cells
@@ -29,6 +34,9 @@
 
   // Smooth rendering: track interpolation
   let moveProgress = 0;
+
+  // Particles
+  let particles = [];
 
   // --- Init ---
   function init() {
@@ -70,6 +78,50 @@
     }
   }
 
+  // --- Particles ---
+  function spawnParticles(x, y) {
+    const count = 8;
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
+      const speed = 1.5 + Math.random() * 2.5;
+      particles.push({
+        x: x,
+        y: y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 1.0,
+        decay: 0.02 + Math.random() * 0.02,
+        size: 2 + Math.random() * 3,
+        color: Math.random() > 0.5 ? FOOD_COLOR : '#f0c878'
+      });
+    }
+  }
+
+  function updateParticles() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life -= p.decay;
+      p.vx *= 0.96;
+      p.vy *= 0.96;
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+      }
+    }
+  }
+
+  function drawParticles() {
+    for (const p of particles) {
+      ctx.globalAlpha = p.life;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
   // --- Game state ---
   function resetGame() {
     const cx = Math.floor(GRID / 2);
@@ -84,6 +136,7 @@
     score = 0;
     speed = BASE_SPEED;
     scoreEl.textContent = 'Score: 0';
+    particles = [];
     placeFood();
   }
 
@@ -124,6 +177,7 @@
       moveProgress = 0;
     }
 
+    updateParticles();
     draw();
     animFrame = requestAnimationFrame(gameLoop);
   }
@@ -149,6 +203,8 @@
       score++;
       scoreEl.textContent = 'Score: ' + score;
       speed = Math.min(MAX_SPEED, BASE_SPEED + score * SPEED_INCREMENT);
+      // Particle burst at food location
+      spawnParticles(food.x * cellSize + cellSize / 2, food.y * cellSize + cellSize / 2);
       placeFood();
     } else {
       snake.pop();
@@ -164,10 +220,37 @@
       localStorage.setItem('snakeHighScore', String(highScore));
       highScoreEl.textContent = 'Best: ' + highScore;
     }
-    overlayTitle.textContent = 'ゲームオーバー';
-    overlayMessage.innerHTML = `スコア: <strong>${score}</strong>`;
-    startBtn.textContent = 'もう一度';
+
+    // Screen shake
+    canvasWrapper.classList.add('shake');
+    setTimeout(() => canvasWrapper.classList.remove('shake'), 400);
+
+    // Update overlay for game over
+    overlayTitle.textContent = 'GAME OVER';
+    overlayMessage.textContent = 'Score: ' + score;
+    overlayMessage.className = '';
+    overlayBest.textContent = 'Best: ' + highScore;
+    overlayBest.className = 'best-score';
+    startBtn.textContent = 'RETRY';
+
+    // Hide start-screen elements, show game-over elements
+    if (gameRules) gameRules.style.display = 'none';
+    if (controlsInfo) controlsInfo.style.display = 'none';
+
+    // Add game-over animation class
+    overlayContent.classList.add('game-over');
+
     overlay.classList.remove('hidden');
+  }
+
+  function showStartScreen() {
+    overlayTitle.textContent = '🐍';
+    overlayMessage.className = 'overlay-message-hidden';
+    overlayBest.className = 'overlay-best-hidden';
+    startBtn.textContent = 'PLAY';
+    if (gameRules) gameRules.style.display = '';
+    if (controlsInfo) controlsInfo.style.display = '';
+    overlayContent.classList.remove('game-over');
   }
 
   // --- Drawing ---
@@ -178,6 +261,7 @@
     drawGrid(size);
     drawFood();
     drawSnake();
+    drawParticles();
   }
 
   function drawFood() {
@@ -312,7 +396,10 @@
   }, { passive: true });
 
   // Button
-  startBtn.addEventListener('click', startGame);
+  startBtn.addEventListener('click', () => {
+    showStartScreen();
+    startGame();
+  });
 
   // Resize
   let resizeTimer;

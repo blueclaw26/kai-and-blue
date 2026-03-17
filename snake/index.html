@@ -23,13 +23,24 @@
         <span id="score">Score: 0</span>
         <span id="high-score">Best: 0</span>
       </div>
-      <div class="canvas-wrapper">
+      <div class="canvas-wrapper" id="canvas-wrapper">
         <canvas id="game-canvas"></canvas>
         <div id="overlay" class="overlay">
           <div class="overlay-content">
-            <h2 id="overlay-title">🐍 スネークゲーム</h2>
-            <p id="overlay-message">矢印キー / WASD で操作<br>モバイル: スワイプ</p>
-            <button id="start-btn">スタート</button>
+            <h2 id="overlay-title">🐍</h2>
+            <div class="game-rules">
+              <p class="rule-title">ルール</p>
+              <p>ヘビを操作してエサを食べよう</p>
+              <p>食べるたびにヘビが伸びて、スピードが上がる</p>
+              <p>壁と自分の体にぶつかったらゲームオーバー</p>
+            </div>
+            <div class="controls-info">
+              <p>🎮 矢印キー / WASD</p>
+              <p>📱 スワイプ</p>
+            </div>
+            <p id="overlay-message" class="overlay-message-hidden"></p>
+            <p id="overlay-best" class="overlay-best-hidden"></p>
+            <button id="start-btn">PLAY</button>
           </div>
         </div>
       </div>
