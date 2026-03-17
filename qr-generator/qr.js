@@ -8,6 +8,9 @@
   const overlayGroup = document.getElementById('overlay-group');
   const clearOverlayBtn = document.getElementById('clear-overlay');
   const generateBtn = document.getElementById('generate-btn');
+  const shuffleBtn = document.getElementById('shuffle-btn');
+  const filterGroup = document.getElementById('filter-group');
+  const filterSelect = document.getElementById('color-filter');
   const downloadBtn = document.getElementById('download-btn');
   const canvas = document.getElementById('qr-canvas');
   const hint = document.getElementById('preview-hint');
@@ -30,9 +33,13 @@
     if (currentMode === 'art') {
       errorLevelGroup.style.display = 'none';
       overlayLabel.textContent = 'アート用画像（必須）';
+      shuffleBtn.style.display = '';
+      filterGroup.style.display = '';
     } else {
       errorLevelGroup.style.display = '';
       overlayLabel.textContent = '中央に画像を配置（任意）';
+      shuffleBtn.style.display = 'none';
+      filterGroup.style.display = 'none';
     }
   }
 
@@ -63,6 +70,10 @@
     } else {
       generate();
     }
+  });
+
+  shuffleBtn.addEventListener('click', () => {
+    generateArt(true);
   });
 
   // Generate on load with default text
@@ -115,14 +126,68 @@
     });
   }
 
-  function generateArt() {
-    const text = input.value.trim();
+  function randomSuffix(len) {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let s = '';
+    for (let i = 0; i < len; i++) s += chars[Math.floor(Math.random() * chars.length)];
+    return s;
+  }
+
+  function applyFilter(imageData, filter) {
+    if (filter === 'original') return;
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      let r = data[i], g = data[i+1], b = data[i+2];
+      switch(filter) {
+        case 'bw': {
+          const gray = 0.299*r + 0.587*g + 0.114*b;
+          data[i] = data[i+1] = data[i+2] = gray;
+          break;
+        }
+        case 'sepia': {
+          const gray = 0.299*r + 0.587*g + 0.114*b;
+          data[i] = Math.min(255, gray * 1.2);
+          data[i+1] = Math.min(255, gray * 1.0);
+          data[i+2] = Math.min(255, gray * 0.8);
+          break;
+        }
+        case 'blue': {
+          const gray = 0.299*r + 0.587*g + 0.114*b;
+          data[i] = Math.min(255, gray * 0.7);
+          data[i+1] = Math.min(255, gray * 0.8);
+          data[i+2] = Math.min(255, gray * 1.3);
+          break;
+        }
+        case 'green': {
+          const gray = 0.299*r + 0.587*g + 0.114*b;
+          data[i] = Math.min(255, gray * 0.7);
+          data[i+1] = Math.min(255, gray * 1.2);
+          data[i+2] = Math.min(255, gray * 0.7);
+          break;
+        }
+        case 'high-contrast': {
+          const gray = 0.299*r + 0.587*g + 0.114*b;
+          const threshold = gray > 128 ? 255 : 0;
+          data[i] = data[i+1] = data[i+2] = threshold;
+          break;
+        }
+      }
+    }
+  }
+
+  function generateArt(shuffle) {
+    let text = input.value.trim();
     if (!text || !overlayImage) {
       if (!overlayImage) {
         hint.textContent = '画像をアップロードしてください';
         hint.style.display = 'block';
       }
       return;
+    }
+
+    if (shuffle) {
+      const sep = text.includes('?') ? '&' : '?';
+      text = text + sep + '_=' + randomSuffix(6);
     }
 
     const size = parseInt(sizeSelect.value);
@@ -170,6 +235,7 @@
     bgCtx.drawImage(img, sx, sy, imgMin, imgMin, 0, 0, qrImageSize, qrImageSize);
 
     const bgData = bgCtx.getImageData(0, 0, qrImageSize, qrImageSize);
+    applyFilter(bgData, filterSelect.value);
     const qrPixels = qrCtx.getImageData(0, 0, qrImageSize, qrImageSize);
 
     // Step 3: Merge - replace QR pixels with image pixels except protected areas

@@ -53,7 +53,20 @@
           <button id="clear-overlay" class="btn btn-small" style="display:none;">画像をクリア</button>
         </div>
 
+        <div id="filter-group" class="input-group" style="display:none;">
+          <label>カラーフィルター</label>
+          <select id="color-filter">
+            <option value="original">オリジナル</option>
+            <option value="bw">白黒</option>
+            <option value="sepia">セピア</option>
+            <option value="blue">ブルートーン</option>
+            <option value="green">グリーントーン</option>
+            <option value="high-contrast">ハイコントラスト</option>
+          </select>
+        </div>
+
         <button id="generate-btn" class="btn btn-primary">QRコードを生成</button>
+        <button id="shuffle-btn" class="btn btn-secondary" style="display:none;">🔀 Shuffle</button>
         <button id="download-btn" class="btn btn-secondary" disabled>PNGダウンロード</button>
       </div>
 
