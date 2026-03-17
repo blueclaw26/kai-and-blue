@@ -15,87 +15,252 @@
       <p class="tagline">コードが書けない人間と、コードが書けるAI。<br>一緒にものを作りながら、開発を学んでいく記録。</p>
     </header>
 
-    <section class="projects">
-      <h2>Projects</h2>
+    <section class="phase">
+      <h2>Phase 1</h2>
       <div class="project-grid">
-        <a href="memory-game/index.html" class="project-card">
+        <a href="memory-game/index.html" class="project-card done">
           <h3>神経衰弱</h3>
-          <p>絵文字で遊ぶカードゲーム。JavaScriptを覚えるために作った。</p>
-          <span class="tag">JavaScript</span>
+          <span class="tag">JavaScript / DOM操作</span>
         </a>
-        <div class="project-card">
-          <h3>論文速報Bot</h3>
-          <p>JACSの新着論文を拾って、Discordに日本語で投稿してくれるBot。毎日動いてる。</p>
-          <span class="tag">Python</span>
-        </div>
-        <div class="project-card">
-          <h3>日次レポート自動化</h3>
-          <p>CRMのデータを毎日集計して、Google Sheetsに書き込む仕組み。手作業がなくなった。</p>
-          <span class="tag">API連携</span>
-        </div>
-        <div class="project-card">
+        <div class="project-card done">
           <h3>このサイト</h3>
-          <p>最初に作ったもの。HTMLとCSSだけ。デザインは何度か作り直してる。</p>
           <span class="tag">HTML / CSS</span>
         </div>
-        <div class="project-card ongoing">
-          <span class="badge">ongoing</span>
-          <h3>MiroFish</h3>
-          <p>魚の生態シミュレーション。Python + Vite構成で作り始めたところ。</p>
-          <span class="tag">Python / Vite</span>
+        <div class="project-card done">
+          <h3>論文速報Bot</h3>
+          <span class="tag">Python / RSS / Discord</span>
         </div>
-        <div class="project-card ongoing">
-          <span class="badge">ongoing</span>
-          <h3>AI Chat UI</h3>
-          <p>自分用のチャットインターフェース。API連携とフロントエンド設計を学ぶ予定。</p>
-          <span class="tag">Next.js</span>
+        <div class="project-card done">
+          <h3>日次レポート自動化</h3>
+          <span class="tag">API / Google Sheets</span>
+        </div>
+        <div class="project-card">
+          <h3>クイズアプリ</h3>
+          <span class="tag">JavaScript / データ構造 / スコアリング</span>
+        </div>
+        <div class="project-card">
+          <h3>タイピングゲーム</h3>
+          <span class="tag">JavaScript / イベント処理</span>
+        </div>
+        <div class="project-card">
+          <h3>ポモドーロタイマー</h3>
+          <span class="tag">JavaScript / 通知API / localStorage</span>
+        </div>
+        <div class="project-card">
+          <h3>Markdownプレビューア</h3>
+          <span class="tag">JavaScript / パーサー / リアルタイム描画</span>
+        </div>
+        <div class="project-card">
+          <h3>天気ダッシュボード</h3>
+          <span class="tag">外部API / JSON / 非同期処理</span>
+        </div>
+        <div class="project-card">
+          <h3>為替レートモニター</h3>
+          <span class="tag">API / 自動更新 / グラフ描画</span>
+        </div>
+        <div class="project-card">
+          <h3>スネークゲーム</h3>
+          <span class="tag">Canvas API / ゲームループ / キー入力</span>
+        </div>
+        <div class="project-card">
+          <h3>LPテンプレート量産</h3>
+          <span class="tag">CSS設計 / レスポンシブ / コンポーネント思考</span>
         </div>
       </div>
     </section>
 
-    <section class="roadmap">
-      <h2>Roadmap</h2>
-      <div class="roadmap-columns">
-        <div class="roadmap-column">
-          <h3>作りたいもの</h3>
-          <ul>
-            <li>家族アルバム自動生成 — LINEに写真を投げると自動で整理・アルバム化</li>
-            <li>家計簿アプリ — 入力がラクで、月次レポートが自動で出る</li>
-            <li>ブックマーク管理 — 論文やWebページをタグ付けして検索できる</li>
-            <li>議事録Bot — 会議音声から要約とアクションアイテムを抽出</li>
-            <li>在庫管理ツール — 写真を撮るだけで在庫を認識・記録</li>
-            <li>名刺スキャナー — 撮影→CRM自動登録</li>
-            <li>日報自動化 — チャットログから日報を自動生成</li>
-            <li>引っ越しチェックリスト — やること・届出・スケジュールを全自動管理</li>
-            <li>レシピ提案 — 冷蔵庫の中身を入力したら作れるものを提案</li>
-            <li>読書ログ — 本を登録して感想メモ、年間レポート付き</li>
-          </ul>
+    <section class="phase">
+      <h2>Phase 2</h2>
+      <div class="project-grid">
+        <div class="project-card ongoing">
+          <span class="badge">ongoing</span>
+          <h3>AI Chat UI</h3>
+          <span class="tag">Next.js / API連携 / ストリーミング</span>
         </div>
-        <div class="roadmap-column">
-          <h3>学びたいこと</h3>
-          <ul>
-            <li>ターミナル・コマンドライン — 基本操作を手に馴染ませる</li>
-            <li>Git / GitHub — バージョン管理とチーム開発の基礎</li>
-            <li>HTML / CSS / JavaScript — Webの三本柱</li>
-            <li>API — 外部サービスとデータをやり取りする方法</li>
-            <li>サーバーとデプロイ — 作ったものをインターネットに公開する</li>
-            <li>データベース — 情報を保存・検索・更新する仕組み</li>
-            <li>エラーハンドリング — 壊れたときに直せる力</li>
-            <li>Python — 自動化やデータ処理の万能ツール</li>
-            <li>Node.js / TypeScript — モダンなWeb開発の言語</li>
-            <li>認証・セキュリティ — ログインや個人情報保護の基礎</li>
-          </ul>
+        <div class="project-card">
+          <h3>ブックマーク管理</h3>
+          <span class="tag">DB / CRUD / 全文検索</span>
         </div>
-        <div class="roadmap-column">
-          <h3>開発スタイル</h3>
-          <ul>
-            <li>OpenClaw — AIアシスタントと常時連携しながら開発</li>
-            <li>サブエージェント — 裏でコードを書かせて本体は会話に集中</li>
-            <li>Claude Code / Codex — 外部コーディングAIとGitHub経由で連携</li>
-            <li>マルチデバイス — 複数端末のOpenClawが協調して作業</li>
-            <li>GitHub中心ワークフロー — コード管理・レビュー・自動デプロイ</li>
-            <li>cron自動化 — 定期タスクを人の手を離れて実行</li>
-          </ul>
+        <div class="project-card">
+          <h3>家計簿アプリ</h3>
+          <span class="tag">認証 / DB / グラフ / CSV出力</span>
+        </div>
+        <div class="project-card">
+          <h3>読書ログ</h3>
+          <span class="tag">DB / タグ / 年間レポート</span>
+        </div>
+        <div class="project-card">
+          <h3>習慣トラッカー</h3>
+          <span class="tag">DB / カレンダーUI / 通知</span>
+        </div>
+        <div class="project-card">
+          <h3>URL短縮サービス</h3>
+          <span class="tag">Node.js / ルーティング / リダイレクト</span>
+        </div>
+        <div class="project-card">
+          <h3>アンケートツール</h3>
+          <span class="tag">フォーム設計 / 集計 / 可視化</span>
+        </div>
+        <div class="project-card">
+          <h3>社内Wiki</h3>
+          <span class="tag">Markdown / 認証 / 検索 / 権限管理</span>
+        </div>
+        <div class="project-card">
+          <h3>RSS統合リーダー</h3>
+          <span class="tag">フィード解析 / フィルタ / 既読管理</span>
+        </div>
+        <div class="project-card">
+          <h3>フォーム自動生成</h3>
+          <span class="tag">JSON Schema / バリデーション / 動的UI</span>
+        </div>
+        <div class="project-card">
+          <h3>ファイル共有サービス</h3>
+          <span class="tag">アップロード / ストレージ / 有効期限</span>
+        </div>
+        <div class="project-card">
+          <h3>掲示板</h3>
+          <span class="tag">投稿 / スレッド / ページネーション / モデレーション</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="phase">
+      <h2>Phase 3</h2>
+      <div class="project-grid">
+        <div class="project-card ongoing">
+          <span class="badge">ongoing</span>
+          <h3>MiroFish</h3>
+          <span class="tag">AI対話 / 将来シミュレーション / Python + Vite</span>
+        </div>
+        <div class="project-card">
+          <h3>議事録Bot</h3>
+          <span class="tag">音声認識 / AI要約 / アクションアイテム抽出</span>
+        </div>
+        <div class="project-card">
+          <h3>日報自動化</h3>
+          <span class="tag">チャットログ解析 / AI生成 / テンプレート</span>
+        </div>
+        <div class="project-card">
+          <h3>レシピ提案</h3>
+          <span class="tag">自然言語入力 / AI推薦 / 材料マッチング</span>
+        </div>
+        <div class="project-card">
+          <h3>メール自動分類・返信下書き</h3>
+          <span class="tag">NLP / ルールエンジン / Gmail API</span>
+        </div>
+        <div class="project-card">
+          <h3>契約書レビュー補助</h3>
+          <span class="tag">PDF解析 / AI抽出 / リスクフラグ</span>
+        </div>
+        <div class="project-card">
+          <h3>FAQ自動応答Bot</h3>
+          <span class="tag">RAG / ベクトル検索 / 埋め込み</span>
+        </div>
+        <div class="project-card">
+          <h3>翻訳ツール</h3>
+          <span class="tag">多言語API / 用語辞書 / コンテキスト保持</span>
+        </div>
+        <div class="project-card">
+          <h3>コードレビューBot</h3>
+          <span class="tag">GitHub Actions / AI / 差分解析</span>
+        </div>
+        <div class="project-card">
+          <h3>スクレイピング→レポート</h3>
+          <span class="tag">Puppeteer / AI要約 / 定期実行</span>
+        </div>
+        <div class="project-card">
+          <h3>論文サマリー生成</h3>
+          <span class="tag">PDF解析 / AI要約 / 引用管理</span>
+        </div>
+        <div class="project-card">
+          <h3>商品比較ツール</h3>
+          <span class="tag">スクレイピング / AI分析 / 表出力</span>
+        </div>
+        <div class="project-card">
+          <h3>Claude Code / Codex連携</h3>
+          <span class="tag">GitHub / CI/CD / マルチエージェント</span>
+        </div>
+        <div class="project-card">
+          <h3>OpenClaw協調開発</h3>
+          <span class="tag">サブエージェント / マルチデバイス / タスク分散</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="phase">
+      <h2>Phase 4</h2>
+      <div class="project-grid">
+        <div class="project-card">
+          <h3>家族アルバム自動生成</h3>
+          <span class="tag">LINE連携 / 画像解析 / 自動分類</span>
+        </div>
+        <div class="project-card">
+          <h3>在庫管理</h3>
+          <span class="tag">画像認識 / モバイル / バーコード読取</span>
+        </div>
+        <div class="project-card">
+          <h3>名刺→CRM自動登録</h3>
+          <span class="tag">OCR / API連携 / 重複検出</span>
+        </div>
+        <div class="project-card">
+          <h3>確定申告補助</h3>
+          <span class="tag">PDF解析 / 仕訳分類 / CSV出力</span>
+        </div>
+        <div class="project-card">
+          <h3>旅行プランナー</h3>
+          <span class="tag">地図API / AI提案 / 予算管理</span>
+        </div>
+        <div class="project-card">
+          <h3>スマートホーム連携</h3>
+          <span class="tag">IoT / IFTTT / 音声操作 / センサー</span>
+        </div>
+        <div class="project-card">
+          <h3>地域イベントマップ</h3>
+          <span class="tag">位置情報 / 地図API / ユーザー投稿</span>
+        </div>
+        <div class="project-card">
+          <h3>オープンデータ可視化</h3>
+          <span class="tag">政府統計 / D3.js / インタラクティブ</span>
+        </div>
+        <div class="project-card">
+          <h3>NPO寄付管理</h3>
+          <span class="tag">決済API / レポート / 透明性</span>
+        </div>
+        <div class="project-card">
+          <h3>環境モニタリング</h3>
+          <span class="tag">センサーデータ / 可視化 / アラート</span>
+        </div>
+        <div class="project-card">
+          <h3>マーケットプレイス</h3>
+          <span class="tag">出品 / 決済 / レビュー / エスクロー</span>
+        </div>
+        <div class="project-card">
+          <h3>学習コース作成ツール</h3>
+          <span class="tag">動画 / クイズ / 進捗管理 / LMS</span>
+        </div>
+        <div class="project-card">
+          <h3>多言語コミュニティ</h3>
+          <span class="tag">リアルタイム翻訳 / チャット / モデレーション</span>
+        </div>
+        <div class="project-card">
+          <h3>健康データ統合ダッシュボード</h3>
+          <span class="tag">ウェアラブル連携 / 可視化 / 傾向分析</span>
+        </div>
+        <div class="project-card">
+          <h3>選挙・投票アプリ</h3>
+          <span class="tag">認証 / 匿名性 / 集計 / 改ざん防止</span>
+        </div>
+        <div class="project-card">
+          <h3>クラウドファンディング</h3>
+          <span class="tag">プロジェクト管理 / 決済 / 進捗公開</span>
+        </div>
+        <div class="project-card">
+          <h3>災害情報集約・共有</h3>
+          <span class="tag">リアルタイム / 地図 / プッシュ通知</span>
+        </div>
+        <div class="project-card">
+          <h3>フリーランス請求書管理</h3>
+          <span class="tag">PDF生成 / 入金追跡 / 自動リマインド</span>
         </div>
       </div>
     </section>
