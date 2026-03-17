@@ -3,46 +3,97 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LPテンプレート量産 — Kai & Blue</title>
+  <title>LP テンプレートギャラリー</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
-<style>.docs-link{position:fixed;top:16px;right:16px;width:40px;height:40px;background:rgba(255,255,255,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.15);z-index:9999;transition:transform 0.2s,box-shadow 0.2s}.docs-link:hover{transform:scale(1.1);box-shadow:0 4px 12px rgba(0,0,0,0.2)}.docs-link::after{content:"制作記録";position:absolute;right:48px;background:#333;color:#fff;padding:4px 10px;border-radius:6px;font-size:12px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.2s}.docs-link:hover::after{opacity:1}</style></head>
+</head>
 <body>
   <div class="container">
-    <div class="top-bar">
-      <a href="../index.html" class="back">&larr; Kai & Blue</a>
-      <a href="../lp-docs/" class="docs-link" title="制作記録">📖</a>
-    </div>
+    <a href="../index.html" class="back-link">← ホームに戻る</a>
+    <h1 class="page-title">LP テンプレートギャラリー</h1>
+    <p class="page-subtitle">ターゲット顧客別のランディングページ8パターン</p>
 
-    <header>
-      <h1>LPテンプレート量産</h1>
-      <p class="subtitle">4種類のランディングページテンプレートをプレビュー＆ソース閲覧</p>
-    </header>
-
-    <div class="gallery" id="gallery"></div>
-
-    <footer>
-      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
-    </footer>
+    <div class="template-grid" id="templateGrid"></div>
   </div>
 
   <!-- Overlay -->
   <div class="overlay" id="overlay">
-    <div class="overlay-content">
-      <div class="overlay-header">
-        <h3 id="overlay-title"></h3>
-        <div class="overlay-tabs">
-          <button class="tab-btn active" id="tab-preview">プレビュー</button>
-          <button class="tab-btn" id="tab-source">ソース</button>
-        </div>
-        <button class="close-btn" id="close-btn">&times;</button>
+    <div class="overlay-header">
+      <span class="overlay-title" id="overlayTitle"></span>
+      <div class="overlay-tabs">
+        <button class="overlay-tab active" data-tab="preview" onclick="switchTab('preview')">プレビュー</button>
+        <button class="overlay-tab" data-tab="source" onclick="switchTab('source')">ソース</button>
       </div>
-      <iframe class="preview-frame" id="preview-frame" sandbox="allow-same-origin"></iframe>
-      <div class="source-view" id="source-view"></div>
+      <button class="overlay-close" onclick="closeOverlay()">✕</button>
+    </div>
+    <div class="overlay-body">
+      <iframe id="previewFrame"></iframe>
+      <pre id="sourceView"></pre>
     </div>
   </div>
 
+  <a href="../lp-docs/" class="docs-link" title="制作記録">📖</a>
+
   <script src="lp.js"></script>
+  <script>
+    const grid = document.getElementById('templateGrid');
+    const overlay = document.getElementById('overlay');
+    const overlayTitle = document.getElementById('overlayTitle');
+    const previewFrame = document.getElementById('previewFrame');
+    const sourceView = document.getElementById('sourceView');
+
+    let currentSource = '';
+
+    window.LP_TEMPLATES.forEach((tpl, i) => {
+      const card = document.createElement('div');
+      card.className = 'template-card';
+      card.innerHTML = `
+        <div class="card-header">
+          <span class="card-name">${tpl.name}</span>
+          <span class="card-tag">${tpl.target}</span>
+        </div>
+        <p class="card-desc">${tpl.description}</p>
+        <div class="card-color-bar" style="background: linear-gradient(90deg, ${tpl.colors[0]}, ${tpl.colors[1] || tpl.colors[0]})"></div>
+      `;
+      card.addEventListener('click', () => openOverlay(tpl));
+      grid.appendChild(card);
+    });
+
+    function openOverlay(tpl) {
+      overlayTitle.textContent = tpl.name;
+      currentSource = tpl.html;
+      previewFrame.srcdoc = tpl.html;
+      sourceView.textContent = tpl.html;
+      switchTab('preview');
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeOverlay() {
+      overlay.classList.remove('active');
+      previewFrame.srcdoc = '';
+      document.body.style.overflow = '';
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.overlay-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+      });
+      if (tab === 'preview') {
+        previewFrame.style.display = 'block';
+        sourceView.style.display = 'none';
+      } else {
+        previewFrame.style.display = 'none';
+        sourceView.style.display = 'block';
+      }
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeOverlay();
+    });
+
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) closeOverlay();
+    });
+  </script>
 </body>
 </html>

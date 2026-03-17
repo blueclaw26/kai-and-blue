@@ -1,597 +1,674 @@
-const templates = [
+window.LP_TEMPLATES = [
+  // ─── Template 1: B2B SaaS ───
   {
-    id: 'hero-cta',
-    name: 'Hero + CTA',
-    desc: '大きなヒーローエリア、見出し、CTA',
+    name: 'SaaS プロダクト',
+    target: 'B2B / ビジネス',
+    description: 'クリーンでプロフェッショナルなSaaS向けLP。機能紹介、料金表、FAQ付き。',
+    colors: ['#2563eb', '#93c5fd'],
     html: `<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CloudFlow — ビジネスを加速するSaaS</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #222; }
-.hero {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 40px 24px;
-}
-.hero h1 {
-  font-size: 3rem;
-  font-weight: 700;
-  margin-bottom: 16px;
-  line-height: 1.2;
-}
-.hero p {
-  font-size: 1.2rem;
-  max-width: 560px;
-  opacity: 0.9;
-  margin-bottom: 32px;
-  line-height: 1.7;
-}
-.cta-btn {
-  display: inline-block;
-  padding: 16px 48px;
-  background: white;
-  color: #667eea;
-  font-size: 1.1rem;
-  font-weight: 600;
-  border-radius: 50px;
-  text-decoration: none;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.cta-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-}
-.features {
-  padding: 80px 24px;
-  max-width: 900px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 32px;
-  text-align: center;
-}
-.feat h3 { font-size: 1.1rem; margin: 12px 0 8px; }
-.feat p { font-size: 0.9rem; color: #666; line-height: 1.6; }
-.feat-icon { font-size: 2rem; }
-@media (max-width: 600px) {
-  .hero h1 { font-size: 2rem; }
-  .features { grid-template-columns: 1fr; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Noto Sans JP',sans-serif;color:#1a1a1a;background:#fff}
+a{text-decoration:none;color:inherit}
+
+/* Hero */
+.hero{background:linear-gradient(135deg,#2563eb 0%,#1e40af 100%);color:#fff;padding:100px 20px 80px;text-align:center}
+.hero h1{font-size:42px;font-weight:700;margin-bottom:16px;line-height:1.3}
+.hero p{font-size:18px;opacity:0.9;max-width:600px;margin:0 auto 32px;line-height:1.7}
+.btn-primary{display:inline-block;background:#fff;color:#2563eb;padding:14px 36px;border-radius:8px;font-weight:600;font-size:16px;transition:transform 0.2s,box-shadow 0.2s}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.15)}
+.btn-secondary{display:inline-block;border:2px solid rgba(255,255,255,0.5);color:#fff;padding:12px 32px;border-radius:8px;font-weight:500;font-size:15px;margin-left:12px;transition:border-color 0.2s}
+.btn-secondary:hover{border-color:#fff}
+
+/* Features */
+.features{padding:80px 20px;max-width:960px;margin:0 auto;text-align:center}
+.features h2{font-size:28px;font-weight:700;margin-bottom:12px}
+.features>p{color:#6b6b6b;margin-bottom:48px;font-size:15px}
+.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
+.feature-card{padding:32px 24px;border-radius:12px;background:#f8fafc;text-align:center}
+.feature-icon{font-size:36px;margin-bottom:16px}
+.feature-card h3{font-size:17px;font-weight:600;margin-bottom:8px}
+.feature-card p{color:#6b6b6b;font-size:14px;line-height:1.6}
+
+/* Pricing */
+.pricing{background:#f8fafc;padding:80px 20px}
+.pricing h2{text-align:center;font-size:28px;font-weight:700;margin-bottom:48px}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:960px;margin:0 auto}
+.price-card{background:#fff;border-radius:12px;padding:36px 28px;text-align:center;border:2px solid transparent;transition:border-color 0.2s}
+.price-card.popular{border-color:#2563eb;position:relative}
+.price-card.popular::before{content:"人気";position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#2563eb;color:#fff;padding:4px 16px;border-radius:20px;font-size:12px;font-weight:600}
+.price-card h3{font-size:18px;font-weight:600;margin-bottom:8px}
+.price-amount{font-size:40px;font-weight:700;color:#2563eb;margin:16px 0 8px}
+.price-amount span{font-size:16px;font-weight:400;color:#6b6b6b}
+.price-card ul{list-style:none;margin:24px 0;text-align:left}
+.price-card li{padding:8px 0;font-size:14px;color:#444;border-bottom:1px solid #f0f0f0}
+.price-card li::before{content:"✓ ";color:#2563eb;font-weight:600}
+.price-btn{display:block;width:100%;padding:12px;border-radius:8px;font-weight:600;font-size:14px;text-align:center;transition:background 0.2s}
+.price-btn-outline{border:2px solid #2563eb;color:#2563eb;background:transparent}
+.price-btn-outline:hover{background:#eff6ff}
+.price-btn-fill{background:#2563eb;color:#fff;border:none}
+.price-btn-fill:hover{background:#1d4ed8}
+
+/* Trust */
+.trust{padding:60px 20px;text-align:center;max-width:800px;margin:0 auto}
+.trust p{color:#6b6b6b;font-size:14px;margin-bottom:24px;text-transform:uppercase;letter-spacing:1px}
+.trust-logos{display:flex;justify-content:center;gap:40px;flex-wrap:wrap}
+.trust-logo{color:#aaa;font-size:18px;font-weight:600}
+
+/* FAQ */
+.faq{padding:80px 20px;max-width:700px;margin:0 auto}
+.faq h2{text-align:center;font-size:28px;font-weight:700;margin-bottom:40px}
+.faq-item{border-bottom:1px solid #e5e5e5;padding:20px 0}
+.faq-item h3{font-size:16px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.faq-item p{color:#6b6b6b;font-size:14px;line-height:1.7;margin-top:12px}
+
+/* Footer */
+footer{background:#1a1a1a;color:#fff;text-align:center;padding:40px 20px}
+footer p{font-size:13px;opacity:0.6}
+
+@media(max-width:768px){
+  .hero h1{font-size:28px}
+  .feature-grid,.pricing-grid{grid-template-columns:1fr}
+  .btn-secondary{margin-left:0;margin-top:12px;display:inline-block}
 }
 </style>
 </head>
 <body>
-<div class="hero">
-  <h1>あなたのビジネスを<br>次のレベルへ</h1>
-  <p>シンプルで強力なツールで、チームの生産性を劇的に向上させましょう。今すぐ無料トライアルを始めてみませんか。</p>
-  <a href="#" class="cta-btn">無料で始める →</a>
-</div>
-<div class="features">
-  <div class="feat">
-    <div class="feat-icon">⚡</div>
-    <h3>高速パフォーマンス</h3>
-    <p>最新の技術で構築された、ストレスフリーな操作体験。</p>
-  </div>
-  <div class="feat">
-    <div class="feat-icon">🔒</div>
-    <h3>セキュリティ</h3>
-    <p>エンタープライズレベルの暗号化で、データを安全に保護。</p>
-  </div>
-  <div class="feat">
-    <div class="feat-icon">📊</div>
-    <h3>分析ダッシュボード</h3>
-    <p>リアルタイムのデータ可視化で、的確な判断をサポート。</p>
-  </div>
-</div>
+  <section class="hero">
+    <h1>ワークフローを、もっとスマートに</h1>
+    <p>CloudFlowはチーム全体の生産性を向上させるオールインワンプラットフォーム。タスク管理、コミュニケーション、分析を一つに。</p>
+    <a href="#" class="btn-primary">無料で始める</a>
+    <a href="#" class="btn-secondary">デモを見る →</a>
+  </section>
+
+  <section class="features">
+    <h2>すべてが、ひとつに</h2>
+    <p>チームが本当に必要な機能だけを、シンプルに</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>リアルタイム分析</h3>
+        <p>ダッシュボードでKPIを一目で把握。データドリブンな意思決定を支援します。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <h3>シームレス連携</h3>
+        <p>Slack、Google Workspace、Notionなど200以上のツールと簡単に接続。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>エンタープライズ・セキュリティ</h3>
+        <p>SOC2 Type II準拠。データは暗号化され、安全に管理されます。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="pricing">
+    <h2>シンプルな料金プラン</h2>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <h3>スターター</h3>
+        <div class="price-amount">¥0<span>/月</span></div>
+        <ul>
+          <li>ユーザー3名まで</li>
+          <li>基本的なタスク管理</li>
+          <li>5GBストレージ</li>
+          <li>メールサポート</li>
+        </ul>
+        <a href="#" class="price-btn price-btn-outline">無料で始める</a>
+      </div>
+      <div class="price-card popular">
+        <h3>プロ</h3>
+        <div class="price-amount">¥2,980<span>/月</span></div>
+        <ul>
+          <li>ユーザー無制限</li>
+          <li>高度な分析機能</li>
+          <li>100GBストレージ</li>
+          <li>優先サポート</li>
+          <li>API アクセス</li>
+        </ul>
+        <a href="#" class="price-btn price-btn-fill">プロを選ぶ</a>
+      </div>
+      <div class="price-card">
+        <h3>エンタープライズ</h3>
+        <div class="price-amount">要相談</div>
+        <ul>
+          <li>カスタム機能開発</li>
+          <li>専任サポート担当</li>
+          <li>無制限ストレージ</li>
+          <li>SLA保証</li>
+          <li>オンプレミス対応</li>
+        </ul>
+        <a href="#" class="price-btn price-btn-outline">お問い合わせ</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="trust">
+    <p>多くの企業に選ばれています</p>
+    <div class="trust-logos">
+      <span class="trust-logo">TechNova</span>
+      <span class="trust-logo">GreenLeaf</span>
+      <span class="trust-logo">SkyBridge</span>
+      <span class="trust-logo">Matsuda Corp</span>
+      <span class="trust-logo">NextWave</span>
+    </div>
+  </section>
+
+  <section class="faq">
+    <h2>よくある質問</h2>
+    <div class="faq-item">
+      <h3>無料プランに期限はありますか？</h3>
+      <p>いいえ、無料プランは永続的にご利用いただけます。必要に応じていつでもアップグレード可能です。</p>
+    </div>
+    <div class="faq-item">
+      <h3>データの移行はできますか？</h3>
+      <p>はい、CSV/JSON形式でのインポートに対応しています。専任チームが移行をサポートします。</p>
+    </div>
+    <div class="faq-item">
+      <h3>解約はいつでもできますか？</h3>
+      <p>はい、いつでも解約可能です。日割り返金にも対応しています。</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 CloudFlow Inc. All rights reserved.</p>
+  </footer>
 </body>
 </html>`
   },
+
+  // ─── Template 2: D2C 健康食品 ───
   {
-    id: 'feature-grid',
-    name: 'Feature Grid',
-    desc: '見出し、3カラム機能カード、CTA',
+    name: '健康食品',
+    target: 'D2C / 一般消費者',
+    description: '緊急感と社会的証明を重視したD2C向けLP。レビュー、比較表、限定オファー付き。',
+    colors: ['#4a7c59', '#e8a44a'],
     html: `<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ナチュラグリーン — 毎日の健康をサポート</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #1a1a1a; background: #fafafa; }
-.header {
-  text-align: center;
-  padding: 80px 24px 40px;
-}
-.header h1 {
-  font-size: 2.4rem;
-  font-weight: 700;
-  margin-bottom: 12px;
-}
-.header p {
-  font-size: 1.1rem;
-  color: #666;
-  max-width: 500px;
-  margin: 0 auto;
-}
-.grid {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 0 24px 60px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-}
-.card {
-  background: white;
-  border-radius: 16px;
-  padding: 32px 24px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  transition: transform 0.2s;
-}
-.card:hover { transform: translateY(-4px); }
-.card-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-  margin-bottom: 16px;
-}
-.card-icon.blue { background: #e8f0fe; }
-.card-icon.green { background: #e6f4ea; }
-.card-icon.orange { background: #fef3e2; }
-.card h3 { font-size: 1.05rem; margin-bottom: 8px; }
-.card p { font-size: 0.9rem; color: #555; line-height: 1.7; }
-.cta-section {
-  text-align: center;
-  padding: 40px 24px 80px;
-}
-.cta-btn {
-  display: inline-block;
-  padding: 14px 40px;
-  background: #1a73e8;
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 8px;
-  text-decoration: none;
-  transition: background 0.2s;
-}
-.cta-btn:hover { background: #1557b0; }
-@media (max-width: 600px) {
-  .grid { grid-template-columns: 1fr; }
-  .header h1 { font-size: 1.8rem; }
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans JP',sans-serif;color:#1a1a1a;background:#fff}
+a{text-decoration:none;color:inherit}
+
+/* Hero */
+.hero{background:linear-gradient(135deg,#f5f0e6 0%,#e8e0d0 100%);padding:80px 20px;text-align:center;position:relative;overflow:hidden}
+.hero-badge{display:inline-block;background:#e74c3c;color:#fff;padding:8px 20px;border-radius:30px;font-size:14px;font-weight:700;margin-bottom:24px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.hero h1{font-size:36px;font-weight:900;margin-bottom:16px;line-height:1.4;color:#2d5a3d}
+.hero p{font-size:16px;color:#666;max-width:540px;margin:0 auto 24px;line-height:1.8}
+.product-visual{width:280px;height:280px;background:linear-gradient(135deg,#4a7c59,#6da67a);border-radius:50%;margin:0 auto 32px;display:flex;align-items:center;justify-content:center;font-size:80px;box-shadow:0 20px 40px rgba(74,124,89,0.2)}
+.btn-cta{display:inline-block;background:#4a7c59;color:#fff;padding:16px 48px;border-radius:40px;font-weight:700;font-size:17px;transition:transform 0.2s,box-shadow 0.2s}
+.btn-cta:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(74,124,89,0.3)}
+.btn-cta small{display:block;font-size:12px;font-weight:400;opacity:0.9;margin-top:4px}
+
+/* Benefits */
+.benefits{padding:80px 20px;max-width:900px;margin:0 auto}
+.section-title{text-align:center;font-size:26px;font-weight:700;margin-bottom:48px;color:#2d5a3d}
+.benefit-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.benefit-card{text-align:center;padding:28px 20px}
+.benefit-icon{font-size:40px;margin-bottom:16px}
+.benefit-card h3{font-size:17px;font-weight:600;margin-bottom:8px}
+.benefit-card p{color:#666;font-size:14px;line-height:1.7}
+
+/* Testimonials */
+.testimonials{background:#faf7f2;padding:80px 20px}
+.review-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:900px;margin:0 auto}
+.review-card{background:#fff;border-radius:12px;padding:28px;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+.review-stars{color:#e8a44a;font-size:18px;margin-bottom:12px}
+.review-card p{font-size:14px;line-height:1.7;color:#444;margin-bottom:16px}
+.review-author{font-size:13px;color:#888}
+
+/* Comparison */
+.comparison{padding:80px 20px;max-width:700px;margin:0 auto}
+.compare-table{width:100%;border-collapse:collapse;margin-top:32px}
+.compare-table th{background:#4a7c59;color:#fff;padding:14px 16px;text-align:left;font-size:14px}
+.compare-table th:first-child{border-radius:8px 0 0 0}
+.compare-table th:last-child{border-radius:0 8px 0 0}
+.compare-table td{padding:12px 16px;border-bottom:1px solid #eee;font-size:14px}
+.compare-table tr:last-child td:first-child{border-radius:0 0 0 8px}
+.compare-table tr:last-child td:last-child{border-radius:0 0 8px 0}
+.check{color:#4a7c59;font-weight:700}
+.cross{color:#ccc}
+
+/* Offer */
+.offer{background:linear-gradient(135deg,#2d5a3d,#4a7c59);color:#fff;padding:60px 20px;text-align:center}
+.offer h2{font-size:28px;font-weight:700;margin-bottom:8px}
+.offer p{font-size:16px;opacity:0.9;margin-bottom:8px}
+.countdown{display:flex;justify-content:center;gap:16px;margin:24px 0}
+.countdown-item{background:rgba(255,255,255,0.15);border-radius:8px;padding:16px 20px;min-width:70px}
+.countdown-num{font-size:28px;font-weight:700;display:block}
+.countdown-label{font-size:11px;opacity:0.8}
+.btn-offer{display:inline-block;background:#e8a44a;color:#fff;padding:16px 48px;border-radius:40px;font-weight:700;font-size:17px;transition:transform 0.2s}
+.btn-offer:hover{transform:translateY(-2px)}
+
+/* Footer */
+footer{background:#1a1a1a;color:#fff;text-align:center;padding:40px 20px}
+footer p{font-size:12px;opacity:0.5;line-height:1.8}
+
+@media(max-width:768px){
+  .hero h1{font-size:26px}
+  .benefit-grid,.review-grid{grid-template-columns:1fr}
+  .product-visual{width:200px;height:200px;font-size:60px}
 }
 </style>
 </head>
 <body>
-<div class="header">
-  <h1>すべてが揃った<br>オールインワン</h1>
-  <p>必要な機能を、ひとつのプラットフォームで。複雑さを排除し、本質に集中。</p>
-</div>
-<div class="grid">
-  <div class="card">
-    <div class="card-icon blue">📝</div>
-    <h3>タスク管理</h3>
-    <p>ドラッグ＆ドロップで直感的にタスクを整理。チーム全員の進捗が一目でわかる。</p>
-  </div>
-  <div class="card">
-    <div class="card-icon green">💬</div>
-    <h3>リアルタイムチャット</h3>
-    <p>プロジェクトごとのチャンネルで、情報がスレッドに整理される。検索も簡単。</p>
-  </div>
-  <div class="card">
-    <div class="card-icon orange">📁</div>
-    <h3>ファイル共有</h3>
-    <p>安全なクラウドストレージで、チームのファイルを一元管理。バージョン管理も自動。</p>
-  </div>
-</div>
-<div class="cta-section">
-  <a href="#" class="cta-btn">今すぐ無料で試す</a>
-</div>
+  <section class="hero">
+    <span class="hero-badge">🎉 初回限定 50% OFF</span>
+    <div class="product-visual">🌿</div>
+    <h1>朝の一杯で、カラダが変わる</h1>
+    <p>厳選された国産有機素材を配合。管理栄養士監修のグリーンスムージーで、毎日の健康習慣を始めませんか？</p>
+    <a href="#" class="btn-cta">初回50%OFFで試す<small>送料無料・いつでも解約OK</small></a>
+  </section>
+
+  <section class="benefits">
+    <h2 class="section-title">選ばれる3つの理由</h2>
+    <div class="benefit-grid">
+      <div class="benefit-card">
+        <div class="benefit-icon">🌾</div>
+        <h3>100%国産有機素材</h3>
+        <p>契約農家から直接仕入れた有機野菜のみを使用。農薬・添加物は一切不使用です。</p>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-icon">👩‍⚕️</div>
+        <h3>管理栄養士が監修</h3>
+        <p>1日に必要なビタミン・ミネラルの50%以上をカバー。栄養バランスを科学的に設計。</p>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-icon">⏱️</div>
+        <h3>たった30秒で完成</h3>
+        <p>水や牛乳に溶かすだけ。忙しい朝でも続けられるから、3ヶ月継続率は92%。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="testimonials">
+    <h2 class="section-title">お客様の声</h2>
+    <div class="review-grid">
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p>「朝の目覚めが変わりました。3週間続けていますが、明らかに体が軽くなった気がします。」</p>
+        <span class="review-author">— 田中 美咲さん（32歳・会社員）</span>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p>「野菜嫌いの私でも飲める味。フルーティーで、青臭さがまったくありません。」</p>
+        <span class="review-author">— 佐藤 健太さん（28歳・エンジニア）</span>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★☆</div>
+        <p>「家族全員で飲んでいます。子どもも喜んで飲むので、野菜不足の心配がなくなりました。」</p>
+        <span class="review-author">— 山本 恵子さん（41歳・主婦）</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="comparison">
+    <h2 class="section-title">他社製品との比較</h2>
+    <table class="compare-table">
+      <tr><th>特徴</th><th>ナチュラグリーン</th><th>A社</th><th>B社</th></tr>
+      <tr><td>有機素材100%</td><td class="check">✓</td><td class="cross">—</td><td class="cross">—</td></tr>
+      <tr><td>管理栄養士監修</td><td class="check">✓</td><td class="check">✓</td><td class="cross">—</td></tr>
+      <tr><td>添加物フリー</td><td class="check">✓</td><td class="cross">—</td><td class="check">✓</td></tr>
+      <tr><td>初回割引</td><td class="check">50% OFF</td><td class="cross">10% OFF</td><td class="cross">なし</td></tr>
+      <tr><td>定期縛りなし</td><td class="check">✓</td><td class="cross">—</td><td class="cross">—</td></tr>
+    </table>
+  </section>
+
+  <section class="offer">
+    <h2>期間限定キャンペーン</h2>
+    <p>先着500名様限定 — 初回50%OFF + 送料無料</p>
+    <div class="countdown">
+      <div class="countdown-item"><span class="countdown-num">02</span><span class="countdown-label">日</span></div>
+      <div class="countdown-item"><span class="countdown-num">14</span><span class="countdown-label">時間</span></div>
+      <div class="countdown-item"><span class="countdown-num">37</span><span class="countdown-label">分</span></div>
+    </div>
+    <a href="#" class="btn-offer">今すぐ申し込む →</a>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 NaturaGreen Inc.<br>特定商取引法に基づく表記 | プライバシーポリシー | 利用規約</p>
+  </footer>
 </body>
 </html>`
   },
+
+  // ─── Template 3: レストラン / カフェ ───
   {
-    id: 'testimonial',
-    name: 'Testimonial',
-    desc: '見出し、お客様の声、CTA',
+    name: 'レストラン',
+    target: '飲食 / ローカル',
+    description: 'エレガントで写真中心のレストランLP。メニュー、ストーリー、アクセス情報付き。',
+    colors: ['#1a1a1a', '#c9a96e'],
     html: `<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KUMO — 日本料理</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #1a1a1a; background: #0f172a; }
-.hero {
-  text-align: center;
-  padding: 80px 24px 48px;
-  color: white;
-}
-.hero h1 {
-  font-size: 2.4rem;
-  font-weight: 700;
-  margin-bottom: 12px;
-}
-.hero p {
-  font-size: 1.05rem;
-  color: #94a3b8;
-  max-width: 480px;
-  margin: 0 auto;
-}
-.testimonials {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 0 24px 60px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-}
-.quote-card {
-  background: #1e293b;
-  border-radius: 16px;
-  padding: 28px 24px;
-  border: 1px solid #334155;
-}
-.stars {
-  color: #fbbf24;
-  font-size: 0.9rem;
-  margin-bottom: 12px;
-}
-.quote-card blockquote {
-  font-size: 0.92rem;
-  color: #cbd5e1;
-  line-height: 1.8;
-  margin-bottom: 16px;
-}
-.author {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #4a8f7f;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-.author-info .name { font-size: 0.85rem; color: white; font-weight: 600; }
-.author-info .role { font-size: 0.75rem; color: #64748b; }
-.cta-section {
-  text-align: center;
-  padding: 20px 24px 80px;
-}
-.cta-btn {
-  display: inline-block;
-  padding: 14px 40px;
-  background: #4a8f7f;
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 50px;
-  text-decoration: none;
-  transition: background 0.2s;
-}
-.cta-btn:hover { background: #3d7a6b; }
-@media (max-width: 600px) {
-  .testimonials { grid-template-columns: 1fr; }
-  .hero h1 { font-size: 1.8rem; }
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Inter:wght@400;500&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Serif JP',serif;color:#fff;background:#1a1a1a}
+a{text-decoration:none;color:inherit}
+
+/* Hero */
+.hero{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:linear-gradient(135deg,#2a1a0e 0%,#1a1a1a 50%,#0d1117 100%);z-index:0}
+.hero-content{position:relative;z-index:1}
+.hero-sub{font-family:'Inter',sans-serif;font-size:12px;letter-spacing:4px;text-transform:uppercase;color:#c9a96e;margin-bottom:24px}
+.hero h1{font-size:56px;font-weight:700;letter-spacing:8px;margin-bottom:16px}
+.hero-tagline{font-size:16px;color:rgba(255,255,255,0.6);margin-bottom:40px;font-style:italic}
+.btn-reserve{display:inline-block;border:1px solid #c9a96e;color:#c9a96e;padding:14px 40px;font-family:'Inter',sans-serif;font-size:13px;letter-spacing:2px;text-transform:uppercase;transition:all 0.3s}
+.btn-reserve:hover{background:#c9a96e;color:#1a1a1a}
+.scroll-hint{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);font-family:'Inter',sans-serif;font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:2px;animation:fadeInOut 2s infinite}
+@keyframes fadeInOut{0%,100%{opacity:0.3}50%{opacity:0.8}}
+
+/* Menu */
+.menu{padding:100px 20px;max-width:800px;margin:0 auto}
+.section-label{font-family:'Inter',sans-serif;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#c9a96e;text-align:center;margin-bottom:12px}
+.section-heading{text-align:center;font-size:28px;margin-bottom:60px}
+.menu-item{display:flex;gap:24px;margin-bottom:48px;align-items:flex-start}
+.menu-img{width:160px;height:120px;border-radius:4px;flex-shrink:0}
+.menu-info{flex:1}
+.menu-info h3{font-size:18px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:baseline}
+.menu-price{color:#c9a96e;font-family:'Inter',sans-serif;font-size:16px;font-weight:500}
+.menu-info p{color:rgba(255,255,255,0.5);font-size:14px;line-height:1.8}
+.menu-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(201,169,110,0.2),transparent);margin-bottom:48px}
+
+/* Story */
+.story{padding:100px 20px;background:#141414}
+.story-content{max-width:700px;margin:0 auto;text-align:center}
+.story-content p{color:rgba(255,255,255,0.6);font-size:15px;line-height:2;margin-bottom:20px}
+.story-img{width:100%;height:300px;background:linear-gradient(135deg,#2a2018,#3a2a1a);border-radius:4px;margin:40px 0}
+
+/* Access */
+.access{padding:100px 20px;max-width:700px;margin:0 auto;text-align:center}
+.access-info{margin-top:40px;color:rgba(255,255,255,0.6);font-family:'Inter','Noto Serif JP',sans-serif;font-size:14px;line-height:2.2}
+.access-info strong{color:#fff;font-weight:500}
+
+/* CTA */
+.cta-section{padding:80px 20px;text-align:center;background:linear-gradient(135deg,#1a1a1a,#2a1a0e)}
+.cta-section h2{font-size:24px;margin-bottom:16px}
+.cta-section p{color:rgba(255,255,255,0.5);font-size:14px;margin-bottom:32px}
+
+/* Footer */
+footer{border-top:1px solid rgba(255,255,255,0.05);padding:40px 20px;text-align:center}
+footer p{font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,0.25)}
+
+@media(max-width:768px){
+  .hero h1{font-size:32px;letter-spacing:4px}
+  .menu-item{flex-direction:column}
+  .menu-img{width:100%;height:180px}
 }
 </style>
 </head>
 <body>
-<div class="hero">
-  <h1>お客様の声</h1>
-  <p>実際にご利用いただいているお客様からの評価をご紹介します。</p>
-</div>
-<div class="testimonials">
-  <div class="quote-card">
-    <div class="stars">★★★★★</div>
-    <blockquote>「導入後、チームの生産性が30%向上しました。UIが直感的で、トレーニング不要でした。」</blockquote>
-    <div class="author">
-      <div class="avatar">田</div>
-      <div class="author-info">
-        <div class="name">田中太郎</div>
-        <div class="role">CTO, テック株式会社</div>
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <p class="hero-sub">Japanese Cuisine</p>
+      <h1>KUMO</h1>
+      <p class="hero-tagline">雲のように、軽やかに。季節を纏う一皿を。</p>
+      <a href="#" class="btn-reserve">ご予約はこちら</a>
+    </div>
+    <span class="scroll-hint">Scroll ↓</span>
+  </section>
+
+  <section class="menu">
+    <p class="section-label">Menu</p>
+    <h2 class="section-heading">おすすめ料理</h2>
+
+    <div class="menu-item">
+      <div class="menu-img" style="background:linear-gradient(135deg,#4a3728,#6b5240)"></div>
+      <div class="menu-info">
+        <h3>季節の前菜盛り合わせ <span class="menu-price">¥2,800</span></h3>
+        <p>旬の食材を5種の小皿に。目でも舌でも楽しむ、季節の移ろいを感じる前菜。</p>
       </div>
     </div>
-  </div>
-  <div class="quote-card">
-    <div class="stars">★★★★★</div>
-    <blockquote>「カスタマーサポートの対応が素晴らしい。質問にはいつも丁寧に答えてくれます。」</blockquote>
-    <div class="author">
-      <div class="avatar">佐</div>
-      <div class="author-info">
-        <div class="name">佐藤花子</div>
-        <div class="role">マネージャー, デザイン社</div>
+    <div class="menu-divider"></div>
+
+    <div class="menu-item">
+      <div class="menu-img" style="background:linear-gradient(135deg,#3a2820,#5a4030)"></div>
+      <div class="menu-info">
+        <h3>黒毛和牛の炭火焼き <span class="menu-price">¥5,500</span></h3>
+        <p>A5ランクの黒毛和牛を備長炭で。山葵と岩塩でシンプルにお召し上がりください。</p>
       </div>
     </div>
-  </div>
-  <div class="quote-card">
-    <div class="stars">★★★★★</div>
-    <blockquote>「他のツールから乗り換えて大正解。コストを半分に削減しつつ、機能は2倍に。」</blockquote>
-    <div class="author">
-      <div class="avatar">鈴</div>
-      <div class="author-info">
-        <div class="name">鈴木一郎</div>
-        <div class="role">CEO, スタートアップ inc.</div>
+    <div class="menu-divider"></div>
+
+    <div class="menu-item">
+      <div class="menu-img" style="background:linear-gradient(135deg,#2a3a28,#3a4a38)"></div>
+      <div class="menu-info">
+        <h3>鯛の土鍋ごはん <span class="menu-price">¥3,200</span></h3>
+        <p>明石産の天然鯛を丸ごと一匹。炊きたての土鍋ごはんと共に、2〜3名でどうぞ。</p>
       </div>
     </div>
-  </div>
-</div>
-<div class="cta-section">
-  <a href="#" class="cta-btn">無料トライアルを始める</a>
-</div>
+    <div class="menu-divider"></div>
+
+    <div class="menu-item">
+      <div class="menu-img" style="background:linear-gradient(135deg,#2e2028,#4a3040)"></div>
+      <div class="menu-info">
+        <h3>抹茶のティラミス <span class="menu-price">¥1,400</span></h3>
+        <p>宇治抹茶とマスカルポーネの出会い。ほろ苦さと甘さの絶妙なバランス。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="story">
+    <div class="story-content">
+      <p class="section-label">Our Story</p>
+      <h2 class="section-heading">雲のはじまり</h2>
+      <div class="story-img"></div>
+      <p>2018年、京都の路地裏で小さなカウンター8席から始まったKUMO。「料理は空気のように自然であるべきだ」という信念のもと、素材の声に耳を傾け、一皿一皿を丁寧に仕立てています。</p>
+      <p>化学調味料を一切使わず、出汁と素材の力だけで表現する味わい。それがKUMOのスタイルです。</p>
+    </div>
+  </section>
+
+  <section class="access">
+    <p class="section-label">Access</p>
+    <h2 class="section-heading">アクセス</h2>
+    <div class="access-info">
+      <p><strong>住所:</strong> 〒604-0924 京都府京都市中京区一之船入町 384-1</p>
+      <p><strong>最寄駅:</strong> 地下鉄東西線「京都市役所前」駅 徒歩5分</p>
+      <p><strong>営業時間:</strong> ランチ 11:30〜14:00 / ディナー 17:30〜22:00</p>
+      <p><strong>定休日:</strong> 毎週月曜日</p>
+      <p><strong>電話:</strong> 075-XXX-XXXX</p>
+    </div>
+  </section>
+
+  <section class="cta-section">
+    <h2>ご予約を承ります</h2>
+    <p>お電話またはオンラインからご予約いただけます</p>
+    <a href="#" class="btn-reserve">予約する</a>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 KUMO — Japanese Cuisine. All rights reserved.</p>
+  </footer>
 </body>
 </html>`
   },
+
+  // ─── Template 4: モバイルゲーム ───
   {
-    id: 'pricing',
-    name: 'Pricing',
-    desc: '見出し、3つの料金プラン、CTA',
+    name: 'ゲームアプリ',
+    target: 'エンタメ / 若年層',
+    description: 'ダークでエネルギッシュなゲームアプリLP。グロー効果、ダウンロードボタン付き。',
+    colors: ['#1a0a2e', '#00e5ff'],
     html: `<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOVA STRIKE — 銀河を支配せよ</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #1a1a1a; background: #f8fafc; }
-.header {
-  text-align: center;
-  padding: 80px 24px 48px;
-}
-.header h1 {
-  font-size: 2.4rem;
-  font-weight: 700;
-  margin-bottom: 12px;
-}
-.header p {
-  font-size: 1.05rem;
-  color: #666;
-}
-.pricing {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 0 24px 80px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  align-items: start;
-}
-.plan {
-  background: white;
-  border-radius: 16px;
-  padding: 36px 28px;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  border: 2px solid transparent;
-  transition: transform 0.2s;
-}
-.plan:hover { transform: translateY(-4px); }
-.plan.popular {
-  border-color: #4a8f7f;
-  position: relative;
-}
-.popular-badge {
-  position: absolute;
-  top: -14px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #4a8f7f;
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 4px 16px;
-  border-radius: 20px;
-}
-.plan-name {
-  font-size: 1rem;
-  color: #888;
-  font-weight: 500;
-  margin-bottom: 8px;
-}
-.plan-price {
-  font-size: 2.8rem;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-.plan-price span { font-size: 1rem; color: #888; font-weight: 400; }
-.plan-desc {
-  font-size: 0.85rem;
-  color: #888;
-  margin-bottom: 24px;
-}
-.plan ul {
-  list-style: none;
-  margin-bottom: 28px;
-  text-align: left;
-}
-.plan li {
-  font-size: 0.9rem;
-  padding: 8px 0;
-  border-bottom: 1px solid #f0f0f0;
-  color: #444;
-}
-.plan li::before {
-  content: "✓ ";
-  color: #4a8f7f;
-  font-weight: 600;
-}
-.plan-btn {
-  display: block;
-  width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: 2px solid #4a8f7f;
-  background: transparent;
-  color: #4a8f7f;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: none;
-  transition: all 0.2s;
-}
-.plan-btn:hover, .plan.popular .plan-btn {
-  background: #4a8f7f;
-  color: white;
-}
-.plan.popular .plan-btn:hover {
-  background: #3d7a6b;
-  border-color: #3d7a6b;
-}
-@media (max-width: 600px) {
-  .pricing { grid-template-columns: 1fr; }
-  .header h1 { font-size: 1.8rem; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Noto Sans JP',sans-serif;color:#fff;background:#0a0515}
+a{text-decoration:none;color:inherit}
+
+/* Hero */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 20px;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(0,229,255,0.1) 0%,transparent 70%);top:-100px;left:50%;transform:translateX(-50%)}
+.hero::after{content:"";position:absolute;width:400px;height:400px;background:radial-gradient(circle,rgba(255,0,128,0.08) 0%,transparent 70%);bottom:-50px;right:-100px}
+.hero-label{font-size:12px;letter-spacing:4px;text-transform:uppercase;color:#00e5ff;margin-bottom:20px}
+.hero h1{font-size:56px;font-weight:900;margin-bottom:16px;background:linear-gradient(135deg,#00e5ff,#ff0080);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.2}
+.hero p{color:rgba(255,255,255,0.6);font-size:16px;max-width:500px;margin:0 auto 32px;line-height:1.7}
+.game-visual{width:300px;height:300px;background:linear-gradient(135deg,#1a0a2e,#2a1a4e);border:2px solid rgba(0,229,255,0.3);border-radius:20px;margin:0 auto 40px;display:flex;align-items:center;justify-content:center;font-size:80px;box-shadow:0 0 60px rgba(0,229,255,0.15),inset 0 0 60px rgba(0,229,255,0.05)}
+.btn-download{display:inline-block;background:linear-gradient(135deg,#00e5ff,#0099cc);color:#0a0515;padding:16px 48px;border-radius:12px;font-weight:700;font-size:17px;transition:transform 0.2s,box-shadow 0.2s}
+.btn-download:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,229,255,0.3)}
+
+/* Features */
+.features{padding:100px 20px;max-width:960px;margin:0 auto}
+.section-title{text-align:center;font-size:28px;font-weight:700;margin-bottom:48px}
+.section-title span{color:#00e5ff}
+.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.feature-card{background:rgba(255,255,255,0.03);border:1px solid rgba(0,229,255,0.15);border-radius:16px;padding:32px 24px;text-align:center;position:relative;overflow:hidden;transition:border-color 0.3s,box-shadow 0.3s}
+.feature-card:hover{border-color:rgba(0,229,255,0.5);box-shadow:0 0 30px rgba(0,229,255,0.1)}
+.feature-card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#00e5ff,transparent);opacity:0;transition:opacity 0.3s}
+.feature-card:hover::before{opacity:1}
+.feature-icon{font-size:40px;margin-bottom:16px}
+.feature-card h3{font-size:17px;font-weight:600;margin-bottom:8px}
+.feature-card p{color:rgba(255,255,255,0.5);font-size:14px;line-height:1.7}
+
+/* Screenshots */
+.screenshots{padding:100px 20px;background:rgba(0,229,255,0.02)}
+.screenshot-grid{display:flex;gap:20px;max-width:960px;margin:0 auto;overflow-x:auto;padding-bottom:12px}
+.screenshot-item{min-width:220px;height:380px;background:linear-gradient(180deg,#1a0a2e,#2a1a4e);border-radius:16px;border:1px solid rgba(0,229,255,0.1);display:flex;align-items:center;justify-content:center;font-size:48px;flex-shrink:0}
+
+/* Reviews */
+.reviews{padding:100px 20px;max-width:800px;margin:0 auto}
+.review-grid{display:grid;gap:20px}
+.review-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:24px;display:flex;gap:16px;align-items:flex-start}
+.review-avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#00e5ff,#ff0080);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700}
+.review-body h4{font-size:14px;font-weight:600;margin-bottom:4px}
+.review-stars{color:#ffd700;font-size:14px;margin-bottom:8px}
+.review-body p{color:rgba(255,255,255,0.5);font-size:13px;line-height:1.6}
+
+/* Download */
+.download-section{padding:100px 20px;text-align:center;background:linear-gradient(180deg,#0a0515,#1a0a2e)}
+.download-section h2{font-size:32px;font-weight:900;margin-bottom:12px}
+.download-section p{color:rgba(255,255,255,0.5);margin-bottom:36px;font-size:15px}
+.store-buttons{display:flex;justify-content:center;gap:16px;flex-wrap:wrap}
+.store-btn{display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);padding:14px 28px;border-radius:12px;transition:background 0.2s,border-color 0.2s}
+.store-btn:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.3)}
+.store-icon{font-size:28px}
+.store-text{text-align:left}
+.store-text small{font-size:10px;color:rgba(255,255,255,0.5);display:block}
+.store-text span{font-size:16px;font-weight:600}
+
+/* Footer */
+footer{border-top:1px solid rgba(255,255,255,0.05);padding:40px 20px;text-align:center}
+footer p{font-size:12px;color:rgba(255,255,255,0.2)}
+
+@media(max-width:768px){
+  .hero h1{font-size:32px}
+  .feature-grid{grid-template-columns:1fr}
+  .game-visual{width:220px;height:220px;font-size:60px}
 }
 </style>
 </head>
 <body>
-<div class="header">
-  <h1>シンプルな料金プラン</h1>
-  <p>チームの規模に合わせて、最適なプランをお選びください。</p>
-</div>
-<div class="pricing">
-  <div class="plan">
-    <div class="plan-name">Starter</div>
-    <div class="plan-price">¥0<span>/月</span></div>
-    <div class="plan-desc">個人利用に最適</div>
-    <ul>
-      <li>3プロジェクトまで</li>
-      <li>1GBストレージ</li>
-      <li>基本レポート</li>
-      <li>メールサポート</li>
-    </ul>
-    <a href="#" class="plan-btn">無料で始める</a>
-  </div>
-  <div class="plan popular">
-    <div class="popular-badge">人気No.1</div>
-    <div class="plan-name">Pro</div>
-    <div class="plan-price">¥2,980<span>/月</span></div>
-    <div class="plan-desc">成長中のチームに</div>
-    <ul>
-      <li>無制限プロジェクト</li>
-      <li>50GBストレージ</li>
-      <li>高度な分析</li>
-      <li>優先サポート</li>
-    </ul>
-    <a href="#" class="plan-btn">14日間無料トライアル</a>
-  </div>
-  <div class="plan">
-    <div class="plan-name">Enterprise</div>
-    <div class="plan-price">¥9,800<span>/月</span></div>
-    <div class="plan-desc">大規模チーム向け</div>
-    <ul>
-      <li>すべてのPro機能</li>
-      <li>無制限ストレージ</li>
-      <li>SSO/SAML認証</li>
-      <li>専任サポート</li>
-    </ul>
-    <a href="#" class="plan-btn">お問い合わせ</a>
-  </div>
-</div>
+  <section class="hero">
+    <p class="hero-label">New Season Now Live</p>
+    <div class="game-visual">🚀</div>
+    <h1>NOVA STRIKE</h1>
+    <p>広大な銀河を舞台に繰り広げられるリアルタイムストラテジー。仲間と共に、宇宙の覇権を手に入れろ。</p>
+    <a href="#" class="btn-download">🎮 無料ダウンロード</a>
+  </section>
+
+  <section class="features">
+    <h2 class="section-title">なぜ<span>NOVA STRIKE</span>なのか</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">⚔️</div>
+        <h3>リアルタイムPvP</h3>
+        <p>世界中のプレイヤーとリアルタイムで対戦。スキルと戦略が勝敗を分ける。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌌</div>
+        <h3>1000以上の星系</h3>
+        <p>探索可能な広大な銀河マップ。各星系に固有の資源と秘密が眠る。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🛸</div>
+        <h3>200種以上の艦船</h3>
+        <p>カスタマイズ自由な艦船で、自分だけの最強艦隊を編成しよう。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="screenshots">
+    <h2 class="section-title">スクリーンショット</h2>
+    <div class="screenshot-grid">
+      <div class="screenshot-item">🌠</div>
+      <div class="screenshot-item">💥</div>
+      <div class="screenshot-item">🪐</div>
+      <div class="screenshot-item">⭐</div>
+    </div>
+  </section>
+
+  <section class="reviews">
+    <h2 class="section-title">プレイヤーの声</h2>
+    <div class="review-grid">
+      <div class="review-card">
+        <div class="review-avatar">K</div>
+        <div class="review-body">
+          <h4>KazuGamer</h4>
+          <div class="review-stars">★★★★★</div>
+          <p>マジで神ゲー。毎日ログインしてる。ギルド戦が熱すぎる！</p>
+        </div>
+      </div>
+      <div class="review-card">
+        <div class="review-avatar">M</div>
+        <div class="review-body">
+          <h4>MikuPlay</h4>
+          <div class="review-stars">★★★★★</div>
+          <p>グラフィックが綺麗すぎる。スマホでこのクオリティは凄い。課金要素も良心的。</p>
+        </div>
+      </div>
+      <div class="review-card">
+        <div class="review-avatar">T</div>
+        <div class="review-body">
+          <h4>TaroSTG</h4>
+          <div class="review-stars">★★★★☆</div>
+          <p>戦略性が高くて飽きない。チュートリアルがもう少し丁寧だと嬉しいかな。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="download-section">
+    <h2>今すぐプレイ</h2>
+    <p>基本プレイ無料 — 600万ダウンロード突破</p>
+    <div class="store-buttons">
+      <a href="#" class="store-btn">
+        <span class="store-icon">🍎</span>
+        <div class="store-text"><small>Download on the</small><span>App Store</span></div>
+      </a>
+      <a href="#" class="store-btn">
+        <span class="store-icon">▶️</span>
+        <div class="store-text"><small>Get it on</small><span>Google Play</span></div>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 Nova Strike Studio. All rights reserved.</p>
+  </footer>
 </body>
 </html>`
   }
 ];
-
-function init() {
-  const gallery = document.getElementById('gallery');
-  const overlay = document.getElementById('overlay');
-  const overlayTitle = document.getElementById('overlay-title');
-  const previewFrame = document.getElementById('preview-frame');
-  const sourceView = document.getElementById('source-view');
-  const tabPreview = document.getElementById('tab-preview');
-  const tabSource = document.getElementById('tab-source');
-  const closeBtn = document.getElementById('close-btn');
-
-  // Render gallery cards
-  templates.forEach(t => {
-    const card = document.createElement('div');
-    card.className = 'template-card';
-    card.innerHTML = `
-      <iframe class="card-preview" srcdoc="${escapeAttr(t.html)}" sandbox="allow-same-origin" scrolling="no" loading="lazy"></iframe>
-      <div class="card-info">
-        <h3>${t.name}</h3>
-        <p>${t.desc}</p>
-      </div>
-      <div class="card-actions">
-        <button class="btn btn-preview" data-id="${t.id}">プレビュー</button>
-        <button class="btn btn-source" data-id="${t.id}" data-mode="source">ソースを見る</button>
-      </div>
-    `;
-    gallery.appendChild(card);
-  });
-
-  // Event delegation for buttons
-  gallery.addEventListener('click', e => {
-    const btn = e.target.closest('.btn');
-    if (!btn) return;
-    const t = templates.find(x => x.id === btn.dataset.id);
-    if (!t) return;
-    openOverlay(t, btn.dataset.mode === 'source' ? 'source' : 'preview');
-  });
-
-  function openOverlay(t, mode) {
-    overlayTitle.textContent = t.name;
-    previewFrame.srcdoc = t.html;
-    sourceView.textContent = t.html;
-    showTab(mode);
-    overlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function showTab(mode) {
-    if (mode === 'source') {
-      previewFrame.style.display = 'none';
-      sourceView.style.display = 'block';
-      tabSource.classList.add('active');
-      tabPreview.classList.remove('active');
-    } else {
-      previewFrame.style.display = 'block';
-      sourceView.style.display = 'none';
-      tabPreview.classList.add('active');
-      tabSource.classList.remove('active');
-    }
-  }
-
-  tabPreview.addEventListener('click', () => showTab('preview'));
-  tabSource.addEventListener('click', () => showTab('source'));
-
-  closeBtn.addEventListener('click', closeOverlay);
-  overlay.addEventListener('click', e => {
-    if (e.target === overlay) closeOverlay();
-  });
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeOverlay();
-  });
-
-  function closeOverlay() {
-    overlay.classList.remove('active');
-    document.body.style.overflow = '';
-    previewFrame.srcdoc = '';
-  }
-}
-
-function escapeAttr(s) {
-  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-document.addEventListener('DOMContentLoaded', init);
