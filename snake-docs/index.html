@@ -88,13 +88,16 @@
   <script>
     document.querySelectorAll('.term').forEach(term => {
       term.addEventListener('click', () => {
-        const existing = term.parentNode.querySelector('.term-explain');
-        if (existing) { existing.remove(); return; }
-        term.parentNode.querySelectorAll('.term-explain').forEach(e => e.remove());
-        const el = document.createElement('span');
-        el.className = 'term-explain';
-        el.textContent = term.dataset.explain;
-        term.parentNode.appendChild(el);
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
       });
     });
   </script>
