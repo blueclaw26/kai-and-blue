@@ -247,21 +247,25 @@
           resultData.data[idx + 2] = qrPixels.data[idx + 2];
           resultData.data[idx + 3] = 255;
         } else if (isQRDark) {
-          // Dark modules: size varies based on image brightness at this position
-          // Bright image area → smaller block (more image visible)
-          // Dark image area → full block
+          // Dark modules: full 3×3 solid black square
+          // BUT in bright image areas, randomly skip entire modules to show image
+          // Use module coordinates as seed for consistent randomness per module
           const bgGray = 0.299 * bgData.data[idx] + 0.587 * bgData.data[idx+1] + 0.114 * bgData.data[idx+2];
-          // If image is bright here AND this is a corner pixel, show image instead
-          // Corner pixels: (0,0), (0,2), (2,0), (2,2)
-          const isCorner = (subX !== 1 && subY !== 1);
-          if (isCorner && bgGray > 160) {
-            // Bright area corner: show image (creates gaps for image visibility)
+          // Pseudo-random per module (consistent across 3×3 sub-pixels of same module)
+          const hash = ((moduleRow * 7919 + moduleCol * 6271) % 100);
+          // Brighter image = more likely to skip block. threshold: 0-100
+          // gray 255 (white) → skip if hash < 60 (60% chance)
+          // gray 128 (mid) → skip if hash < 20 (20% chance)
+          // gray 0 (black) → never skip
+          const skipChance = Math.max(0, (bgGray - 80) / 175 * 60);
+          if (hash < skipChance) {
+            // Skip this dark module entirely: show image
             resultData.data[idx] = bgData.data[idx];
             resultData.data[idx + 1] = bgData.data[idx + 1];
             resultData.data[idx + 2] = bgData.data[idx + 2];
             resultData.data[idx + 3] = 255;
           } else {
-            // Dark area or center/edge pixels: keep QR block
+            // Keep as solid black block
             resultData.data[idx] = qrPixels.data[idx];
             resultData.data[idx + 1] = qrPixels.data[idx + 1];
             resultData.data[idx + 2] = qrPixels.data[idx + 2];
