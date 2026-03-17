@@ -44,7 +44,9 @@ for entry in feed.entries:
     authors = entry.get("author", "Unknown")</code></pre>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          RSSフィードとは何か、XMLデータの構造、Pythonでの外部ライブラリ利用
+          <span class="term" data-explain="Webサイトが「新しい記事が出ました」という情報をXML形式で配信する仕組み。ニュースサイトやブログ、学術ジャーナルが対応していて、プログラムで定期的にチェックできる。">RSSフィード</span>
+          <span class="term" data-explain="データを階層的に表現するためのマークアップ言語。HTMLに似ているが、タグ名を自由に定義できる。RSSフィードはXML形式で書かれている。">XMLの構造</span>
+          <span class="term" data-explain="他の開発者が作った再利用可能なコード（ライブラリ）をインストールして使う仕組み。pip installコマンドでインストールし、importで読み込む。feedparserもその一つ。">外部ライブラリ</span>
         </div>
       </div>
 
@@ -69,7 +71,8 @@ new_papers = [
 ]</code></pre>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          テキストフィルタリング、JSONファイルによる状態管理
+          <span class="term" data-explain="テキストの中から特定のキーワードやパターンに一致するものだけを抽出する処理。if文とin演算子の組み合わせで実装できる。">テキストフィルタリング</span>
+          <span class="term" data-explain="プログラムの状態（ここでは投稿済みDOIのリスト）をJSON形式のファイルに保存し、次回実行時に読み込んで続きから処理する仕組み。簡易的なデータベースの代わり。">JSON状態管理</span>
         </div>
       </div>
 
@@ -84,7 +87,9 @@ new_papers = [
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          HTTPステータスコード（403の意味）、スクレイピングの基本、ブラウザ自動操作
+          <span class="term" data-explain="Webサーバーが返す3桁の数字。200は成功、404はページが見つからない、403はアクセス禁止。ボットからのアクセスをブロックしているサーバーが403を返すことが多い。">HTTPステータスコード</span>
+          <span class="term" data-explain="Webページの内容をプログラムで取得し、必要な情報を抽出する技術。HTMLの構造を解析して、特定のタグやクラスのテキストを取り出す。">スクレイピング</span>
+          <span class="term" data-explain="プログラムからブラウザを遠隔操作する技術。人間がブラウザを使っているように見えるため、ボットをブロックするサーバーにもアクセスできる。Puppeteer、Playwright、OpenClawのbrowserツールなどがある。">ブラウザ自動操作</span>
         </div>
       </div>
 
@@ -98,7 +103,9 @@ new_papers = [
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          AIによるテキスト処理、要約と翻訳の違い、ドメイン知識の活用
+          <span class="term" data-explain="大規模言語モデル（LLM）に文章を渡して、要約・翻訳・分類・抽出などの処理をさせること。プロンプト（指示文）の書き方で出力の質が大きく変わる。">AIテキスト処理</span>
+          <span class="term" data-explain="翻訳は元の意味を別の言語に置き換える処理。要約は情報量を減らして重要なポイントだけを抽出する処理。要約はドメイン知識がないと的外れになりやすい。">要約と翻訳</span>
+          <span class="term" data-explain="特定の分野（ここでは学術論文）に関する専門知識をAIの処理に反映させること。汎用的なAIに専門的な指示を与えることで、その分野に特化した出力が得られる。">ドメイン知識</span>
         </div>
       </div>
 
@@ -121,7 +128,9 @@ message = f"""**{title_ja}**
 [DOI]({doi_url})"""</code></pre>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          Discord APIの基本、メッセージフォーマット、画像添付
+          <span class="term" data-explain="Discordのチャンネルにメッセージを送信したり、情報を取得したりするためのプログラミングインターフェース。Webhookやボットトークンを使ってアクセスする。">Discord API</span>
+          <span class="term" data-explain="Discordではマークダウン記法が使える。**太字**、```コードブロック```、[リンク](URL)などで見やすく整形できる。">メッセージフォーマット</span>
+          <span class="term" data-explain="メッセージにファイルを添付して送信する機能。URLを指定する方法と、ファイルをアップロードする方法がある。">画像添付</span>
         </div>
       </div>
 
@@ -138,7 +147,9 @@ message = f"""**{title_ja}**
 0 8,20 * * * /path/to/journal-bot/run.sh</code></pre>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          cronとは何か、定期実行の設計、HEARTBEAT vs cronの使い分け
+          <span class="term" data-explain="Unix/Linux/macOSに組み込まれたタスクスケジューラ。「毎日8時に実行」「毎週月曜に実行」のような定期実行を設定できる。crontabコマンドで管理する。">cron</span>
+          <span class="term" data-explain="自動化タスクをいつ・どのくらいの頻度で実行するかを決めること。頻度が高すぎるとリソースの無駄、低すぎると情報が古くなる。">定期実行の設計</span>
+          <span class="term" data-explain="HEARTBEATはAIエージェントの会話ループ内で動作し、おおよそのタイミングで実行。cronはOSレベルで正確な時刻に実行。正確さが必要ならcron、会話コンテキストが必要ならHEARTBEAT。">HEARTBEAT vs cron</span>
         </div>
       </div>
     </section>
@@ -168,5 +179,21 @@ message = f"""**{title_ja}**
       <p><a href="../index.html">Kai & Blue</a> — 2026</p>
     </footer>
   </div>
+<script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+</script>
 </body>
 </html>
