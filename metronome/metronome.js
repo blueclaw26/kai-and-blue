@@ -144,19 +144,19 @@
     let freq, dur, vol;
     switch (type) {
       case 'accent':
-        freq = 1200;
-        dur = 0.03;
+        freq = 1500;
+        dur = 0.06;
         vol = volume * 1.0;
         break;
       case 'beat':
         freq = 1000;
-        dur = 0.03;
-        vol = volume * 0.75;
+        dur = 0.05;
+        vol = volume * 0.8;
         break;
       case 'sub':
         freq = 800;
-        dur = 0.02;
-        vol = volume * 0.35;
+        dur = 0.03;
+        vol = volume * 0.4;
         break;
     }
 
@@ -164,7 +164,8 @@
     osc.type = 'square';
 
     gain.gain.setValueAtTime(vol, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + dur * 0.8);
+    gain.gain.setValueAtTime(0, time + dur);
 
     osc.start(time);
     osc.stop(time + dur + 0.01);
