@@ -76,6 +76,7 @@ header h1 {
 
 /* Project cards */
 .project-card {
+  position: relative;
   background: white;
   border-radius: 10px;
   padding: 20px;
@@ -169,10 +170,57 @@ footer p {
   color: #ccc;
 }
 
+/* Tooltips */
+.project-card[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: #333;
+  color: #fff;
+  font-size: 0.78rem;
+  padding: 10px 14px;
+  border-radius: 8px;
+  max-width: 280px;
+  line-height: 1.5;
+  white-space: normal;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 100;
+}
+
+.project-card[data-tooltip]::before {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: #333;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 100;
+}
+
+.project-card[data-tooltip]:hover::after,
+.project-card[data-tooltip]:hover::before {
+  opacity: 1;
+}
+
 /* Responsive */
 @media (max-width: 800px) {
   .project-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .project-card[data-tooltip]::after,
+  .project-card[data-tooltip]::before {
+    display: none;
   }
 }
 
