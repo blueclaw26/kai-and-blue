@@ -71,6 +71,7 @@
   let slowEndTime = 0;
   let lastCorrectTime = 0;       // timestamp of last correct answer
   const COMBO_TIME_WINDOW = 2000; // ms — must answer within this to keep combo
+  let scorePopups = [];           // { text, x, y, startTime }
 
   // ─── Canvas sizing ───
   function resizeCanvas() {
@@ -286,6 +287,40 @@
   }
 
   // ─── Combo system ───
+  function showScorePopup(points, x, y) {
+    scorePopups.push({
+      text: `+${points}`,
+      x, y,
+      startTime: performance.now()
+    });
+  }
+
+  function drawScorePopups(now) {
+    for (let i = scorePopups.length - 1; i >= 0; i--) {
+      const p = scorePopups[i];
+      const elapsed = now - p.startTime;
+      const duration = 1000;
+      if (elapsed > duration) {
+        scorePopups.splice(i, 1);
+        continue;
+      }
+      const progress = elapsed / duration;
+      const alpha = 1 - progress;
+      const yOffset = progress * 40;
+      const size = 18 + (1 - progress) * 8;
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.font = `bold ${size}px Courier New, Consolas, monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#4caf50';
+      ctx.shadowColor = '#4caf50';
+      ctx.shadowBlur = 10;
+      ctx.fillText(p.text, p.x, p.y - yOffset);
+      ctx.restore();
+    }
+  }
+
   function onComboIncrease() {
     const now = performance.now();
     if (lastCorrectTime > 0 && (now - lastCorrectTime) <= COMBO_TIME_WINDOW) {
@@ -403,15 +438,19 @@
         fw.flash = 'green';
         fw.flashTimer = 20;
         input.value = '';
+        const prevScore = score;
         score++;
-        // Combo score bonus (applied after onComboIncrease updates combo)
         wordsResolvedThisWave++;
         // Green flash on input
         flashInput('green');
         // Particles
-        spawnParticles(fw.x + ctx.measureText(fw.text).width / 2, fw.y, '#4caf50');
-        // Combo
+        const wordCenterX = fw.x + ctx.measureText(fw.text).width / 2;
+        spawnParticles(wordCenterX, fw.y, '#4caf50');
+        // Combo (may add bonus score)
         onComboIncrease();
+        // Show popup with total points gained
+        const gained = score - prevScore;
+        showScorePopup(gained, wordCenterX, fw.y);
         updateHUD();
         return;
       }
@@ -496,9 +535,10 @@
     // Highlight matching prefix
     drawMatchHint();
 
-    // Draw combo and effects
+    // Draw combo, effects, and score popups
     drawCombo(now);
     drawEffectText(now);
+    drawScorePopups(now);
 
     // Draw breather overlay
     drawBreather(now);
@@ -595,6 +635,7 @@
     slowActive = false;
     waveClearText = null;
     lastCorrectTime = 0;
+    scorePopups = [];
     updateHUD();
 
     // Reset gameover heading in case it was changed to "ALL CLEAR!"
