@@ -133,42 +133,56 @@
     }
   }
 
+  function createNoiseBuffer(duration) {
+    const sampleRate = audioCtx.sampleRate;
+    const length = Math.floor(sampleRate * duration);
+    const buffer = audioCtx.createBuffer(1, length, sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < length; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    return buffer;
+  }
+
   function playClick(time, type) {
     // type: 'accent', 'beat', 'sub'
-    const osc = audioCtx.createOscillator();
+    // Use noise-based click for natural "click" sound
+    const noise = audioCtx.createBufferSource();
     const gain = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
 
-    osc.connect(gain);
+    noise.buffer = createNoiseBuffer(0.05);
+    noise.connect(filter);
+    filter.connect(gain);
     gain.connect(audioCtx.destination);
 
-    let freq, dur, vol;
+    let filterFreq, dur, vol;
     switch (type) {
       case 'accent':
-        freq = 1500;
-        dur = 0.06;
+        filterFreq = 3000;
+        dur = 0.015;
         vol = volume * 1.0;
         break;
       case 'beat':
-        freq = 1000;
-        dur = 0.05;
+        filterFreq = 2500;
+        dur = 0.012;
         vol = volume * 0.8;
         break;
       case 'sub':
-        freq = 800;
-        dur = 0.03;
+        filterFreq = 2000;
+        dur = 0.008;
         vol = volume * 0.4;
         break;
     }
 
-    osc.frequency.setValueAtTime(freq, time);
-    osc.type = 'square';
+    filter.type = 'highpass';
+    filter.frequency.setValueAtTime(filterFreq, time);
 
     gain.gain.setValueAtTime(vol, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + dur * 0.8);
-    gain.gain.setValueAtTime(0, time + dur);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
 
-    osc.start(time);
-    osc.stop(time + dur + 0.01);
+    noise.start(time);
+    noise.stop(time + dur + 0.01);
   }
 
   // --- Scheduler ---
