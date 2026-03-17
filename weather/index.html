@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🌤️ Weather Dashboard</h1>
+      <p class="subtitle">天気ダッシュボード</p>
+      <a href="../weather-docs/" class="docs-link">📖 docs</a>
+    </header>
+
+    <div class="search-bar">
+      <input type="text" id="city-input" placeholder="都市名を入力 (e.g. Tokyo, London)" autocomplete="off">
+      <button id="search-btn">検索</button>
+      <button id="unit-toggle" class="unit-btn" title="Toggle °C / °F">°C</button>
+    </div>
+
+    <div id="loading" class="loading hidden">
+      <div class="spinner"></div>
+      <p>読み込み中...</p>
+    </div>
+
+    <div id="error" class="error hidden"></div>
+
+    <main id="weather-content" class="hidden">
+      <section class="current-weather">
+        <div class="current-header">
+          <h2 id="city-name"></h2>
+          <p id="country" class="country"></p>
+        </div>
+        <div class="current-body">
+          <div class="current-main">
+            <span id="current-icon" class="weather-icon-large"></span>
+            <span id="current-temp" class="temp-large"></span>
+          </div>
+          <p id="current-condition" class="condition-text"></p>
+          <div class="current-details">
+            <div class="detail">
+              <span class="detail-label">体感温度</span>
+              <span id="feels-like" class="detail-value"></span>
+            </div>
+            <div class="detail">
+              <span class="detail-label">湿度</span>
+              <span id="humidity" class="detail-value"></span>
+            </div>
+            <div class="detail">
+              <span class="detail-label">風速</span>
+              <span id="wind-speed" class="detail-value"></span>
+            </div>
+          </div>
+        </div>
+        <p id="last-updated" class="last-updated"></p>
+      </section>
+
+      <section class="forecast">
+        <h3>7日間の予報</h3>
+        <div id="forecast-cards" class="forecast-cards"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="weather.js"></script>
+</body>
+</html>
