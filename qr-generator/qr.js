@@ -185,10 +185,17 @@
         const b = imgData.data[idx + 2];
         const gray = 0.299 * r + 0.587 * g + 0.114 * b;
 
-        // Calculate how many sub-pixels should be dark (0 to subGrid*subGrid)
-        // Lower gray = more dark sub-pixels
+        // QR data + image brightness determine sub-pixel fill
+        // Dark modules stay predominantly dark, light stay predominantly light
         const darkness = 1 - gray / 255; // 0=white, 1=black
-        const numDark = Math.round(darkness * subGrid * subGrid);
+        let numDark;
+        if (isDark) {
+          // QR dark module: 2-4 sub-pixels dark (image modulates intensity)
+          numDark = 2 + Math.round(darkness * 2);
+        } else {
+          // QR light module: 0-1 sub-pixels dark (slight image texture only)
+          numDark = Math.round(darkness * 1);
+        }
 
         for (let sy = 0; sy < subGrid; sy++) {
           for (let sx = 0; sx < subGrid; sx++) {
