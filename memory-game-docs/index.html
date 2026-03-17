@@ -81,7 +81,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          ゲーム完了条件の設計、UIフィードバック
+          <span class="term" data-explain="ゲームが終わったかどうかを判定するロジック。神経衰弱では「全ペアがマッチしたか」をチェック。マッチ数 === 総ペア数で判定。">ゲーム完了条件</span><span class="term" data-explain="ゲームの状態変化をユーザーに伝えるための表示。クリア時のメッセージ表示、スコアの更新、アニメーションなど。">UIフィードバック</span>
         </div>
       </div>
     </section>
@@ -99,6 +99,36 @@
       <ul class="tech-list">
         <li>HTML</li>
         <li>CSS 3D Transform</li>
+        <li>JavaScript</li>
+        <li>DOM操作</li>
+        <li>Fisher-Yatesシャッフル</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+</body>
+</html>
+
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+</script>
+</body>
+</html>
+   </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+</body>
+</html>
+>
         <li>JavaScript</li>
         <li>DOM操作</li>
         <li>Fisher-Yatesシャッフル</li>

@@ -222,6 +222,38 @@ footer a:hover {
   text-decoration: underline;
 }
 
+/* Clickable term explanations */
+.term {
+  color: #4a8f7f;
+  cursor: pointer;
+  border-bottom: 1px dashed #4a8f7f;
+  transition: color 0.2s;
+}
+.term + .term::before {
+  content: "、";
+  color: #999;
+  border-bottom: none;
+  cursor: default;
+}
+.term:hover {
+  color: #3d7a6b;
+}
+.term-explain {
+  display: block;
+  margin: 8px 0 4px;
+  padding: 10px 14px;
+  background: #f0eeea;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: #4a4a4a;
+  line-height: 1.7;
+  animation: termSlide 0.2s ease;
+}
+@keyframes termSlide {
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 200px; }
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .container {
