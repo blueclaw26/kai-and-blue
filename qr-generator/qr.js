@@ -247,23 +247,11 @@
           resultData.data[idx + 2] = qrPixels.data[idx + 2];
           resultData.data[idx + 3] = 255;
         } else if (isQRDark) {
-          // Dark modules: keep center cross (5 of 9 pixels) as QR, corners as image
-          // Center pixel + 4 edge-centers = cross shape
-          const isCenter = (subX === 1 && subY === 1);
-          const isEdgeCenter = (subX === 1 || subY === 1) && !(subX === subY);
-          if (isCenter || isEdgeCenter) {
-            // QR data (black)
-            resultData.data[idx] = qrPixels.data[idx];
-            resultData.data[idx + 1] = qrPixels.data[idx + 1];
-            resultData.data[idx + 2] = qrPixels.data[idx + 2];
-            resultData.data[idx + 3] = 255;
-          } else {
-            // Corners: blend - use image
-            resultData.data[idx] = bgData.data[idx];
-            resultData.data[idx + 1] = bgData.data[idx + 1];
-            resultData.data[idx + 2] = bgData.data[idx + 2];
-            resultData.data[idx + 3] = 255;
-          }
+          // Dark modules: solid black square (all 9 pixels)
+          resultData.data[idx] = qrPixels.data[idx];
+          resultData.data[idx + 1] = qrPixels.data[idx + 1];
+          resultData.data[idx + 2] = qrPixels.data[idx + 2];
+          resultData.data[idx + 3] = 255;
         } else {
           // Light modules: show image
           resultData.data[idx] = bgData.data[idx];
