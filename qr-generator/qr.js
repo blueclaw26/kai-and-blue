@@ -131,61 +131,82 @@
     const qrData = QRCode.create(text, { errorCorrectionLevel: 'H' });
     const modules = qrData.modules;
     const moduleCount = modules.size;
-    const moduleSize = Math.floor(size / (moduleCount + 4));
-    const margin = Math.floor((size - moduleCount * moduleSize) / 2);
 
-    // Resize overlay image to module grid
+    // Sub-pixel grid per module (3x3 = 9 sub-pixels per module)
+    const subGrid = 3;
+    const totalPixels = moduleCount * subGrid;
+    const pixelSize = size / (totalPixels + subGrid * 4); // margin
+    const margin = Math.floor((size - totalPixels * pixelSize) / 2);
+
+    // Get grayscale image data at module resolution
     const tmpCanvas = document.createElement('canvas');
     tmpCanvas.width = moduleCount;
     tmpCanvas.height = moduleCount;
     const tmpCtx = tmpCanvas.getContext('2d');
     tmpCtx.drawImage(overlayImage, 0, 0, moduleCount, moduleCount);
-    const imageData = tmpCtx.getImageData(0, 0, moduleCount, moduleCount);
+    const imgData = tmpCtx.getImageData(0, 0, moduleCount, moduleCount);
 
-    // Draw on main canvas
+    // Main canvas
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, size, size);
 
+    // Bayer-like ordered dithering matrix for 3x3
+    const bayerOrder = [
+      [0, 7, 3],
+      [6, 5, 2],
+      [4, 1, 8]
+    ];
+
     for (let row = 0; row < moduleCount; row++) {
       for (let col = 0; col < moduleCount; col++) {
         const isDark = modules.get(row, col);
         const isFinder = isInFinderPattern(row, col, moduleCount);
 
-        // Get pixel color from image
-        const idx = (row * moduleCount + col) * 4;
-        const r = imageData.data[idx];
-        const g = imageData.data[idx + 1];
-        const b = imageData.data[idx + 2];
-
-        let fillColor;
         if (isFinder) {
-          fillColor = isDark ? '#000000' : '#ffffff';
-        } else if (isDark) {
-          // Dark module: use the image color but ensure it's dark enough to scan
-          // Clamp each channel to max 100 so dark modules stay dark
-          const dr = Math.min(r, 100);
-          const dg = Math.min(g, 100);
-          const db = Math.min(b, 100);
-          fillColor = `rgb(${dr}, ${dg}, ${db})`;
-        } else {
-          // Light module: use the image color but ensure it's light enough
-          // Push each channel toward 255
-          const lr = Math.max(r, 180);
-          const lg = Math.max(g, 180);
-          const lb = Math.max(b, 180);
-          fillColor = `rgb(${lr}, ${lg}, ${lb})`;
+          // Solid black or white for finder patterns — must stay intact for scanning
+          if (isDark) {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(
+              margin + col * subGrid * pixelSize,
+              margin + row * subGrid * pixelSize,
+              subGrid * pixelSize,
+              subGrid * pixelSize
+            );
+          }
+          continue;
         }
 
-        ctx.fillStyle = fillColor;
-        ctx.fillRect(
-          margin + col * moduleSize,
-          margin + row * moduleSize,
-          moduleSize,
-          moduleSize
-        );
+        // Get grayscale value (0=black, 255=white)
+        const idx = (row * moduleCount + col) * 4;
+        const r = imgData.data[idx];
+        const g = imgData.data[idx + 1];
+        const b = imgData.data[idx + 2];
+        const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+
+        // Calculate how many sub-pixels should be dark (0 to subGrid*subGrid)
+        // Lower gray = more dark sub-pixels
+        const darkness = 1 - gray / 255; // 0=white, 1=black
+        const numDark = Math.round(darkness * subGrid * subGrid);
+
+        for (let sy = 0; sy < subGrid; sy++) {
+          for (let sx = 0; sx < subGrid; sx++) {
+            const threshold = bayerOrder[sy][sx];
+            const shouldBeDark = threshold < numDark;
+
+            if (shouldBeDark) {
+              ctx.fillStyle = '#000000';
+              ctx.fillRect(
+                margin + (col * subGrid + sx) * pixelSize,
+                margin + (row * subGrid + sy) * pixelSize,
+                pixelSize,
+                pixelSize
+              );
+            }
+          }
+        }
       }
     }
 
