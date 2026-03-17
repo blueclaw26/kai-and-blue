@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markdownプレビューア — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; Kai & Blue</a>
+
+    <header>
+      <h1>Markdownプレビューア</h1>
+      <p class="subtitle">リアルタイムMarkdownエディタの制作記録</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>左にMarkdownを書くと右にHTMLプレビューがリアルタイムで表示されるエディタ。外部ライブラリを使わず、正規表現で自作パーサーを実装。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>分割レイアウトの構築</h3>
+        <p>左右50/50の分割ペインを作り、エディタとプレビューを横に並べる。</p>
+        <ul>
+          <li>CSS Flexboxで横並び、モバイルでは縦積み</li>
+          <li>エディタ側は<code>textarea</code>、プレビュー側は<code>div</code></li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="CSSの柔軟なレイアウト手法。display:flexで子要素を横並びにし、flex:1で均等に幅を分配する。Gridより直感的な1次元レイアウト。">Flexbox</span>
+          <span class="term" data-explain="複数行のテキスト入力を受け付けるHTML要素。valueプロパティでJavaScriptから入力内容を取得・設定できる。">textarea</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>Markdownパーサーの実装</h3>
+        <p>正規表現でMarkdown記法をHTMLタグに変換する。ブロック要素を先に、インライン要素を後に処理する順序が重要。</p>
+        <ul>
+          <li>見出し（<code>#</code>）、太字（<code>**</code>）、斜体（<code>*</code>）、コード（<code>`</code>）、リンク、画像、リスト、引用、水平線</li>
+          <li>段落とコードブロックの処理（ブロック要素は先に処理、インライン要素は後）</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="テキストのパターンを記述するための特殊な文字列。/\*\*(.*?)\*\*/gは**で囲まれたテキストにマッチする。replaceメソッドと組み合わせてテキスト変換に使う。">正規表現</span>
+          <span class="term" data-explain="テキストを解析して構造化されたデータやHTMLに変換するプログラム。入力を読んで、ルールに基づいて出力を生成する。">パーサー</span>
+          <span class="term" data-explain="HTMLの要素は2種類。ブロック要素（h1, p, div）は1行を占有、インライン要素（strong, em, code）は文中に埋め込まれる。パーサーでは処理順序が重要。">ブロック要素とインライン要素</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>リアルタイムプレビュー</h3>
+        <p><code>textarea</code>の<code>input</code>イベントを監視し、キー入力のたびにパーサーを実行してプレビューを更新する。</p>
+        <ul>
+          <li>キー入力のたびにパーサーを実行し、プレビューの<code>innerHTML</code>を更新</li>
+          <li>デフォルトコンテンツとしてMarkdownチートシートを表示</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="テキスト入力が変化するたびに発火するイベント。keydownやkeyupより正確で、ペーストや日本語入力にも対応する。">inputイベント</span>
+          <span class="term" data-explain="要素の中のHTMLを文字列として取得・設定するプロパティ。パーサーが生成したHTML文字列をそのまま描画できる。XSS対策が必要な場面もある。">innerHTML</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>ユーティリティ機能</h3>
+        <p>エディタの使い勝手を向上させるための便利機能を追加する。</p>
+        <ul>
+          <li>HTMLソースのクリップボードコピー（<code>navigator.clipboard</code> API）</li>
+          <li>エディタのクリア</li>
+          <li>Tabキーでスペース挿入（デフォルトのフォーカス移動を防止）</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="ブラウザからクリップボード（コピー&ペースト）にアクセスするAPI。navigator.clipboard.writeText()でテキストをコピーできる。">Clipboard API</span>
+          <span class="term" data-explain="イベントのデフォルト動作を無効にするメソッド。Tabキーのデフォルト（次の要素にフォーカス移動）を止めて、代わりにスペースを挿入する。">preventDefault</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kaiのレビューで変わったこと</h2>
+      <ul class="review-list">
+        <li>サブエージェントで一発作成、大きな修正なし</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術まとめ</h2>
+      <ul class="tech-list">
+        <li><a href="../tech/#html">HTML</a></li>
+        <li><a href="../tech/#css">CSS</a></li>
+        <li><a href="../tech/#javascript">JavaScript</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+<script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>天気ダッシュボード — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; Kai & Blue</a>
+
+    <header>
+      <h1>天気ダッシュボード</h1>
+      <p class="subtitle">天気情報ダッシュボードの制作記録</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>都市名を入力すると現在の天気と7日間予報を表示するダッシュボード。Open-Meteo API（無料、APIキー不要）を使用。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>外部APIの調査</h3>
+        <p>Open-Meteo APIの仕様を調査。無料で認証不要、2つのAPIを組み合わせて使う。</p>
+        <ul>
+          <li>Geocoding API: 都市名→緯度経度の変換</li>
+          <li>Forecast API: 緯度経度→天気データの取得</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="URLにアクセスするとデータが返ってくる仕組み。Open-MeteoのURLにパラメータ（緯度、経度）を指定するとJSON形式で天気データが返る。">REST API</span>
+          <span class="term" data-explain="APIの使い方が書かれたドキュメント。エンドポイント（URL）、パラメータ（何を指定するか）、レスポンス（何が返るか）を確認する。">APIドキュメントの読み方</span>
+          <span class="term" data-explain="都市名や住所を緯度・経度の座標に変換する処理。天気APIは座標を入力として要求するため、都市名検索にはジオコーディングが必要。">ジオコーディング</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>fetch/async-awaitによるデータ取得</h3>
+        <p><code>fetch</code> APIでHTTPリクエストを送信し、<code>async/await</code>で非同期処理を読みやすく記述する。</p>
+        <ul>
+          <li>レスポンスのJSONパースと必要なデータの抽出</li>
+          <li>Geocoding → Forecast の2段階リクエスト</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="ブラウザからHTTPリクエストを送信するための標準API。fetch(url)でリクエストし、.json()でレスポンスをJavaScriptオブジェクトに変換する。">fetch API</span>
+          <span class="term" data-explain="非同期処理を同期的に書けるJavaScriptの構文。awaitで結果を待ち、try/catchでエラーを処理する。Promiseのthen/catchより読みやすい。">async/await</span>
+          <span class="term" data-explain="APIから返ってきたJSON文字列をJavaScriptのオブジェクトに変換すること。response.json()で自動的に行われる。ネストしたデータの中から必要な値を取り出す。">JSONパース</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>天気データの表示</h3>
+        <p>APIから取得したデータを画面に表示する。天気コードをUnicode絵文字にマッピングしてアイコンとして使う。</p>
+        <ul>
+          <li>現在の天気: 気温、体感温度、湿度、風速、天気コード→アイコン変換</li>
+          <li>7日間予報: 日付、最高/最低気温、天気アイコン</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="APIが返すコード値（0=晴れ、1=おおむね晴れ等）を、表示用のテキストやアイコンに変換すること。オブジェクトやswitch文で対応表を作る。">データマッピング</span>
+          <span class="term" data-explain="JavaScriptでHTML要素を動的に生成し、APIから取得したデータを埋め込んで画面に表示する。テンプレートリテラルでHTMLを組み立てるパターン。">DOM操作でUI構築</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>UXの改善</h3>
+        <p>ユーザー体験を向上させるための機能を追加する。エラーが起きても画面が壊れないようにする。</p>
+        <ul>
+          <li>ローディング表示（データ取得中のフィードバック）</li>
+          <li>エラーハンドリング（都市が見つからない、API接続失敗）</li>
+          <li>°C/°F切り替え</li>
+          <li>最後に検索した都市を<code>localStorage</code>に保存</li>
+          <li>デフォルトでTokyoを表示</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="非同期処理が完了するまでの間、ユーザーに「読み込み中」であることを伝えるUI。スピナーやテキストで表示し、完了後に消す。">ローディング状態</span>
+          <span class="term" data-explain="try/catchでエラーを捕捉し、ユーザーに分かりやすいメッセージを表示すること。APIが失敗しても画面が壊れないようにする。">エラーハンドリング</span>
+          <span class="term" data-explain="ブラウザにデータを保存する仕組み。最後に検索した都市名を覚えておき、次回アクセス時に自動で読み込む。">localStorage</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kaiのレビューで変わったこと</h2>
+      <ul class="review-list">
+        <li>作成後に確認予定</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術まとめ</h2>
+      <ul class="tech-list">
+        <li><a href="../tech/#html">HTML</a></li>
+        <li><a href="../tech/#css">CSS</a></li>
+        <li><a href="../tech/#javascript">JavaScript</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+<script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+</script>
+</body>
+</html>
