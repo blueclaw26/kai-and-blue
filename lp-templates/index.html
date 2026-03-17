@@ -59,9 +59,16 @@
     });
 
     function openOverlay(tpl) {
+      // Clear previous content first
+      previewFrame.srcdoc = '';
+      previewFrame.removeAttribute('src');
+
       overlayTitle.textContent = tpl.name;
       currentSource = tpl.html;
-      previewFrame.srcdoc = tpl.html;
+      // Use setTimeout to ensure previous content is fully unloaded
+      setTimeout(() => {
+        previewFrame.srcdoc = tpl.html;
+      }, 0);
       sourceView.textContent = tpl.html;
       switchTab('preview');
       overlay.classList.add('active');
@@ -71,6 +78,9 @@
     function closeOverlay() {
       overlay.classList.remove('active');
       previewFrame.srcdoc = '';
+      previewFrame.removeAttribute('src');
+      currentSource = '';
+      sourceView.textContent = '';
       document.body.style.overflow = '';
     }
 

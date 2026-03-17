@@ -1,74 +1,68 @@
 window.LP_TEMPLATES = [
-  // ─── Template 1: B2B SaaS ───
+  // ─── Template 1: B2B SaaS (Flowboard) ───
   {
     name: 'SaaS プロダクト',
     target: 'B2B / ビジネス',
     description: 'クリーンでプロフェッショナルなSaaS向けLP。機能紹介、料金表、FAQ付き。',
-    colors: ['#2563eb', '#93c5fd'],
+    colors: ['#4a6fa5', '#93c5fd'],
     html: `<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CloudFlow — ビジネスを加速するSaaS</title>
+<title>Flowboard — プロジェクト管理とワークフロー自動化</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter','Noto Sans JP',sans-serif;color:#1a1a1a;background:#fff}
 a{text-decoration:none;color:inherit}
 
-/* Hero */
-.hero{background:linear-gradient(135deg,#2563eb 0%,#1e40af 100%);color:#fff;padding:100px 20px 80px;text-align:center}
+.hero{background:linear-gradient(135deg,#4a6fa5 0%,#374f73 100%);color:#fff;padding:100px 20px 80px;text-align:center}
 .hero h1{font-size:42px;font-weight:700;margin-bottom:16px;line-height:1.3}
 .hero p{font-size:18px;opacity:0.9;max-width:600px;margin:0 auto 32px;line-height:1.7}
-.btn-primary{display:inline-block;background:#fff;color:#2563eb;padding:14px 36px;border-radius:8px;font-weight:600;font-size:16px;transition:transform 0.2s,box-shadow 0.2s}
+.btn-primary{display:inline-block;background:#fff;color:#4a6fa5;padding:14px 36px;border-radius:8px;font-weight:600;font-size:16px;transition:transform 0.2s,box-shadow 0.2s}
 .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.15)}
 .btn-secondary{display:inline-block;border:2px solid rgba(255,255,255,0.5);color:#fff;padding:12px 32px;border-radius:8px;font-weight:500;font-size:15px;margin-left:12px;transition:border-color 0.2s}
 .btn-secondary:hover{border-color:#fff}
 
-/* Features */
 .features{padding:80px 20px;max-width:960px;margin:0 auto;text-align:center}
 .features h2{font-size:28px;font-weight:700;margin-bottom:12px}
 .features>p{color:#6b6b6b;margin-bottom:48px;font-size:15px}
 .feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
 .feature-card{padding:32px 24px;border-radius:12px;background:#f8fafc;text-align:center}
-.feature-icon{font-size:36px;margin-bottom:16px}
+.feature-icon{width:56px;height:56px;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff}
 .feature-card h3{font-size:17px;font-weight:600;margin-bottom:8px}
 .feature-card p{color:#6b6b6b;font-size:14px;line-height:1.6}
 
-/* Pricing */
 .pricing{background:#f8fafc;padding:80px 20px}
 .pricing h2{text-align:center;font-size:28px;font-weight:700;margin-bottom:48px}
 .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:960px;margin:0 auto}
 .price-card{background:#fff;border-radius:12px;padding:36px 28px;text-align:center;border:2px solid transparent;transition:border-color 0.2s}
-.price-card.popular{border-color:#2563eb;position:relative}
-.price-card.popular::before{content:"人気";position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#2563eb;color:#fff;padding:4px 16px;border-radius:20px;font-size:12px;font-weight:600}
+.price-card.popular{border-color:#4a6fa5;position:relative}
+.price-card.popular::before{content:"人気";position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#4a6fa5;color:#fff;padding:4px 16px;border-radius:20px;font-size:12px;font-weight:600}
 .price-card h3{font-size:18px;font-weight:600;margin-bottom:8px}
-.price-amount{font-size:40px;font-weight:700;color:#2563eb;margin:16px 0 8px}
+.price-amount{font-size:40px;font-weight:700;color:#4a6fa5;margin:16px 0 8px}
 .price-amount span{font-size:16px;font-weight:400;color:#6b6b6b}
 .price-card ul{list-style:none;margin:24px 0;text-align:left}
 .price-card li{padding:8px 0;font-size:14px;color:#444;border-bottom:1px solid #f0f0f0}
-.price-card li::before{content:"✓ ";color:#2563eb;font-weight:600}
+.price-card li::before{content:"\\2713\\0020";color:#4a6fa5;font-weight:600}
 .price-btn{display:block;width:100%;padding:12px;border-radius:8px;font-weight:600;font-size:14px;text-align:center;transition:background 0.2s}
-.price-btn-outline{border:2px solid #2563eb;color:#2563eb;background:transparent}
-.price-btn-outline:hover{background:#eff6ff}
-.price-btn-fill{background:#2563eb;color:#fff;border:none}
-.price-btn-fill:hover{background:#1d4ed8}
+.price-btn-outline{border:2px solid #4a6fa5;color:#4a6fa5;background:transparent}
+.price-btn-outline:hover{background:#eef3fa}
+.price-btn-fill{background:#4a6fa5;color:#fff;border:none}
+.price-btn-fill:hover{background:#3d5e8a}
 
-/* Trust */
 .trust{padding:60px 20px;text-align:center;max-width:800px;margin:0 auto}
 .trust p{color:#6b6b6b;font-size:14px;margin-bottom:24px;text-transform:uppercase;letter-spacing:1px}
 .trust-logos{display:flex;justify-content:center;gap:40px;flex-wrap:wrap}
 .trust-logo{color:#aaa;font-size:18px;font-weight:600}
 
-/* FAQ */
 .faq{padding:80px 20px;max-width:700px;margin:0 auto}
 .faq h2{text-align:center;font-size:28px;font-weight:700;margin-bottom:40px}
 .faq-item{border-bottom:1px solid #e5e5e5;padding:20px 0}
 .faq-item h3{font-size:16px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
 .faq-item p{color:#6b6b6b;font-size:14px;line-height:1.7;margin-top:12px}
 
-/* Footer */
 footer{background:#1a1a1a;color:#fff;text-align:center;padding:40px 20px}
 footer p{font-size:13px;opacity:0.6}
 
@@ -81,30 +75,30 @@ footer p{font-size:13px;opacity:0.6}
 </head>
 <body>
   <section class="hero">
-    <h1>ワークフローを、もっとスマートに</h1>
-    <p>CloudFlowはチーム全体の生産性を向上させるオールインワンプラットフォーム。タスク管理、コミュニケーション、分析を一つに。</p>
+    <h1>プロジェクト管理を、<br>Flowboardでシンプルに</h1>
+    <p>Flowboardはタスク管理・ワークフロー自動化・進捗トラッキングを一つにまとめたプラットフォーム。チームの動きを可視化し、ボトルネックを自動で検出します。</p>
     <a href="#" class="btn-primary">無料で始める</a>
     <a href="#" class="btn-secondary">デモを見る →</a>
   </section>
 
   <section class="features">
-    <h2>すべてが、ひとつに</h2>
-    <p>チームが本当に必要な機能だけを、シンプルに</p>
+    <h2>Flowboardでできること</h2>
+    <p>プロジェクトの計画から実行まで、チームの生産性を引き上げる3つのコア機能</p>
     <div class="feature-grid">
       <div class="feature-card">
-        <div class="feature-icon">📊</div>
-        <h3>リアルタイム分析</h3>
-        <p>ダッシュボードでKPIを一目で把握。データドリブンな意思決定を支援します。</p>
+        <div class="feature-icon" style="background:linear-gradient(135deg,#4a6fa5,#6b8fc5)">F</div>
+        <h3>フロー自動化</h3>
+        <p>繰り返しタスクをドラッグ&ドロップで自動化。承認フロー、通知ルール、ステータス遷移をノーコードで設定できます。</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">🔗</div>
-        <h3>シームレス連携</h3>
-        <p>Slack、Google Workspace、Notionなど200以上のツールと簡単に接続。</p>
+        <div class="feature-icon" style="background:linear-gradient(135deg,#5a8abf,#7ba5d4)">G</div>
+        <h3>ガントチャート & カンバン</h3>
+        <p>ガントチャートとカンバンボードをワンクリックで切り替え。プロジェクトの全体像と個別タスクを同時に把握。</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">🔒</div>
-        <h3>エンタープライズ・セキュリティ</h3>
-        <p>SOC2 Type II準拠。データは暗号化され、安全に管理されます。</p>
+        <div class="feature-icon" style="background:linear-gradient(135deg,#374f73,#4a6fa5)">R</div>
+        <h3>リアルタイムレポート</h3>
+        <p>チームの稼働率、タスク完了率、遅延リスクを自動集計。週次レポートはSlackやメールに自動配信されます。</p>
       </div>
     </div>
   </section>
@@ -113,36 +107,37 @@ footer p{font-size:13px;opacity:0.6}
     <h2>シンプルな料金プラン</h2>
     <div class="pricing-grid">
       <div class="price-card">
-        <h3>スターター</h3>
+        <h3>Starter</h3>
         <div class="price-amount">¥0<span>/月</span></div>
         <ul>
-          <li>ユーザー3名まで</li>
-          <li>基本的なタスク管理</li>
-          <li>5GBストレージ</li>
-          <li>メールサポート</li>
+          <li>ユーザー5名まで</li>
+          <li>プロジェクト3件まで</li>
+          <li>カンバンボード</li>
+          <li>基本レポート</li>
         </ul>
         <a href="#" class="price-btn price-btn-outline">無料で始める</a>
       </div>
       <div class="price-card popular">
-        <h3>プロ</h3>
+        <h3>Pro</h3>
         <div class="price-amount">¥2,980<span>/月</span></div>
         <ul>
           <li>ユーザー無制限</li>
-          <li>高度な分析機能</li>
-          <li>100GBストレージ</li>
-          <li>優先サポート</li>
+          <li>プロジェクト無制限</li>
+          <li>フロー自動化</li>
+          <li>ガントチャート</li>
+          <li>高度なレポート</li>
           <li>API アクセス</li>
         </ul>
-        <a href="#" class="price-btn price-btn-fill">プロを選ぶ</a>
+        <a href="#" class="price-btn price-btn-fill">Proを選ぶ</a>
       </div>
       <div class="price-card">
-        <h3>エンタープライズ</h3>
-        <div class="price-amount">要相談</div>
+        <h3>Enterprise</h3>
+        <div class="price-amount" style="font-size:28px">お問い合わせ</div>
         <ul>
-          <li>カスタム機能開発</li>
-          <li>専任サポート担当</li>
-          <li>無制限ストレージ</li>
-          <li>SLA保証</li>
+          <li>カスタムワークフロー</li>
+          <li>SSO / SAML対応</li>
+          <li>専任カスタマーサクセス</li>
+          <li>SLA保証 99.99%</li>
           <li>オンプレミス対応</li>
         </ul>
         <a href="#" class="price-btn price-btn-outline">お問い合わせ</a>
@@ -151,7 +146,7 @@ footer p{font-size:13px;opacity:0.6}
   </section>
 
   <section class="trust">
-    <p>多くの企業に選ばれています</p>
+    <p>多くのチームに選ばれています</p>
     <div class="trust-logos">
       <span class="trust-logo">TechNova</span>
       <span class="trust-logo">GreenLeaf</span>
@@ -164,12 +159,12 @@ footer p{font-size:13px;opacity:0.6}
   <section class="faq">
     <h2>よくある質問</h2>
     <div class="faq-item">
-      <h3>無料プランに期限はありますか？</h3>
-      <p>いいえ、無料プランは永続的にご利用いただけます。必要に応じていつでもアップグレード可能です。</p>
+      <h3>Starterプランに期限はありますか？</h3>
+      <p>いいえ、Starterプランは永続的にご利用いただけます。チームが成長したらProへのアップグレードをご検討ください。</p>
     </div>
     <div class="faq-item">
-      <h3>データの移行はできますか？</h3>
-      <p>はい、CSV/JSON形式でのインポートに対応しています。専任チームが移行をサポートします。</p>
+      <h3>既存ツールからデータを移行できますか？</h3>
+      <p>はい、Trello・Asana・Jiraからのインポートに対応しています。CSV/JSON形式でのインポートも可能です。</p>
     </div>
     <div class="faq-item">
       <h3>解約はいつでもできますか？</h3>
@@ -178,13 +173,13 @@ footer p{font-size:13px;opacity:0.6}
   </section>
 
   <footer>
-    <p>&copy; 2026 CloudFlow Inc. All rights reserved.</p>
+    <p>&copy; 2026 Flowboard Inc. All rights reserved.</p>
   </footer>
 </body>
 </html>`
   },
 
-  // ─── Template 2: D2C 健康食品 ───
+  // ─── Template 2: D2C 健康食品 (VITALGREEN) ───
   {
     name: '健康食品',
     target: 'D2C / 一般消費者',
@@ -195,42 +190,39 @@ footer p{font-size:13px;opacity:0.6}
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ナチュラグリーン — 毎日の健康をサポート</title>
+<title>VITALGREEN — オーガニックグリーンスムージー</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Noto Sans JP',sans-serif;color:#1a1a1a;background:#fff}
 a{text-decoration:none;color:inherit}
 
-/* Hero */
 .hero{background:linear-gradient(135deg,#f5f0e6 0%,#e8e0d0 100%);padding:80px 20px;text-align:center;position:relative;overflow:hidden}
 .hero-badge{display:inline-block;background:#e74c3c;color:#fff;padding:8px 20px;border-radius:30px;font-size:14px;font-weight:700;margin-bottom:24px;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
 .hero h1{font-size:36px;font-weight:900;margin-bottom:16px;line-height:1.4;color:#2d5a3d}
 .hero p{font-size:16px;color:#666;max-width:540px;margin:0 auto 24px;line-height:1.8}
-.product-visual{width:280px;height:280px;background:linear-gradient(135deg,#4a7c59,#6da67a);border-radius:50%;margin:0 auto 32px;display:flex;align-items:center;justify-content:center;font-size:80px;box-shadow:0 20px 40px rgba(74,124,89,0.2)}
+.product-visual{width:280px;height:280px;background:linear-gradient(135deg,#4a7c59,#6da67a);border-radius:50%;margin:0 auto 32px;display:flex;align-items:center;justify-content:center;box-shadow:0 20px 40px rgba(74,124,89,0.2);position:relative}
+.product-visual::after{content:"V";font-size:72px;font-weight:900;color:rgba(255,255,255,0.25);font-family:'Inter',sans-serif}
 .btn-cta{display:inline-block;background:#4a7c59;color:#fff;padding:16px 48px;border-radius:40px;font-weight:700;font-size:17px;transition:transform 0.2s,box-shadow 0.2s}
 .btn-cta:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(74,124,89,0.3)}
 .btn-cta small{display:block;font-size:12px;font-weight:400;opacity:0.9;margin-top:4px}
 
-/* Benefits */
 .benefits{padding:80px 20px;max-width:900px;margin:0 auto}
 .section-title{text-align:center;font-size:26px;font-weight:700;margin-bottom:48px;color:#2d5a3d}
 .benefit-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
 .benefit-card{text-align:center;padding:28px 20px}
-.benefit-icon{font-size:40px;margin-bottom:16px}
+.benefit-icon{width:64px;height:64px;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff}
 .benefit-card h3{font-size:17px;font-weight:600;margin-bottom:8px}
 .benefit-card p{color:#666;font-size:14px;line-height:1.7}
 
-/* Testimonials */
 .testimonials{background:#faf7f2;padding:80px 20px}
 .review-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:900px;margin:0 auto}
 .review-card{background:#fff;border-radius:12px;padding:28px;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
-.review-stars{color:#e8a44a;font-size:18px;margin-bottom:12px}
+.review-stars{color:#e8a44a;font-size:18px;margin-bottom:12px;letter-spacing:2px}
 .review-card p{font-size:14px;line-height:1.7;color:#444;margin-bottom:16px}
 .review-author{font-size:13px;color:#888}
 
-/* Comparison */
 .comparison{padding:80px 20px;max-width:700px;margin:0 auto}
 .compare-table{width:100%;border-collapse:collapse;margin-top:32px}
 .compare-table th{background:#4a7c59;color:#fff;padding:14px 16px;text-align:left;font-size:14px}
@@ -242,7 +234,6 @@ a{text-decoration:none;color:inherit}
 .check{color:#4a7c59;font-weight:700}
 .cross{color:#ccc}
 
-/* Offer */
 .offer{background:linear-gradient(135deg,#2d5a3d,#4a7c59);color:#fff;padding:60px 20px;text-align:center}
 .offer h2{font-size:28px;font-weight:700;margin-bottom:8px}
 .offer p{font-size:16px;opacity:0.9;margin-bottom:8px}
@@ -253,43 +244,43 @@ a{text-decoration:none;color:inherit}
 .btn-offer{display:inline-block;background:#e8a44a;color:#fff;padding:16px 48px;border-radius:40px;font-weight:700;font-size:17px;transition:transform 0.2s}
 .btn-offer:hover{transform:translateY(-2px)}
 
-/* Footer */
 footer{background:#1a1a1a;color:#fff;text-align:center;padding:40px 20px}
 footer p{font-size:12px;opacity:0.5;line-height:1.8}
 
 @media(max-width:768px){
   .hero h1{font-size:26px}
   .benefit-grid,.review-grid{grid-template-columns:1fr}
-  .product-visual{width:200px;height:200px;font-size:60px}
+  .product-visual{width:200px;height:200px}
+  .product-visual::after{font-size:52px}
 }
 </style>
 </head>
 <body>
   <section class="hero">
-    <span class="hero-badge">🎉 初回限定 50% OFF</span>
-    <div class="product-visual">🌿</div>
-    <h1>朝の一杯で、カラダが変わる</h1>
-    <p>厳選された国産有機素材を配合。管理栄養士監修のグリーンスムージーで、毎日の健康習慣を始めませんか？</p>
+    <span class="hero-badge">初回限定 50% OFF</span>
+    <div class="product-visual"></div>
+    <h1>朝の一杯で、カラダが目覚める</h1>
+    <p>VITALGREENは、国産有機ケール・大麦若葉・モリンガをベースにしたグリーンスムージーパウダー。1杯で1日分のビタミン・ミネラルの50%以上をカバーします。</p>
     <a href="#" class="btn-cta">初回50%OFFで試す<small>送料無料・いつでも解約OK</small></a>
   </section>
 
   <section class="benefits">
-    <h2 class="section-title">選ばれる3つの理由</h2>
+    <h2 class="section-title">VITALGREENが選ばれる理由</h2>
     <div class="benefit-grid">
       <div class="benefit-card">
-        <div class="benefit-icon">🌾</div>
-        <h3>100%国産有機素材</h3>
-        <p>契約農家から直接仕入れた有機野菜のみを使用。農薬・添加物は一切不使用です。</p>
+        <div class="benefit-icon" style="background:linear-gradient(135deg,#4a7c59,#6da67a)">O</div>
+        <h3>有機JAS認証取得</h3>
+        <p>九州の契約農家から直接仕入れた有機野菜のみ使用。農薬・化学肥料・人工甘味料は一切不使用です。</p>
       </div>
       <div class="benefit-card">
-        <div class="benefit-icon">👩‍⚕️</div>
-        <h3>管理栄養士が監修</h3>
-        <p>1日に必要なビタミン・ミネラルの50%以上をカバー。栄養バランスを科学的に設計。</p>
+        <div class="benefit-icon" style="background:linear-gradient(135deg,#3d6a4a,#5a8f6a)">N</div>
+        <h3>管理栄養士が配合設計</h3>
+        <p>ビタミンC・鉄分・食物繊維を重点配合。吸収率を高めるビタミンD3とマグネシウムも独自ブレンド。</p>
       </div>
       <div class="benefit-card">
-        <div class="benefit-icon">⏱️</div>
+        <div class="benefit-icon" style="background:linear-gradient(135deg,#2d5a3d,#4a7c59)">30</div>
         <h3>たった30秒で完成</h3>
-        <p>水や牛乳に溶かすだけ。忙しい朝でも続けられるから、3ヶ月継続率は92%。</p>
+        <p>水や豆乳に溶かすだけ。抹茶ラテのような味わいで、青臭さゼロ。3ヶ月継続率92%の続けやすさ。</p>
       </div>
     </div>
   </section>
@@ -299,29 +290,29 @@ footer p{font-size:12px;opacity:0.5;line-height:1.8}
     <div class="review-grid">
       <div class="review-card">
         <div class="review-stars">★★★★★</div>
-        <p>「朝の目覚めが変わりました。3週間続けていますが、明らかに体が軽くなった気がします。」</p>
-        <span class="review-author">— 田中 美咲さん（32歳・会社員）</span>
+        <p>「VITALGREENを飲み始めて3週間。朝の目覚めが明らかに変わりました。肌の調子も良くなった気がします。」</p>
+        <span class="review-author">— 渡辺 美咲さん（32歳・会社員）</span>
       </div>
       <div class="review-card">
         <div class="review-stars">★★★★★</div>
-        <p>「野菜嫌いの私でも飲める味。フルーティーで、青臭さがまったくありません。」</p>
-        <span class="review-author">— 佐藤 健太さん（28歳・エンジニア）</span>
+        <p>「青汁は苦手でしたが、これは抹茶ラテみたいで驚きました。毎朝の習慣になっています。」</p>
+        <span class="review-author">— 岡田 健太さん（28歳・エンジニア）</span>
       </div>
       <div class="review-card">
         <div class="review-stars">★★★★☆</div>
-        <p>「家族全員で飲んでいます。子どもも喜んで飲むので、野菜不足の心配がなくなりました。」</p>
-        <span class="review-author">— 山本 恵子さん（41歳・主婦）</span>
+        <p>「家族4人で飲んでいます。子どもも嫌がらず飲めるので、野菜不足の心配がなくなりました。」</p>
+        <span class="review-author">— 中村 恵子さん（41歳・主婦）</span>
       </div>
     </div>
   </section>
 
   <section class="comparison">
-    <h2 class="section-title">他社製品との比較</h2>
+    <h2 class="section-title">市販のグリーンスムージーとの比較</h2>
     <table class="compare-table">
-      <tr><th>特徴</th><th>ナチュラグリーン</th><th>A社</th><th>B社</th></tr>
-      <tr><td>有機素材100%</td><td class="check">✓</td><td class="cross">—</td><td class="cross">—</td></tr>
+      <tr><th>特徴</th><th>VITALGREEN</th><th>市販パウダーA</th><th>市販パウダーB</th></tr>
+      <tr><td>有機JAS認証</td><td class="check">✓</td><td class="cross">—</td><td class="cross">—</td></tr>
       <tr><td>管理栄養士監修</td><td class="check">✓</td><td class="check">✓</td><td class="cross">—</td></tr>
-      <tr><td>添加物フリー</td><td class="check">✓</td><td class="cross">—</td><td class="check">✓</td></tr>
+      <tr><td>人工甘味料フリー</td><td class="check">✓</td><td class="cross">—</td><td class="check">✓</td></tr>
       <tr><td>初回割引</td><td class="check">50% OFF</td><td class="cross">10% OFF</td><td class="cross">なし</td></tr>
       <tr><td>定期縛りなし</td><td class="check">✓</td><td class="cross">—</td><td class="cross">—</td></tr>
     </table>
@@ -335,11 +326,11 @@ footer p{font-size:12px;opacity:0.5;line-height:1.8}
       <div class="countdown-item"><span class="countdown-num">14</span><span class="countdown-label">時間</span></div>
       <div class="countdown-item"><span class="countdown-num">37</span><span class="countdown-label">分</span></div>
     </div>
-    <a href="#" class="btn-offer">今すぐ申し込む →</a>
+    <a href="#" class="btn-offer">今すぐ申し込む</a>
   </section>
 
   <footer>
-    <p>&copy; 2026 NaturaGreen Inc.<br>特定商取引法に基づく表記 | プライバシーポリシー | 利用規約</p>
+    <p>&copy; 2026 VITALGREEN Inc.<br>特定商取引法に基づく表記 | プライバシーポリシー | 利用規約</p>
   </footer>
 </body>
 </html>`
@@ -363,7 +354,6 @@ footer p{font-size:12px;opacity:0.5;line-height:1.8}
 body{font-family:'Noto Serif JP',serif;color:#fff;background:#1a1a1a}
 a{text-decoration:none;color:inherit}
 
-/* Hero */
 .hero{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;overflow:hidden}
 .hero-bg{position:absolute;inset:0;background:linear-gradient(135deg,#2a1a0e 0%,#1a1a1a 50%,#0d1117 100%);z-index:0}
 .hero-content{position:relative;z-index:1}
@@ -375,7 +365,6 @@ a{text-decoration:none;color:inherit}
 .scroll-hint{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);font-family:'Inter',sans-serif;font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:2px;animation:fadeInOut 2s infinite}
 @keyframes fadeInOut{0%,100%{opacity:0.3}50%{opacity:0.8}}
 
-/* Menu */
 .menu{padding:100px 20px;max-width:800px;margin:0 auto}
 .section-label{font-family:'Inter',sans-serif;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#c9a96e;text-align:center;margin-bottom:12px}
 .section-heading{text-align:center;font-size:28px;margin-bottom:60px}
@@ -387,23 +376,19 @@ a{text-decoration:none;color:inherit}
 .menu-info p{color:rgba(255,255,255,0.5);font-size:14px;line-height:1.8}
 .menu-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(201,169,110,0.2),transparent);margin-bottom:48px}
 
-/* Story */
 .story{padding:100px 20px;background:#141414}
 .story-content{max-width:700px;margin:0 auto;text-align:center}
 .story-content p{color:rgba(255,255,255,0.6);font-size:15px;line-height:2;margin-bottom:20px}
 .story-img{width:100%;height:300px;background:linear-gradient(135deg,#2a2018,#3a2a1a);border-radius:4px;margin:40px 0}
 
-/* Access */
 .access{padding:100px 20px;max-width:700px;margin:0 auto;text-align:center}
 .access-info{margin-top:40px;color:rgba(255,255,255,0.6);font-family:'Inter','Noto Serif JP',sans-serif;font-size:14px;line-height:2.2}
 .access-info strong{color:#fff;font-weight:500}
 
-/* CTA */
 .cta-section{padding:80px 20px;text-align:center;background:linear-gradient(135deg,#1a1a1a,#2a1a0e)}
 .cta-section h2{font-size:24px;margin-bottom:16px}
 .cta-section p{color:rgba(255,255,255,0.5);font-size:14px;margin-bottom:32px}
 
-/* Footer */
 footer{border-top:1px solid rgba(255,255,255,0.05);padding:40px 20px;text-align:center}
 footer p{font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,0.25)}
 
@@ -423,7 +408,7 @@ footer p{font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,0.
       <p class="hero-tagline">雲のように、軽やかに。季節を纏う一皿を。</p>
       <a href="#" class="btn-reserve">ご予約はこちら</a>
     </div>
-    <span class="scroll-hint">Scroll ↓</span>
+    <span class="scroll-hint">Scroll</span>
   </section>
 
   <section class="menu">
@@ -480,11 +465,11 @@ footer p{font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,0.
     <p class="section-label">Access</p>
     <h2 class="section-heading">アクセス</h2>
     <div class="access-info">
-      <p><strong>住所:</strong> 〒604-0924 京都府京都市中京区一之船入町 384-1</p>
-      <p><strong>最寄駅:</strong> 地下鉄東西線「京都市役所前」駅 徒歩5分</p>
+      <p><strong>エリア:</strong> 表参道エリア</p>
+      <p><strong>最寄駅:</strong> 東京メトロ「表参道」駅 徒歩5分</p>
       <p><strong>営業時間:</strong> ランチ 11:30〜14:00 / ディナー 17:30〜22:00</p>
       <p><strong>定休日:</strong> 毎週月曜日</p>
-      <p><strong>電話:</strong> 075-XXX-XXXX</p>
+      <p><strong>ご予約:</strong> お電話またはオンラインにて承ります</p>
     </div>
   </section>
 
@@ -501,172 +486,159 @@ footer p{font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,0.
 </html>`
   },
 
-  // ─── Template 4: モバイルゲーム ───
+  // ─── Template 4: ゲームアプリ (VOID RUNNERS) ───
   {
     name: 'ゲームアプリ',
     target: 'エンタメ / 若年層',
-    description: 'ダークでエネルギッシュなゲームアプリLP。グロー効果、ダウンロードボタン付き。',
-    colors: ['#1a0a2e', '#00e5ff'],
+    description: 'ダークでシネマティックなゲームアプリLP。ビジュアル重視、最小限のテキスト。',
+    colors: ['#0a0515', '#00e5ff'],
     html: `<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NOVA STRIKE — 銀河を支配せよ</title>
+<title>VOID RUNNERS</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter','Noto Sans JP',sans-serif;color:#fff;background:#0a0515}
 a{text-decoration:none;color:inherit}
 
-/* Hero */
-.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 20px;position:relative;overflow:hidden}
-.hero::before{content:"";position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(0,229,255,0.1) 0%,transparent 70%);top:-100px;left:50%;transform:translateX(-50%)}
-.hero::after{content:"";position:absolute;width:400px;height:400px;background:radial-gradient(circle,rgba(255,0,128,0.08) 0%,transparent 70%);bottom:-50px;right:-100px}
-.hero-label{font-size:12px;letter-spacing:4px;text-transform:uppercase;color:#00e5ff;margin-bottom:20px}
-.hero h1{font-size:56px;font-weight:900;margin-bottom:16px;background:linear-gradient(135deg,#00e5ff,#ff0080);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.2}
-.hero p{color:rgba(255,255,255,0.6);font-size:16px;max-width:500px;margin:0 auto 32px;line-height:1.7}
-.game-visual{width:300px;height:300px;background:linear-gradient(135deg,#1a0a2e,#2a1a4e);border:2px solid rgba(0,229,255,0.3);border-radius:20px;margin:0 auto 40px;display:flex;align-items:center;justify-content:center;font-size:80px;box-shadow:0 0 60px rgba(0,229,255,0.15),inset 0 0 60px rgba(0,229,255,0.05)}
+/* Massive Hero */
+.hero{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;padding:0 20px 80px;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:linear-gradient(180deg,#0d0820 0%,#1a0a2e 40%,#0a0515 100%);z-index:0}
+.hero-bg::before{content:"";position:absolute;width:800px;height:800px;background:radial-gradient(circle,rgba(0,229,255,0.08) 0%,transparent 70%);top:5%;left:50%;transform:translateX(-50%)}
+.hero-bg::after{content:"";position:absolute;width:500px;height:500px;background:radial-gradient(circle,rgba(255,0,128,0.06) 0%,transparent 70%);bottom:10%;right:-100px}
+.hero-visual{position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);width:480px;height:480px;background:linear-gradient(135deg,#1a0a2e,#2a1a4e);border:1px solid rgba(0,229,255,0.15);border-radius:24px;box-shadow:0 0 120px rgba(0,229,255,0.08),inset 0 0 80px rgba(0,229,255,0.03);z-index:1}
+.hero-content{position:relative;z-index:2}
+.hero h1{font-size:64px;font-weight:900;margin-bottom:12px;background:linear-gradient(135deg,#00e5ff,#ff0080);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1;letter-spacing:4px}
+.hero-tagline{font-size:18px;color:rgba(255,255,255,0.5);margin-bottom:36px;font-weight:400;letter-spacing:1px}
+.hero-buttons{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
 .btn-download{display:inline-block;background:linear-gradient(135deg,#00e5ff,#0099cc);color:#0a0515;padding:16px 48px;border-radius:12px;font-weight:700;font-size:17px;transition:transform 0.2s,box-shadow 0.2s}
 .btn-download:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,229,255,0.3)}
 
-/* Features */
-.features{padding:100px 20px;max-width:960px;margin:0 auto}
-.section-title{text-align:center;font-size:28px;font-weight:700;margin-bottom:48px}
-.section-title span{color:#00e5ff}
-.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-.feature-card{background:rgba(255,255,255,0.03);border:1px solid rgba(0,229,255,0.15);border-radius:16px;padding:32px 24px;text-align:center;position:relative;overflow:hidden;transition:border-color 0.3s,box-shadow 0.3s}
-.feature-card:hover{border-color:rgba(0,229,255,0.5);box-shadow:0 0 30px rgba(0,229,255,0.1)}
-.feature-card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#00e5ff,transparent);opacity:0;transition:opacity 0.3s}
-.feature-card:hover::before{opacity:1}
-.feature-icon{font-size:40px;margin-bottom:16px}
-.feature-card h3{font-size:17px;font-weight:600;margin-bottom:8px}
-.feature-card p{color:rgba(255,255,255,0.5);font-size:14px;line-height:1.7}
+/* Feature Labels */
+.features{padding:80px 20px;max-width:800px;margin:0 auto}
+.feature-strip{display:flex;justify-content:center;gap:24px;flex-wrap:wrap}
+.feature-label{background:rgba(255,255,255,0.03);border:1px solid rgba(0,229,255,0.15);border-radius:12px;padding:20px 28px;text-align:center;transition:border-color 0.3s}
+.feature-label:hover{border-color:rgba(0,229,255,0.5)}
+.feature-label h3{font-size:15px;font-weight:600;color:#00e5ff;margin-bottom:4px}
+.feature-label p{font-size:12px;color:rgba(255,255,255,0.4)}
 
 /* Screenshots */
-.screenshots{padding:100px 20px;background:rgba(0,229,255,0.02)}
-.screenshot-grid{display:flex;gap:20px;max-width:960px;margin:0 auto;overflow-x:auto;padding-bottom:12px}
-.screenshot-item{min-width:220px;height:380px;background:linear-gradient(180deg,#1a0a2e,#2a1a4e);border-radius:16px;border:1px solid rgba(0,229,255,0.1);display:flex;align-items:center;justify-content:center;font-size:48px;flex-shrink:0}
+.screenshots{padding:80px 20px}
+.screenshots h2{text-align:center;font-size:20px;font-weight:600;margin-bottom:36px;color:rgba(255,255,255,0.6);letter-spacing:2px;text-transform:uppercase}
+.screenshot-grid{display:flex;gap:20px;max-width:1000px;margin:0 auto;overflow-x:auto;padding-bottom:12px;-webkit-overflow-scrolling:touch}
+.screenshot-item{min-width:260px;height:440px;background:linear-gradient(180deg,#1a0a2e,#2a1a4e);border-radius:16px;border:1px solid rgba(0,229,255,0.08);flex-shrink:0;position:relative;overflow:hidden}
+.screenshot-item::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(0,229,255,0.03) 100%)}
 
-/* Reviews */
-.reviews{padding:100px 20px;max-width:800px;margin:0 auto}
-.review-grid{display:grid;gap:20px}
-.review-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:24px;display:flex;gap:16px;align-items:flex-start}
-.review-avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#00e5ff,#ff0080);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700}
-.review-body h4{font-size:14px;font-weight:600;margin-bottom:4px}
-.review-stars{color:#ffd700;font-size:14px;margin-bottom:8px}
-.review-body p{color:rgba(255,255,255,0.5);font-size:13px;line-height:1.6}
+/* Rating + Stats */
+.stats{padding:60px 20px;text-align:center}
+.stats-row{display:flex;justify-content:center;gap:48px;flex-wrap:wrap}
+.stat-item{text-align:center}
+.stat-num{font-size:32px;font-weight:900;display:block;margin-bottom:4px}
+.stat-num.stars{color:#ffd700;letter-spacing:2px;font-size:24px}
+.stat-num.count{background:linear-gradient(135deg,#00e5ff,#ff0080);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-label{font-size:12px;color:rgba(255,255,255,0.4)}
 
-/* Download */
-.download-section{padding:100px 20px;text-align:center;background:linear-gradient(180deg,#0a0515,#1a0a2e)}
-.download-section h2{font-size:32px;font-weight:900;margin-bottom:12px}
-.download-section p{color:rgba(255,255,255,0.5);margin-bottom:36px;font-size:15px}
+/* Store Buttons */
+.download-section{padding:80px 20px;text-align:center;background:linear-gradient(180deg,#0a0515,#1a0a2e)}
+.download-section h2{font-size:28px;font-weight:900;margin-bottom:32px}
 .store-buttons{display:flex;justify-content:center;gap:16px;flex-wrap:wrap}
-.store-btn{display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);padding:14px 28px;border-radius:12px;transition:background 0.2s,border-color 0.2s}
-.store-btn:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.3)}
-.store-icon{font-size:28px}
+.store-btn{display:inline-flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);padding:16px 32px;border-radius:14px;transition:background 0.2s,border-color 0.2s}
+.store-btn:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.25)}
+.store-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#fff}
 .store-text{text-align:left}
-.store-text small{font-size:10px;color:rgba(255,255,255,0.5);display:block}
+.store-text small{font-size:10px;color:rgba(255,255,255,0.4);display:block}
 .store-text span{font-size:16px;font-weight:600}
 
-/* Footer */
 footer{border-top:1px solid rgba(255,255,255,0.05);padding:40px 20px;text-align:center}
 footer p{font-size:12px;color:rgba(255,255,255,0.2)}
 
 @media(max-width:768px){
-  .hero h1{font-size:32px}
-  .feature-grid{grid-template-columns:1fr}
-  .game-visual{width:220px;height:220px;font-size:60px}
+  .hero h1{font-size:40px}
+  .hero-visual{width:300px;height:300px}
+  .feature-strip{flex-direction:column;align-items:center}
 }
 </style>
 </head>
 <body>
   <section class="hero">
-    <p class="hero-label">New Season Now Live</p>
-    <div class="game-visual">🚀</div>
-    <h1>NOVA STRIKE</h1>
-    <p>広大な銀河を舞台に繰り広げられるリアルタイムストラテジー。仲間と共に、宇宙の覇権を手に入れろ。</p>
-    <a href="#" class="btn-download">🎮 無料ダウンロード</a>
+    <div class="hero-bg"></div>
+    <div class="hero-visual"></div>
+    <div class="hero-content">
+      <h1>VOID RUNNERS</h1>
+      <p class="hero-tagline">Run. Fight. Survive the void.</p>
+      <div class="hero-buttons">
+        <a href="#" class="btn-download">Free Download</a>
+      </div>
+    </div>
   </section>
 
   <section class="features">
-    <h2 class="section-title">なぜ<span>NOVA STRIKE</span>なのか</h2>
-    <div class="feature-grid">
-      <div class="feature-card">
-        <div class="feature-icon">⚔️</div>
-        <h3>リアルタイムPvP</h3>
-        <p>世界中のプレイヤーとリアルタイムで対戦。スキルと戦略が勝敗を分ける。</p>
+    <div class="feature-strip">
+      <div class="feature-label">
+        <h3>PvP Battle</h3>
+        <p>リアルタイム対戦</p>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">🌌</div>
-        <h3>1000以上の星系</h3>
-        <p>探索可能な広大な銀河マップ。各星系に固有の資源と秘密が眠る。</p>
+      <div class="feature-label">
+        <h3>Co-op Mode</h3>
+        <p>4人協力プレイ</p>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">🛸</div>
-        <h3>200種以上の艦船</h3>
-        <p>カスタマイズ自由な艦船で、自分だけの最強艦隊を編成しよう。</p>
+      <div class="feature-label">
+        <h3>Endless Worlds</h3>
+        <p>自動生成マップ</p>
+      </div>
+      <div class="feature-label">
+        <h3>200+ Gear</h3>
+        <p>装備カスタマイズ</p>
       </div>
     </div>
   </section>
 
   <section class="screenshots">
-    <h2 class="section-title">スクリーンショット</h2>
+    <h2>Screenshots</h2>
     <div class="screenshot-grid">
-      <div class="screenshot-item">🌠</div>
-      <div class="screenshot-item">💥</div>
-      <div class="screenshot-item">🪐</div>
-      <div class="screenshot-item">⭐</div>
+      <div class="screenshot-item" style="background:linear-gradient(180deg,#1a0a2e,#0d1a3a)"></div>
+      <div class="screenshot-item" style="background:linear-gradient(180deg,#2a0a1e,#1a0a2e)"></div>
+      <div class="screenshot-item" style="background:linear-gradient(180deg,#0a1a2e,#1a2a3e)"></div>
+      <div class="screenshot-item" style="background:linear-gradient(180deg,#1a0a2e,#2a1a4e)"></div>
     </div>
   </section>
 
-  <section class="reviews">
-    <h2 class="section-title">プレイヤーの声</h2>
-    <div class="review-grid">
-      <div class="review-card">
-        <div class="review-avatar">K</div>
-        <div class="review-body">
-          <h4>KazuGamer</h4>
-          <div class="review-stars">★★★★★</div>
-          <p>マジで神ゲー。毎日ログインしてる。ギルド戦が熱すぎる！</p>
-        </div>
+  <section class="stats">
+    <div class="stats-row">
+      <div class="stat-item">
+        <span class="stat-num stars">★★★★★</span>
+        <span class="stat-label">4.8 / 5.0 評価</span>
       </div>
-      <div class="review-card">
-        <div class="review-avatar">M</div>
-        <div class="review-body">
-          <h4>MikuPlay</h4>
-          <div class="review-stars">★★★★★</div>
-          <p>グラフィックが綺麗すぎる。スマホでこのクオリティは凄い。課金要素も良心的。</p>
-        </div>
+      <div class="stat-item">
+        <span class="stat-num count">8M+</span>
+        <span class="stat-label">ダウンロード</span>
       </div>
-      <div class="review-card">
-        <div class="review-avatar">T</div>
-        <div class="review-body">
-          <h4>TaroSTG</h4>
-          <div class="review-stars">★★★★☆</div>
-          <p>戦略性が高くて飽きない。チュートリアルがもう少し丁寧だと嬉しいかな。</p>
-        </div>
+      <div class="stat-item">
+        <span class="stat-num count">#1</span>
+        <span class="stat-label">アクションカテゴリ</span>
       </div>
     </div>
   </section>
 
   <section class="download-section">
-    <h2>今すぐプレイ</h2>
-    <p>基本プレイ無料 — 600万ダウンロード突破</p>
+    <h2>Play Now</h2>
     <div class="store-buttons">
       <a href="#" class="store-btn">
-        <span class="store-icon">🍎</span>
+        <div class="store-icon" style="background:linear-gradient(135deg,#333,#555)">A</div>
         <div class="store-text"><small>Download on the</small><span>App Store</span></div>
       </a>
       <a href="#" class="store-btn">
-        <span class="store-icon">▶️</span>
+        <div class="store-icon" style="background:linear-gradient(135deg,#1a8a4a,#2ab860)">G</div>
         <div class="store-text"><small>Get it on</small><span>Google Play</span></div>
       </a>
     </div>
   </section>
 
   <footer>
-    <p>&copy; 2026 Nova Strike Studio. All rights reserved.</p>
+    <p>&copy; 2026 Void Runners Studio. All rights reserved.</p>
   </footer>
 </body>
 </html>`
@@ -690,7 +662,6 @@ footer p{font-size:12px;color:rgba(255,255,255,0.2)}
 body{font-family:'Inter','Noto Sans JP',sans-serif;color:#1a1a2e;background:#fff}
 a{text-decoration:none;color:inherit}
 
-/* Hero */
 .hero{background:linear-gradient(135deg,#4f46e5 0%,#3730a3 100%);color:#fff;padding:100px 20px 80px;text-align:center;position:relative;overflow:hidden}
 .hero::before{content:"";position:absolute;width:500px;height:500px;background:radial-gradient(circle,rgba(147,197,253,0.15),transparent 70%);top:-150px;right:-100px}
 .hero-badge{display:inline-block;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);padding:8px 20px;border-radius:30px;font-size:14px;font-weight:600;margin-bottom:24px;backdrop-filter:blur(4px)}
@@ -705,7 +676,6 @@ a{text-decoration:none;color:inherit}
 .hero-stat-num{font-size:28px;font-weight:800;display:block}
 .hero-stat-label{font-size:12px;opacity:0.7}
 
-/* Learn */
 .learn{padding:80px 20px;max-width:800px;margin:0 auto}
 .section-title{text-align:center;font-size:28px;font-weight:700;margin-bottom:12px}
 .section-sub{text-align:center;color:#6b7280;font-size:15px;margin-bottom:48px}
@@ -714,30 +684,26 @@ a{text-decoration:none;color:inherit}
 .learn-check{color:#4f46e5;font-size:20px;font-weight:700;flex-shrink:0;margin-top:2px}
 .learn-item p{font-size:15px;line-height:1.6}
 
-/* Instructor */
 .instructor{padding:80px 20px;background:#f8fafc}
 .instructor-card{max-width:700px;margin:0 auto;display:flex;gap:32px;align-items:center}
-.instructor-avatar{width:160px;height:160px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#818cf8);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:64px;color:#fff}
+.instructor-avatar{width:160px;height:160px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#818cf8);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:800;color:rgba(255,255,255,0.3);font-family:'Inter',sans-serif}
 .instructor-info h3{font-size:22px;font-weight:700;margin-bottom:4px}
 .instructor-info .title{font-size:14px;color:#4f46e5;font-weight:600;margin-bottom:12px}
 .instructor-info p{font-size:14px;color:#6b7280;line-height:1.8}
 
-/* Curriculum */
 .curriculum{padding:80px 20px;max-width:700px;margin:0 auto}
 .module{border:1px solid #e5e7eb;border-radius:12px;margin-bottom:12px;overflow:hidden}
 .module-header{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;background:#fafaff;cursor:pointer;font-weight:600;font-size:15px}
 .module-header span{color:#4f46e5;font-size:13px;font-weight:500}
 .module-body{padding:0 20px 18px;font-size:14px;color:#6b7280;line-height:1.8}
 
-/* Testimonials */
 .testimonials{padding:80px 20px;background:#f8fafc}
 .review-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:900px;margin:0 auto}
 .review-card{background:#fff;border-radius:12px;padding:28px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
-.review-stars{color:#fbbf24;font-size:16px;margin-bottom:12px}
+.review-stars{color:#fbbf24;font-size:16px;margin-bottom:12px;letter-spacing:2px}
 .review-card p{font-size:14px;line-height:1.7;color:#444;margin-bottom:16px}
 .review-author{font-size:13px;color:#888}
 
-/* Pricing */
 .pricing{padding:80px 20px;max-width:800px;margin:0 auto;text-align:center}
 .pricing-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;max-width:700px;margin:0 auto}
 .price-card{background:#fff;border-radius:16px;padding:36px 28px;border:2px solid #e5e7eb;transition:border-color 0.2s}
@@ -748,31 +714,27 @@ a{text-decoration:none;color:inherit}
 .price-amount span{font-size:15px;font-weight:400;color:#9ca3af}
 .price-card ul{list-style:none;text-align:left;margin:20px 0 28px}
 .price-card li{padding:8px 0;font-size:14px;color:#555;border-bottom:1px solid #f3f4f6}
-.price-card li::before{content:"✓ ";color:#4f46e5;font-weight:700}
+.price-card li::before{content:"\\2713\\0020";color:#4f46e5;font-weight:700}
 .price-btn{display:block;width:100%;padding:14px;border-radius:10px;font-weight:600;font-size:15px;text-align:center;border:none;cursor:pointer;transition:background 0.2s}
 .price-btn-fill{background:#4f46e5;color:#fff}
 .price-btn-fill:hover{background:#4338ca}
 .price-btn-outline{background:transparent;border:2px solid #4f46e5;color:#4f46e5}
 .price-btn-outline:hover{background:#f0f0ff}
 
-/* FAQ */
 .faq{padding:80px 20px;max-width:700px;margin:0 auto}
 .faq-item{border-bottom:1px solid #e5e7eb;padding:20px 0}
 .faq-item h3{font-size:16px;font-weight:600}
 .faq-item p{color:#6b7280;font-size:14px;line-height:1.7;margin-top:10px}
 
-/* Guarantee */
 .guarantee{padding:60px 20px;text-align:center;max-width:600px;margin:0 auto}
-.guarantee-icon{font-size:48px;margin-bottom:16px}
+.guarantee-icon{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#818cf8);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;font-family:'Inter',sans-serif}
 .guarantee h2{font-size:22px;font-weight:700;margin-bottom:12px}
 .guarantee p{color:#6b7280;font-size:14px;line-height:1.8}
 
-/* Final CTA */
 .final-cta{background:linear-gradient(135deg,#4f46e5,#3730a3);color:#fff;padding:80px 20px;text-align:center}
 .final-cta h2{font-size:30px;font-weight:800;margin-bottom:12px}
 .final-cta p{opacity:0.8;font-size:16px;margin-bottom:32px}
 
-/* Footer */
 footer{background:#1a1a2e;color:#fff;text-align:center;padding:40px 20px}
 footer p{font-size:12px;opacity:0.5}
 
@@ -786,7 +748,7 @@ footer p{font-size:12px;opacity:0.5}
 </head>
 <body>
   <section class="hero">
-    <div class="hero-badge">🎓 受講者 <span>10,000人</span> 突破</div>
+    <div class="hero-badge">受講者 <span>10,000人</span> 突破</div>
     <h1>プロになる<br>Webデザイン完全マスター講座</h1>
     <p>現役デザイナーが教える、実務で使えるスキルを6ヶ月で習得。未経験からフリーランスデザイナーへ。</p>
     <a href="#" class="btn-cta">無料体験を始める<small>クレジットカード不要</small></a>
@@ -816,7 +778,7 @@ footer p{font-size:12px;opacity:0.5}
     <h2 class="section-title">講師紹介</h2>
     <p class="section-sub">現場を知るプロが直接指導</p>
     <div class="instructor-card">
-      <div class="instructor-avatar">👨‍🏫</div>
+      <div class="instructor-avatar">RT</div>
       <div class="instructor-info">
         <h3>高橋 亮太</h3>
         <p class="title">シニアUIデザイナー / デザイン講師</p>
@@ -929,7 +891,7 @@ footer p{font-size:12px;opacity:0.5}
   </section>
 
   <section class="guarantee">
-    <div class="guarantee-icon">🛡️</div>
+    <div class="guarantee-icon">G</div>
     <h2>30日間 全額返金保証</h2>
     <p>受講開始から30日以内であれば、理由を問わず全額返金いたします。まずはリスクゼロでお試しください。内容にご満足いただけなければ、メール1通で返金手続きが完了します。</p>
   </section>
@@ -965,7 +927,6 @@ footer p{font-size:12px;opacity:0.5}
 body{font-family:'Noto Serif JP',serif;color:#fff;background:#0f172a}
 a{text-decoration:none;color:inherit}
 
-/* Hero */
 .hero{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;overflow:hidden}
 .hero-bg{position:absolute;inset:0;background:linear-gradient(180deg,#0f172a 0%,#1a2744 40%,#0f172a 100%);z-index:0}
 .hero-bg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(212,168,83,0.08),transparent 70%)}
@@ -977,42 +938,37 @@ a{text-decoration:none;color:inherit}
 .btn-reserve{display:inline-block;background:#d4a853;color:#0f172a;padding:16px 48px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;letter-spacing:2px;border-radius:2px;transition:all 0.3s}
 .btn-reserve:hover{background:#e0bb6e;box-shadow:0 8px 32px rgba(212,168,83,0.3)}
 
-/* Rooms */
 .rooms{padding:100px 20px}
 .section-label{font-family:'Inter',sans-serif;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#d4a853;text-align:center;margin-bottom:12px}
 .section-heading{text-align:center;font-size:28px;font-weight:600;margin-bottom:60px;letter-spacing:2px}
 .room-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1000px;margin:0 auto}
 .room-card{border-radius:4px;overflow:hidden;background:rgba(255,255,255,0.03);border:1px solid rgba(212,168,83,0.15);transition:border-color 0.3s}
 .room-card:hover{border-color:rgba(212,168,83,0.4)}
-.room-img{height:220px;background:linear-gradient(135deg,#1a2744,#243356);display:flex;align-items:center;justify-content:center;font-size:48px}
+.room-img{height:220px;display:flex;align-items:center;justify-content:center}
 .room-info{padding:24px}
 .room-info h3{font-size:18px;font-weight:600;margin-bottom:8px;letter-spacing:1px}
 .room-info p{color:rgba(255,255,255,0.5);font-size:13px;line-height:1.8;margin-bottom:16px}
 .room-price{color:#d4a853;font-family:'Inter',sans-serif;font-size:15px;font-weight:600}
 .room-price span{font-size:12px;color:rgba(255,255,255,0.4);font-weight:400}
 
-/* Amenities */
 .amenities{padding:80px 20px;background:rgba(212,168,83,0.03)}
 .amenity-grid{display:flex;justify-content:center;gap:48px;flex-wrap:wrap;max-width:800px;margin:0 auto}
 .amenity-item{text-align:center}
-.amenity-icon{font-size:40px;margin-bottom:12px;display:block}
+.amenity-icon{width:56px;height:56px;border-radius:50%;border:1px solid rgba(212,168,83,0.3);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#d4a853;font-family:'Inter',sans-serif;letter-spacing:0.5px}
 .amenity-item span{font-size:13px;color:rgba(255,255,255,0.6);display:block}
 
-/* Access */
 .access{padding:80px 20px;max-width:700px;margin:0 auto;text-align:center}
 .access-map{width:100%;height:240px;background:linear-gradient(135deg,#1a2744,#0f172a);border:1px solid rgba(212,168,83,0.1);border-radius:4px;margin:32px 0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-family:'Inter',sans-serif;font-size:14px}
-.access-info{color:rgba(255,255,255,0.6);font-size:14px;line-height:2.2}
+.access-info{color:rgba(255,255,255,0.6);font-family:'Inter','Noto Serif JP',sans-serif;font-size:14px;line-height:2.2}
 .access-info strong{color:#fff;font-weight:500}
 
-/* Reviews */
 .reviews{padding:80px 20px;background:rgba(255,255,255,0.02)}
 .review-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:900px;margin:0 auto}
 .review-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:4px;padding:28px}
-.review-stars{color:#d4a853;font-size:16px;margin-bottom:12px}
+.review-stars{color:#d4a853;font-size:16px;margin-bottom:12px;letter-spacing:2px}
 .review-card p{color:rgba(255,255,255,0.6);font-size:14px;line-height:1.7;margin-bottom:12px}
 .review-author{font-size:13px;color:rgba(255,255,255,0.3)}
 
-/* Special */
 .special{padding:80px 20px;text-align:center}
 .special-card{max-width:600px;margin:0 auto;background:linear-gradient(135deg,rgba(212,168,83,0.08),rgba(212,168,83,0.02));border:1px solid rgba(212,168,83,0.2);border-radius:4px;padding:48px 36px}
 .special-card h3{font-size:22px;font-weight:600;color:#d4a853;margin-bottom:12px;letter-spacing:1px}
@@ -1020,12 +976,10 @@ a{text-decoration:none;color:inherit}
 .special-price{font-family:'Inter',sans-serif;font-size:32px;font-weight:700;color:#d4a853;margin-bottom:24px}
 .special-price span{font-size:14px;color:rgba(255,255,255,0.4);font-weight:400}
 
-/* CTA */
 .cta-section{padding:80px 20px;text-align:center;background:linear-gradient(180deg,#0f172a,#1a2744)}
 .cta-section h2{font-size:26px;font-weight:600;margin-bottom:12px;letter-spacing:2px}
 .cta-section p{color:rgba(255,255,255,0.5);font-size:14px;margin-bottom:36px}
 
-/* Footer */
 footer{border-top:1px solid rgba(255,255,255,0.05);padding:40px 20px;text-align:center}
 footer p{font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,0.2)}
 
@@ -1053,7 +1007,7 @@ footer p{font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,0.
     <h2 class="section-heading">客室のご案内</h2>
     <div class="room-grid">
       <div class="room-card">
-        <div class="room-img">🏔️</div>
+        <div class="room-img" style="background:linear-gradient(135deg,#2a3a4a,#3a4a5a)"></div>
         <div class="room-info">
           <h3>露天風呂付き和室</h3>
           <p>12畳の広々とした和室に専用露天風呂を備えた贅沢な空間。山の稜線を望む絶景をお楽しみください。</p>
@@ -1061,7 +1015,7 @@ footer p{font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,0.
         </div>
       </div>
       <div class="room-card">
-        <div class="room-img">🌊</div>
+        <div class="room-img" style="background:linear-gradient(135deg,#1a2744,#243356)"></div>
         <div class="room-info">
           <h3>和洋スイート</h3>
           <p>和の趣とモダンな快適さを融合。リビング、ベッドルーム、檜の内風呂を完備した特別室。</p>
@@ -1069,7 +1023,7 @@ footer p{font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,0.
         </div>
       </div>
       <div class="room-card">
-        <div class="room-img">🍃</div>
+        <div class="room-img" style="background:linear-gradient(135deg,#2a3a2a,#3a4a38)"></div>
         <div class="room-info">
           <h3>スタンダード和室</h3>
           <p>温かみのある8畳の和室。庭園を望む落ち着いた空間で、日常を忘れるひとときを。</p>
@@ -1083,12 +1037,12 @@ footer p{font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,0.
     <p class="section-label">Amenities</p>
     <h2 class="section-heading">施設・サービス</h2>
     <div class="amenity-grid">
-      <div class="amenity-item"><span class="amenity-icon">♨️</span><span>天然温泉<br>大浴場</span></div>
-      <div class="amenity-item"><span class="amenity-icon">🏊</span><span>温水プール</span></div>
-      <div class="amenity-item"><span class="amenity-icon">🍽️</span><span>会席料理<br>レストラン</span></div>
-      <div class="amenity-item"><span class="amenity-icon">💆</span><span>スパ<br>エステ</span></div>
-      <div class="amenity-item"><span class="amenity-icon">🅿️</span><span>無料駐車場<br>30台</span></div>
-      <div class="amenity-item"><span class="amenity-icon">📶</span><span>全館Wi-Fi<br>完備</span></div>
+      <div class="amenity-item"><div class="amenity-icon">湯</div><span>天然温泉<br>大浴場</span></div>
+      <div class="amenity-item"><div class="amenity-icon">泳</div><span>温水プール</span></div>
+      <div class="amenity-item"><div class="amenity-icon">膳</div><span>会席料理<br>レストラン</span></div>
+      <div class="amenity-item"><div class="amenity-icon">癒</div><span>スパ<br>エステ</span></div>
+      <div class="amenity-item"><div class="amenity-icon">P</div><span>無料駐車場<br>30台</span></div>
+      <div class="amenity-item"><div class="amenity-icon">Wi-Fi</div><span>全館Wi-Fi<br>完備</span></div>
     </div>
   </section>
 
@@ -1168,7 +1122,6 @@ footer p{font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,0.
 body{font-family:'Inter','Noto Sans JP',sans-serif;color:#fff;background:#0a0a0a}
 a{text-decoration:none;color:inherit}
 
-/* Hero */
 .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 20px;position:relative;overflow:hidden}
 .hero::before{content:"";position:absolute;width:800px;height:800px;background:radial-gradient(circle,rgba(124,58,237,0.12),transparent 70%);top:-200px;left:-200px}
 .hero::after{content:"";position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(37,99,235,0.1),transparent 70%);bottom:-100px;right:-150px}
@@ -1180,7 +1133,6 @@ a{text-decoration:none;color:inherit}
 .btn-secondary{display:inline-block;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);padding:14px 36px;border-radius:12px;font-weight:500;font-size:15px;margin-left:12px;transition:border-color 0.2s}
 .btn-secondary:hover{border-color:rgba(255,255,255,0.5);color:#fff}
 
-/* Problem/Solution */
 .problem-solution{padding:100px 20px;max-width:900px;margin:0 auto}
 .ps-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px}
 .ps-card{padding:40px;border-radius:16px}
@@ -1189,9 +1141,9 @@ a{text-decoration:none;color:inherit}
 .ps-card h3{font-size:20px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:10px}
 .ps-card.problem h3{color:#f87171}
 .ps-card.solution h3{color:#a78bfa}
+.ps-icon{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0}
 .ps-card p{color:rgba(255,255,255,0.55);font-size:15px;line-height:1.8}
 
-/* How it works */
 .how-it-works{padding:100px 20px;background:rgba(255,255,255,0.02)}
 .section-title{text-align:center;font-size:32px;font-weight:800;margin-bottom:12px}
 .section-sub{text-align:center;color:rgba(255,255,255,0.5);font-size:15px;margin-bottom:60px}
@@ -1201,33 +1153,28 @@ a{text-decoration:none;color:inherit}
 .step h3{font-size:17px;font-weight:600;margin-bottom:8px}
 .step p{color:rgba(255,255,255,0.5);font-size:14px;line-height:1.7}
 
-/* Metrics */
 .metrics{padding:100px 20px}
 .metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:900px;margin:0 auto}
 .metric{text-align:center;padding:32px 16px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:16px}
 .metric-num{font-size:40px;font-weight:900;background:linear-gradient(135deg,#c084fc,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:block;margin-bottom:8px}
 .metric span{color:rgba(255,255,255,0.5);font-size:13px}
 
-/* Team */
 .team{padding:100px 20px;background:rgba(255,255,255,0.02)}
 .team-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:800px;margin:0 auto}
 .team-member{text-align:center}
-.team-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#2563eb);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:32px}
+.team-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#2563eb);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:rgba(255,255,255,0.3);font-family:'Inter',sans-serif}
 .team-member h4{font-size:15px;font-weight:600;margin-bottom:4px}
 .team-member p{color:rgba(255,255,255,0.4);font-size:12px}
 
-/* Backers */
 .backers{padding:80px 20px;text-align:center}
 .backer-logos{display:flex;justify-content:center;gap:40px;flex-wrap:wrap;margin-top:32px}
 .backer{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px 28px;font-size:16px;font-weight:600;color:rgba(255,255,255,0.4)}
 
-/* Waitlist CTA */
 .waitlist{padding:100px 20px;text-align:center;position:relative;overflow:hidden}
 .waitlist::before{content:"";position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(124,58,237,0.1),transparent 70%);top:-200px;left:50%;transform:translateX(-50%)}
 .waitlist h2{font-size:36px;font-weight:900;margin-bottom:12px;background:linear-gradient(135deg,#c084fc,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .waitlist p{color:rgba(255,255,255,0.5);font-size:16px;margin-bottom:36px}
 
-/* Footer */
 footer{border-top:1px solid rgba(255,255,255,0.06);padding:40px 20px;text-align:center}
 footer p{font-size:12px;color:rgba(255,255,255,0.2)}
 
@@ -1240,7 +1187,7 @@ footer p{font-size:12px;color:rgba(255,255,255,0.2)}
 </head>
 <body>
   <section class="hero">
-    <span class="hero-label">🚀 Series A — $12M Raised</span>
+    <span class="hero-label">Series A — $12M Raised</span>
     <h1>Synapse AI</h1>
     <p>あらゆるデータから、次の一手を。企業の意思決定を自動化する次世代AIプラットフォーム。</p>
     <div>
@@ -1252,11 +1199,11 @@ footer p{font-size:12px;color:rgba(255,255,255,0.2)}
   <section class="problem-solution">
     <div class="ps-grid">
       <div class="ps-card problem">
-        <h3>❌ 課題</h3>
+        <h3><span class="ps-icon" style="background:rgba(239,68,68,0.2);color:#f87171">X</span> 課題</h3>
         <p>企業の意思決定の80%は、不十分なデータ分析に基づいている。Excelとスプレッドシートに埋もれた情報は、タイムリーなインサイトに変換されず、機会損失を生み続けている。</p>
       </div>
       <div class="ps-card solution">
-        <h3>✨ 解決策</h3>
+        <h3><span class="ps-icon" style="background:rgba(124,58,237,0.2);color:#a78bfa">S</span> 解決策</h3>
         <p>Synapse AIは、社内外のあらゆるデータソースを統合し、リアルタイムでインサイトを生成。自然言語で質問するだけで、エグゼクティブレベルの分析レポートが即座に手に入る。</p>
       </div>
     </div>
@@ -1300,22 +1247,22 @@ footer p{font-size:12px;color:rgba(255,255,255,0.2)}
     <p class="section-sub">経験豊富なチームが支える</p>
     <div class="team-grid">
       <div class="team-member">
-        <div class="team-avatar">👤</div>
+        <div class="team-avatar">SS</div>
         <h4>佐藤 翔</h4>
         <p>CEO / Co-founder<br>Ex-Google, 東大CS</p>
       </div>
       <div class="team-member">
-        <div class="team-avatar">👤</div>
+        <div class="team-avatar">EC</div>
         <h4>Emily Chen</h4>
         <p>CTO / Co-founder<br>Ex-Meta AI, Stanford PhD</p>
       </div>
       <div class="team-member">
-        <div class="team-avatar">👤</div>
+        <div class="team-avatar">RT</div>
         <h4>田中 理恵</h4>
         <p>CPO<br>Ex-Mercari, Design Lead</p>
       </div>
       <div class="team-member">
-        <div class="team-avatar">👤</div>
+        <div class="team-avatar">AK</div>
         <h4>Alex Kim</h4>
         <p>VP of Sales<br>Ex-Salesforce, 15年SaaS</p>
       </div>
@@ -1364,7 +1311,6 @@ footer p{font-size:12px;color:rgba(255,255,255,0.2)}
 body{font-family:'Noto Sans JP',sans-serif;color:#3d2b1f;background:#faf5ef}
 a{text-decoration:none;color:inherit}
 
-/* Hero */
 .hero{background:linear-gradient(135deg,#5c4033 0%,#3d2b1f 100%);color:#faf5ef;padding:100px 20px 80px;text-align:center;position:relative;overflow:hidden}
 .hero::before{content:"";position:absolute;width:500px;height:500px;background:radial-gradient(circle,rgba(74,124,89,0.12),transparent 70%);top:-100px;right:-100px}
 .hero h1{font-size:36px;font-weight:800;margin-bottom:16px;line-height:1.5}
@@ -1374,7 +1320,6 @@ a{text-decoration:none;color:inherit}
 .btn-outline{display:inline-block;border:2px solid rgba(250,245,239,0.4);color:#faf5ef;padding:14px 36px;border-radius:40px;font-weight:500;font-size:15px;margin-left:12px;transition:border-color 0.2s}
 .btn-outline:hover{border-color:#faf5ef}
 
-/* Impact */
 .impact{padding:80px 20px;text-align:center}
 .section-title{font-size:28px;font-weight:700;margin-bottom:12px;color:#3d2b1f}
 .section-sub{color:#8b7355;font-size:15px;margin-bottom:48px}
@@ -1383,13 +1328,11 @@ a{text-decoration:none;color:inherit}
 .impact-num{font-size:44px;font-weight:800;color:#4a7c59;display:block;margin-bottom:8px;font-family:'Inter',sans-serif}
 .impact-card p{color:#8b7355;font-size:14px}
 
-/* Story */
 .story{padding:80px 20px;background:#f0ebe3}
 .story-content{max-width:700px;margin:0 auto}
 .story-content p{font-size:15px;line-height:2;color:#5c4a3a;margin-bottom:20px}
-.story-img{width:100%;height:280px;background:linear-gradient(135deg,#d4c4a8,#b8a88c);border-radius:12px;margin:32px 0;display:flex;align-items:center;justify-content:center;font-size:48px;color:#8b7355}
+.story-img{width:100%;height:280px;background:linear-gradient(135deg,#d4c4a8,#b8a88c);border-radius:12px;margin:32px 0}
 
-/* Donation breakdown */
 .breakdown{padding:80px 20px;max-width:600px;margin:0 auto;text-align:center}
 .breakdown-list{margin-top:36px;text-align:left}
 .breakdown-item{display:flex;align-items:center;gap:16px;margin-bottom:20px}
@@ -1398,12 +1341,11 @@ a{text-decoration:none;color:inherit}
 .breakdown-label{width:120px;flex-shrink:0;font-size:14px;font-weight:600;color:#5c4033}
 .breakdown-pct{width:48px;flex-shrink:0;text-align:right;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;color:#4a7c59}
 
-/* Options */
 .options{padding:80px 20px;background:#f0ebe3}
 .option-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;max-width:700px;margin:0 auto}
 .option-card{background:#fff;border-radius:16px;padding:36px 28px;text-align:center;border:2px solid transparent;transition:border-color 0.2s}
 .option-card:hover{border-color:#4a7c59}
-.option-icon{font-size:40px;margin-bottom:16px}
+.option-icon{width:56px;height:56px;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff}
 .option-card h3{font-size:20px;font-weight:700;margin-bottom:8px}
 .option-card p{color:#8b7355;font-size:14px;line-height:1.7;margin-bottom:20px}
 .option-btn{display:inline-block;padding:12px 32px;border-radius:30px;font-weight:600;font-size:14px;transition:background 0.2s}
@@ -1412,12 +1354,10 @@ a{text-decoration:none;color:inherit}
 .option-btn.volunteer{background:transparent;border:2px solid #4a7c59;color:#4a7c59}
 .option-btn.volunteer:hover{background:#f0f7f2}
 
-/* Partners */
 .partners{padding:60px 20px;text-align:center}
 .partner-logos{display:flex;justify-content:center;gap:32px;flex-wrap:wrap;margin-top:24px}
 .partner{background:#fff;border:1px solid #e8dfd3;border-radius:8px;padding:14px 24px;font-size:14px;font-weight:600;color:#8b7355}
 
-/* Newsletter */
 .newsletter{padding:60px 20px;background:#5c4033;color:#faf5ef;text-align:center}
 .newsletter h2{font-size:24px;font-weight:700;margin-bottom:8px}
 .newsletter p{opacity:0.8;font-size:14px;margin-bottom:24px}
@@ -1427,7 +1367,6 @@ a{text-decoration:none;color:inherit}
 .newsletter-btn{background:#4a7c59;color:#fff;padding:14px 28px;border:none;border-radius:30px;font-weight:600;font-size:14px;cursor:pointer;transition:background 0.2s}
 .newsletter-btn:hover{background:#3d6a4a}
 
-/* Footer */
 footer{background:#3d2b1f;color:#faf5ef;text-align:center;padding:40px 20px}
 footer p{font-size:12px;opacity:0.5}
 
@@ -1470,7 +1409,7 @@ footer p{font-size:12px;opacity:0.5}
     <h2 class="section-title" style="text-align:center">一人の少女のストーリー</h2>
     <p class="section-sub" style="text-align:center">支援が届いた先にある、小さな奇跡</p>
     <div class="story-content">
-      <div class="story-img">📖</div>
+      <div class="story-img"></div>
       <p>美咲さん（仮名・14歳）は、母子家庭で育ちました。家計を支えるため、中学2年で塾を辞めざるを得なくなった彼女のもとに、「みどりの架け橋」の学習支援が届いたのは、その年の秋でした。</p>
       <p>週2回の無料学習教室に通い始めた美咲さんは、大学生ボランティアのお姉さんと出会い、少しずつ勉強への意欲を取り戻していきました。「自分にも、やればできることがあるんだ」——そう気づいた瞬間が、彼女の転機でした。</p>
       <p>1年後、美咲さんは第一志望の高校に合格。現在は将来の夢である看護師を目指して、日々勉強に励んでいます。あなたの支援が、こうした一人ひとりの未来をつくっています。</p>
@@ -1509,13 +1448,13 @@ footer p{font-size:12px;opacity:0.5}
     <p class="section-sub" style="text-align:center">あなたに合った形で、力を貸してください</p>
     <div class="option-grid">
       <div class="option-card">
-        <div class="option-icon">💚</div>
+        <div class="option-icon" style="background:linear-gradient(135deg,#4a7c59,#6da67a)">&#9829;</div>
         <h3>寄付で支援する</h3>
         <p>月1,000円から。マンスリーサポーターとして、子どもたちの学びを継続的に支えてください。</p>
         <a href="#" class="option-btn donate">マンスリーサポーターになる</a>
       </div>
       <div class="option-card">
-        <div class="option-icon">🤝</div>
+        <div class="option-icon" style="background:linear-gradient(135deg,#8b7355,#a08a6a)">&#9734;</div>
         <h3>ボランティアで支援</h3>
         <p>学習指導、イベント運営、翻訳など、あなたのスキルを活かして子どもたちを応援しませんか。</p>
         <a href="#" class="option-btn volunteer">ボランティアに申し込む</a>
