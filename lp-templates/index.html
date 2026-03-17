@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LPテンプレート量産 — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <div class="top-bar">
+      <a href="../index.html" class="back">&larr; Kai & Blue</a>
+      <a href="../lp-docs/" class="docs-link">📖 制作記録</a>
+    </div>
+
+    <header>
+      <h1>LPテンプレート量産</h1>
+      <p class="subtitle">4種類のランディングページテンプレートをプレビュー＆ソース閲覧</p>
+    </header>
+
+    <div class="gallery" id="gallery"></div>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+
+  <!-- Overlay -->
+  <div class="overlay" id="overlay">
+    <div class="overlay-content">
+      <div class="overlay-header">
+        <h3 id="overlay-title"></h3>
+        <div class="overlay-tabs">
+          <button class="tab-btn active" id="tab-preview">プレビュー</button>
+          <button class="tab-btn" id="tab-source">ソース</button>
+        </div>
+        <button class="close-btn" id="close-btn">&times;</button>
+      </div>
+      <iframe class="preview-frame" id="preview-frame" sandbox="allow-same-origin"></iframe>
+      <div class="source-view" id="source-view"></div>
+    </div>
+  </div>
+
+  <script src="lp.js"></script>
+</body>
+</html>

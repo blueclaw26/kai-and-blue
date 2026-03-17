@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>為替レートモニター — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; Kai & Blue</a>
+
+    <header>
+      <h1>為替レートモニター</h1>
+      <p class="subtitle">リアルタイム為替レート表示ツールの制作記録</p>
+    </header>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>為替API調査</h3>
+        <p>frankfurter API（無料、キー不要）を選定。信頼性と使いやすさを基準に複数のAPIを比較検討。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="Webサービス同士がデータをやり取りするための仕組み。URLにリクエストを送ると、JSON形式でデータが返ってくる。HTTPメソッド（GET/POST等）を使ってリソースを操作する。">REST API</span><span class="term" data-explain="用途に合ったAPIを選ぶための判断基準。レート制限、レスポンス速度、データの正確性、ドキュメントの充実度、利用規約などを総合的に評価する。">APIの選定基準</span><span class="term" data-explain="無料APIは気軽に試せるがレート制限や機能制限がある。有料APIは安定性・サポート・データ品質が高い。プロジェクトの規模と要件に応じて選択する。">無料API vs 有料API</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>fetch/async-awaitでレート取得</h3>
+        <p>複数通貨のレートを一括取得。非同期処理を使ってAPIからデータを取得し、画面に表示する。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="ブラウザに組み込まれたHTTPリクエスト送信機能。URLを指定してAPIにアクセスし、レスポンスを取得する。XMLHttpRequestの後継として、よりシンプルなコードで通信できる。">fetch API</span><span class="term" data-explain="非同期処理を同期的に書ける構文。awaitでPromiseの完了を待ち、結果を変数に代入できる。try/catchでエラーハンドリングも直感的に書ける。">async/await</span><span class="term" data-explain="APIから返ってくるデータの構造。キーと値のペアで構成され、ネストしたオブジェクトや配列を含むことが多い。rates.USD のようにドット記法でアクセスする。">JSONレスポンスの構造</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>通貨換算ロジック</h3>
+        <p>基準通貨の変更、金額入力、リアルタイム計算。ユーザーの入力に応じて即座に換算結果を更新する。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="JavaScriptでの四則演算、通貨レートの掛け算・割り算。基準通貨を変更すると全通貨の表示が再計算される仕組み。">数値計算</span><span class="term" data-explain="コンピュータは小数を正確に表現できない場合がある（0.1 + 0.2 ≠ 0.3）。通貨計算ではtoFixed()やMath.round()で桁数を制御する必要がある。">浮動小数点の扱い</span><span class="term" data-explain="ユーザーの入力（金額変更、通貨選択）が即座に画面の表示に反映される仕組み。inputイベントを監視して、変更のたびに再計算・再描画する。">UI同期</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>レートチャート描画</h3>
+        <p>Canvas APIで30日間のレート推移を折れ線グラフ表示。データの可視化を通じて傾向を把握できるようにする。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="HTMLのcanvas要素に図形やグラフを描画するためのAPI。2Dコンテキストを取得し、lineTo()やfillRect()などのメソッドで自由に描画できる。">Canvas API</span><span class="term" data-explain="数値データをグラフやチャートとして視覚的に表現すること。折れ線グラフ、棒グラフ、円グラフなど、データの性質に合った表現方法を選ぶ。">データの可視化</span><span class="term" data-explain="実際のデータ値（例: レート135.5）をキャンバス上のピクセル座標に変換する計算。データの最大値・最小値からキャンバスの幅・高さにマッピングする。">座標変換（データ→ピクセル）</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 5</span>
+        <h3>自動更新とUX</h3>
+        <p>60秒ごとの自動更新、カウントダウン表示、localStorageでのデータ永続化。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="一定間隔で関数を繰り返し実行するJavaScriptの機能。60秒ごとにAPIからレートを再取得する、のような定期処理に使う。clearIntervalで停止できる。">setInterval</span><span class="term" data-explain="データの鮮度を保つための設計パターン。更新頻度、ローディング表示、エラー時のリトライ、カウントダウン表示でユーザーに次の更新タイミングを伝える。">自動更新の設計</span><span class="term" data-explain="ブラウザにキーと値のペアでデータを保存する仕組み。ページを閉じてもデータが残る。前回のレートや設定を保存しておき、次回アクセス時に復元できる。">localStorage</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>使用技術</h2>
+      <ul class="tech-list">
+        <li><a href="../tech/#html">HTML</a></li>
+        <li><a href="../tech/#css">CSS</a></li>
+        <li><a href="../tech/#javascript">JavaScript</a></li>
+        <li><a href="../tech/#canvas">Canvas API</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+
+  <script>
+    document.querySelectorAll('.term').forEach(term => {
+      term.addEventListener('click', () => {
+        const existing = term.parentNode.querySelector('.term-explain');
+        if (existing) { existing.remove(); return; }
+        term.parentNode.querySelectorAll('.term-explain').forEach(e => e.remove());
+        const el = document.createElement('span');
+        el.className = 'term-explain';
+        el.textContent = term.dataset.explain;
+        term.parentNode.appendChild(el);
+      });
+    });
+  </script>
+</body>
+</html>

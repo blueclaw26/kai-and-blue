@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LPテンプレート量産 — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; Kai & Blue</a>
+
+    <header>
+      <h1>LPテンプレート量産</h1>
+      <p class="subtitle">ランディングページテンプレートギャラリーの制作記録</p>
+    </header>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>LP構成パターンの整理</h3>
+        <p>Hero+CTA、Feature Grid、Testimonial、Pricingの4パターンを定義。それぞれのLPが持つ役割と構成要素を整理する。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="ランディングページを構成する要素の種類。ヒーローセクション、特徴紹介、お客様の声、料金表、CTAボタンなど。目的に応じて必要な要素を組み合わせる。">LPの構成要素</span><span class="term" data-explain="Call to Action（行動喚起）の略。ユーザーに「今すぐ始める」「無料トライアル」などの具体的なアクションを促すボタンやリンク。配置・色・文言が成果に大きく影響する。">CTA（Call to Action）の設計</span><span class="term" data-explain="情報をどの順番で、どの粒度で提示するかを設計すること。ユーザーの関心→理解→信頼→行動という流れに沿って、コンテンツを構造化する。">情報設計</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>テンプレートのHTML/CSS設計</h3>
+        <p>各パターンの自己完結型テンプレートを作成。1つのHTML文字列に全スタイルを含め、外部依存なしで動作するように設計。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="UIを独立した部品（コンポーネント）として考える設計手法。ヘッダー、カード、ボタンなどをそれぞれ独立した単位として設計し、組み合わせてページを構築する。">コンポーネント思考</span><span class="term" data-explain="CSSの設計方法論。BEM、OOCSS、SMACSSなどの手法がある。クラス名の命名規則やファイル分割のルールを決めることで、大規模なCSSでも保守しやすくなる。">CSS設計手法</span><span class="term" data-explain="1つのファイル内にHTML・CSS・必要なコンテンツがすべて含まれており、外部のリソースに依存せずに動作する状態。テンプレートとして配布・プレビューしやすい。">テンプレートの自己完結性</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>ギャラリーUIの実装</h3>
+        <p>サムネイルカード、プレビュー表示。テンプレートの一覧画面とフルスクリーンプレビュー機能を実装する。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="別のHTMLページを現在のページ内に埋め込むHTML要素。srcdoc属性を使えばHTMLの文字列を直接レンダリングできる。sandbox属性でセキュリティを制御する。">iframe</span><span class="term" data-explain="画面全体を覆う半透明の背景の上にコンテンツを表示するUI。モーダルダイアログやプレビュー表示に使う。position: fixedとz-indexで他の要素の上に配置する。">オーバーレイ表示</span><span class="term" data-explain="プレビュー画面をデスクトップ・タブレット・スマホなど異なる画面サイズで確認できる機能。iframeの幅を変えることで、テンプレートのレスポンシブ対応を確認できる。">レスポンシブプレビュー</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>ソースコード表示</h3>
+        <p>テンプレートのHTML/CSSソースを閲覧可能に。プレビューとソースコードをタブで切り替えられるようにする。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="textContentは文字列をそのままテキストとして表示する（HTMLタグもそのまま表示）。innerHTMLは文字列をHTMLとして解釈・描画する。ソースコード表示にはtextContentを使う。">textContent vs innerHTML</span><span class="term" data-explain="同じHTMLコードでも、textContentで表示すればソースコードとして読める。innerHTMLやsrcdocで表示すればレンダリングされたページとして見える。この使い分けが重要。">コードの表示と実行の違い</span><span class="term" data-explain="実際に動作するコードのソースを閲覧可能にすることで、学習者が構造や実装パターンを学べる。「動くもの」と「その中身」の両方を見せる教育的アプローチ。">教材としてのソースコード公開</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>使用技術</h2>
+      <ul class="tech-list">
+        <li><a href="../tech/#html">HTML</a></li>
+        <li><a href="../tech/#css">CSS</a></li>
+        <li><a href="../tech/#javascript">JavaScript</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+
+  <script>
+    document.querySelectorAll('.term').forEach(term => {
+      term.addEventListener('click', () => {
+        const existing = term.parentNode.querySelector('.term-explain');
+        if (existing) { existing.remove(); return; }
+        term.parentNode.querySelectorAll('.term-explain').forEach(e => e.remove());
+        const el = document.createElement('span');
+        el.className = 'term-explain';
+        el.textContent = term.dataset.explain;
+        term.parentNode.appendChild(el);
+      });
+    });
+  </script>
+</body>
+</html>

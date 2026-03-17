@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>スネークゲーム — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; Kai & Blue</a>
+
+    <header>
+      <h1>スネークゲーム</h1>
+      <p class="subtitle">クラシックスネークゲームの制作記録</p>
+    </header>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>Canvas上にゲームフィールド構築</h3>
+        <p>描画エリア、背景、グリッドを設定。ゲームの土台となるフィールドをCanvas 2D APIで構築する。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="HTMLのcanvas要素に2Dグラフィックスを描画するためのAPI。getContext('2d')でコンテキストを取得し、fillRect()やstrokeRect()で矩形を描く。ゲームの描画基盤。">Canvas 2D API</span><span class="term" data-explain="ゲームが行われる領域の設計。グリッドサイズ、セルの大きさ、境界線の有無を決める。スネークや食べ物の座標管理の基準となる。">ゲームフィールド設計</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>スネークの移動と成長</h3>
+        <p>方向制御、体の追従、食べたら伸びる仕組み。配列で蛇の体を管理し、キー入力で方向を変える。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="配列の末尾に要素を追加するpush()と、先頭の要素を取り除くshift()。スネークの移動は「頭を追加（push）→尻尾を削除（shift）」で実現。食べた時はshiftを省略して伸びる。">配列操作（push/shift）</span><span class="term" data-explain="keydownイベントで押されたキーを検知する。ArrowUp/Down/Left/Rightを判定し、スネークの移動方向を変更する。同時に逆方向への入力を無視する制御も必要。">キーボード入力処理</span><span class="term" data-explain="移動の方向を座標の変化量で表す。上なら{x:0, y:-1}、右なら{x:1, y:0}のように定義。現在位置にベクトルを加算して次の位置を計算する。">方向ベクトル</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>衝突判定</h3>
+        <p>壁との衝突、自分の体との衝突。ゲームオーバーの条件を実装して、ゲームとしてのルールを完成させる。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="スネークの頭の座標が壁の範囲外（0未満またはフィールドサイズ以上）かどうかを判定する。体との衝突は、頭の座標が体のどこかのセグメントと一致するかを配列で検索する。">座標の比較</span><span class="term" data-explain="オブジェクト同士が重なっているかを判定するロジック。スネークゲームではグリッドベースの座標一致判定を使う。より複雑なゲームでは矩形や円の重なり判定を使う。">衝突判定アルゴリズム</span><span class="term" data-explain="ゲームが終了する条件の定義。壁にぶつかる、自分の体にぶつかるなど。条件を満たしたらゲームループを停止し、スコア表示やリスタート画面に遷移する。">ゲームオーバー条件</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>食べ物の生成とスコア</h3>
+        <p>ランダム配置、スコア加算、スピードアップ。食べるたびに難易度が上がる仕組みを実装する。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="Math.random()とMath.floor()を組み合わせて、フィールド内のランダムな座標を生成する。スネークの体と重ならない位置に食べ物を配置する必要がある。">乱数生成</span><span class="term" data-explain="スコアに応じてゲームの速度（setIntervalの間隔）を変化させる。食べるたびにインターバルを短くし、プレイヤーに適度な挑戦を提供する。">難易度の動的調整</span><span class="term" data-explain="localStorageにハイスコアを保存し、ゲーム起動時に読み込む。現在のスコアがハイスコアを超えたら更新する。ブラウザを閉じてもスコアが残る。">ハイスコア管理(localStorage)</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 5</span>
+        <h3>タッチ操作対応</h3>
+        <p>スワイプで方向変更（モバイル対応）。スマートフォンでも快適にプレイできるようにする。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="タッチ開始時と終了時のイベント。touchstartで指が触れた座標を記録し、touchendで離した座標と比較してスワイプの方向を判定する。">touchstart/touchend</span><span class="term" data-explain="タッチ開始座標と終了座標の差分（dx, dy）を計算し、どの方向にスワイプしたかを判定する。Math.abs(dx) > Math.abs(dy)なら水平方向、逆なら垂直方向。">スワイプ方向の計算</span><span class="term" data-explain="スマートフォンやタブレットで操作できるようにすること。タッチイベント対応のほか、viewport設定、適切なサイズ調整、スクロール防止(preventDefault)なども含む。">モバイル対応</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>使用技術</h2>
+      <ul class="tech-list">
+        <li><a href="../tech/#canvas">HTML5 Canvas</a></li>
+        <li><a href="../tech/#javascript">JavaScript</a></li>
+        <li><a href="../tech/#localstorage">localStorage</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+
+  <script>
+    document.querySelectorAll('.term').forEach(term => {
+      term.addEventListener('click', () => {
+        const existing = term.parentNode.querySelector('.term-explain');
+        if (existing) { existing.remove(); return; }
+        term.parentNode.querySelectorAll('.term-explain').forEach(e => e.remove());
+        const el = document.createElement('span');
+        el.className = 'term-explain';
+        el.textContent = term.dataset.explain;
+        term.parentNode.appendChild(el);
+      });
+    });
+  </script>
+</body>
+</html>
