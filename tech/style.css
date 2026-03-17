@@ -254,13 +254,40 @@ footer a:hover {
   to { opacity: 1; max-height: 200px; }
 }
 
-/* Tech list links */
-.tech-list a {
+/* Tech index entries */
+.tech-entry {
+  background: white;
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.tech-entry h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+.tech-desc {
+  font-size: 0.85rem;
+  color: #6b6b6b;
+  margin-bottom: 10px;
+}
+.tech-projects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tech-projects a {
+  font-size: 0.78rem;
   color: #4a8f7f;
   text-decoration: none;
+  background: #f0f0ec;
+  padding: 3px 10px;
+  border-radius: 12px;
 }
-.tech-list a:hover {
-  text-decoration: underline;
+.tech-projects a:hover {
+  background: #e0ddd8;
 }
 
 /* Responsive */

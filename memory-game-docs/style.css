@@ -222,6 +222,15 @@ footer a:hover {
   text-decoration: underline;
 }
 
+/* Tech list links */
+.tech-list a {
+  color: #4a8f7f;
+  text-decoration: none;
+}
+.tech-list a:hover {
+  text-decoration: underline;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .container {
