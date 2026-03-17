@@ -3,7 +3,7 @@ window.LP_TEMPLATES = [
   {
     name: 'SaaS プロダクト',
     target: 'B2B / ビジネス',
-    description: 'クリーンでプロフェッショナルなSaaS向けLP。機能紹介、料金表、FAQ付き。',
+    description: '信頼感を重視。青/白基調で清潔感、機能比較と料金表で合理的に判断させる構成。',
     colors: ['#4a6fa5', '#93c5fd'],
     html: `<!DOCTYPE html>
 <html lang="ja">
@@ -183,7 +183,7 @@ footer p{font-size:13px;opacity:0.6}
   {
     name: '健康食品',
     target: 'D2C / 一般消費者',
-    description: '緊急感と社会的証明を重視したD2C向けLP。レビュー、比較表、限定オファー付き。',
+    description: '感情に訴求。口コミ大量、限定感、カウントダウンで「今買わないと」を演出する構成。',
     colors: ['#4a7c59', '#e8a44a'],
     html: `<!DOCTYPE html>
 <html lang="ja">
@@ -340,7 +340,7 @@ footer p{font-size:12px;opacity:0.5;line-height:1.8}
   {
     name: 'レストラン',
     target: '飲食 / ローカル',
-    description: 'エレガントで写真中心のレストランLP。メニュー、ストーリー、アクセス情報付き。',
+    description: '写真が主役。シズル感とストーリーで世界観を伝え、予約に導く構成。',
     colors: ['#1a1a1a', '#c9a96e'],
     html: `<!DOCTYPE html>
 <html lang="ja">
@@ -490,7 +490,7 @@ footer p{font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,0.
   {
     name: 'ゲームアプリ',
     target: 'エンタメ / 若年層',
-    description: 'ダークでシネマティックなゲームアプリLP。ビジュアル重視、最小限のテキスト。',
+    description: 'ビジュアル全振り。テキスト最小限、動画やスクリーンショットで体験を想像させる構成。',
     colors: ['#0a0515', '#00e5ff'],
     html: `<!DOCTYPE html>
 <html lang="ja">
@@ -648,7 +648,7 @@ footer p{font-size:12px;color:rgba(255,255,255,0.2)}
   {
     name: 'オンラインコース',
     target: '教育 / スキルアップ',
-    description: '権威性と構成力を重視した教育系LP。カリキュラム、講師紹介、FAQ、返金保証付き。',
+    description: '権威づけ。実績数字、講師の肩書き、段階的な情報開示で「この人から学びたい」を作る構成。',
     colors: ['#4f46e5', '#93c5fd'],
     html: `<!DOCTYPE html>
 <html lang="ja">
@@ -913,7 +913,7 @@ footer p{font-size:12px;opacity:0.5}
   {
     name: 'ホテル・旅館',
     target: '観光 / ホスピタリティ',
-    description: '高級感あるホテル・旅館LP。客室紹介、アメニティ、アクセス、特別プラン付き。',
+    description: '没入感。フルスクリーンの写真、余白多め、テキスト少なめで「行きたい」を感じさせる構成。',
     colors: ['#0f172a', '#d4a853'],
     html: `<!DOCTYPE html>
 <html lang="ja">
@@ -1108,7 +1108,7 @@ footer p{font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,0.
   {
     name: 'スタートアップ',
     target: 'テック / 投資家向け',
-    description: 'ダークでグラデーションが映えるスタートアップLP。メトリクス、チーム紹介、ウェイトリスト付き。',
+    description: 'モダンさ。グラデーション、数字で勢いを見せ、「乗り遅れたくない」を作る構成。',
     colors: ['#7c3aed', '#2563eb'],
     html: `<!DOCTYPE html>
 <html lang="ja">
@@ -1297,7 +1297,7 @@ footer p{font-size:12px;color:rgba(255,255,255,0.2)}
   {
     name: 'NPO・社会課題',
     target: '非営利 / 支援者向け',
-    description: '温かみのあるNPO向けLP。インパクト数値、ストーリー、寄付の使途、ボランティア募集付き。',
+    description: '共感訴求。ストーリーテリングと数字でインパクトを見せ、「自分も関わりたい」に導く構成。',
     colors: ['#5c4033', '#4a7c59'],
     html: `<!DOCTYPE html>
 <html lang="ja">
