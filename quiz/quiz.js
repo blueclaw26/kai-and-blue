@@ -144,10 +144,13 @@ function handleAnswer(selected, btn) {
 
   if (selected === q.answer) {
     btn.classList.add('correct');
+    btn.textContent = '✓ ' + btn.textContent;
     score++;
   } else {
     btn.classList.add('wrong');
+    btn.textContent = '✗ ' + btn.textContent;
     buttons[q.answer].classList.add('correct');
+    buttons[q.answer].textContent = '✓ ' + buttons[q.answer].textContent;
   }
 
   setTimeout(() => {
