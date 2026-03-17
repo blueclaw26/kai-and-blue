@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ライフゲーム — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>ライフゲーム</h1>
+      <p class="subtitle">Conway's Game of Life</p>
+    </header>
+
+    <div class="game-area">
+      <canvas id="life-canvas"></canvas>
+    </div>
+
+    <div class="controls">
+      <div class="controls-row">
+        <button id="play-btn" class="btn btn-primary">▶ Play</button>
+        <button id="step-btn" class="btn">Step</button>
+        <button id="clear-btn" class="btn">Clear</button>
+        <button id="random-btn" class="btn">Random</button>
+      </div>
+
+      <div class="controls-row">
+        <label for="speed-slider">速度:</label>
+        <input type="range" id="speed-slider" min="1" max="30" value="10">
+        <span id="speed-display">10 gen/s</span>
+      </div>
+
+      <div class="controls-row">
+        <span class="gen-label">世代: <strong id="gen-count">0</strong></span>
+      </div>
+
+      <div class="controls-row presets">
+        <label>プリセット:</label>
+        <button class="btn btn-small" data-preset="glider">Glider</button>
+        <button class="btn btn-small" data-preset="blinker">Blinker</button>
+        <button class="btn btn-small" data-preset="pulsar">Pulsar</button>
+        <button class="btn btn-small" data-preset="gun">Gosper Glider Gun</button>
+      </div>
+    </div>
+  </div>
+
+  <a href="../life-docs/" class="docs-link" title="制作記録">📖</a>
+  <script src="life.js"></script>
+</body>
+</html>

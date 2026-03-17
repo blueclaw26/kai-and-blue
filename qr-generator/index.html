@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QRコード生成器 — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>QRコード生成器</h1>
+      <p class="subtitle">テキストやURLからQRコードを生成</p>
+    </header>
+
+    <div class="main-layout">
+      <div class="controls-panel">
+        <div class="input-group">
+          <label for="qr-input">テキスト / URL</label>
+          <textarea id="qr-input" rows="3" placeholder="URLやテキストを入力...">https://kai-and-blue.vercel.app</textarea>
+        </div>
+
+        <div class="input-group">
+          <label for="error-level">エラー訂正レベル</label>
+          <select id="error-level">
+            <option value="L">L（7%）</option>
+            <option value="M">M（15%）</option>
+            <option value="Q">Q（25%）</option>
+            <option value="H" selected>H（30%）</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label for="qr-size">サイズ</label>
+          <select id="qr-size">
+            <option value="256">256 × 256</option>
+            <option value="512" selected>512 × 512</option>
+            <option value="1024">1024 × 1024</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label for="overlay-input">中央に画像を配置（任意）</label>
+          <input type="file" id="overlay-input" accept="image/*">
+          <button id="clear-overlay" class="btn btn-small" style="display:none;">画像をクリア</button>
+        </div>
+
+        <button id="generate-btn" class="btn btn-primary">QRコードを生成</button>
+        <button id="download-btn" class="btn btn-secondary" disabled>PNGダウンロード</button>
+      </div>
+
+      <div class="preview-panel">
+        <canvas id="qr-canvas"></canvas>
+        <p id="preview-hint" class="hint">テキストを入力して「生成」をクリック</p>
+      </div>
+    </div>
+  </div>
+
+  <a href="../qr-docs/" class="docs-link" title="制作記録">📖</a>
+  <script src="qr.js"></script>
+</body>
+</html>

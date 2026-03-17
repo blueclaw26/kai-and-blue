@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>名刺デザイナー — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>名刺デザイナー</h1>
+      <p class="subtitle">テンプレートを選んで、名刺をデザイン</p>
+    </header>
+
+    <div class="main-layout">
+      <div class="controls-panel">
+        <div class="input-group">
+          <label for="field-name">名前</label>
+          <input type="text" id="field-name" placeholder="山田 太郎" value="山田 太郎">
+        </div>
+        <div class="input-group">
+          <label for="field-title">役職</label>
+          <input type="text" id="field-title" placeholder="シニアエンジニア" value="シニアエンジニア">
+        </div>
+        <div class="input-group">
+          <label for="field-company">会社名</label>
+          <input type="text" id="field-company" placeholder="株式会社サンプル" value="株式会社サンプル">
+        </div>
+        <div class="input-group">
+          <label for="field-phone">電話番号</label>
+          <input type="text" id="field-phone" placeholder="03-1234-5678" value="03-1234-5678">
+        </div>
+        <div class="input-group">
+          <label for="field-email">メール</label>
+          <input type="text" id="field-email" placeholder="taro@example.com" value="taro@example.com">
+        </div>
+        <div class="input-group">
+          <label for="field-website">ウェブサイト</label>
+          <input type="text" id="field-website" placeholder="https://example.com" value="https://example.com">
+        </div>
+
+        <div class="input-group">
+          <label>テンプレート</label>
+          <div class="template-options">
+            <button class="template-btn active" data-template="classic">Classic</button>
+            <button class="template-btn" data-template="modern">Modern</button>
+            <button class="template-btn" data-template="minimal">Minimal</button>
+            <button class="template-btn" data-template="creative">Creative</button>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>カラースキーム</label>
+          <div class="color-options">
+            <button class="color-btn active" data-color="navy" style="background:#1b2a4a"></button>
+            <button class="color-btn" data-color="teal" style="background:#2a6b5e"></button>
+            <button class="color-btn" data-color="wine" style="background:#6b2a3a"></button>
+            <button class="color-btn" data-color="charcoal" style="background:#333333"></button>
+            <button class="color-btn" data-color="royal" style="background:#3a2a6b"></button>
+          </div>
+        </div>
+
+        <div class="controls-row">
+          <button id="toggle-side" class="btn">裏面を表示</button>
+          <button id="export-btn" class="btn btn-primary">PNGエクスポート</button>
+        </div>
+      </div>
+
+      <div class="preview-panel">
+        <div class="card-wrapper">
+          <canvas id="card-canvas"></canvas>
+        </div>
+        <p class="hint">91mm × 55mm（実寸比率）</p>
+      </div>
+    </div>
+  </div>
+
+  <a href="../card-docs/" class="docs-link" title="制作記録">📖</a>
+  <script src="card.js"></script>
+</body>
+</html>
