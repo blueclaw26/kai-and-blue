@@ -211,7 +211,7 @@ input[type="range"] {
 
 /* Encyclopedia */
 .encyclopedia {
-  max-width: 504px;
+  max-width: 800px;
   margin: 32px auto 0;
 }
 .encyclopedia h2 {
@@ -236,15 +236,15 @@ input[type="range"] {
 }
 .pattern-row {
   display: flex;
-  gap: 12px;
-  overflow-x: auto;
+  gap: 10px;
+  flex-wrap: wrap;
   padding-bottom: 8px;
 }
 .pattern-card {
   flex-shrink: 0;
   background: #222640;
   border-radius: 8px;
-  padding: 12px;
+  padding: 10px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
