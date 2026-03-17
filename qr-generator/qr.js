@@ -127,102 +127,115 @@
 
     const size = parseInt(sizeSelect.value);
 
-    // Generate QR data matrix with highest error correction
+    // Step 1: Generate QR to a temp canvas at module resolution * 3
     const qrData = QRCode.create(text, { errorCorrectionLevel: 'H' });
     const modules = qrData.modules;
     const moduleCount = modules.size;
+    const unit = 3; // pixels per module
+    const qrMargin = 4; // modules of margin
+    const qrImageSize = (moduleCount + qrMargin * 2) * unit;
 
-    const moduleSize = Math.floor(size / (moduleCount + 4)); // +4 for margin
-    const margin = Math.floor((size - moduleCount * moduleSize) / 2);
-
-    // Get grayscale image data at module resolution
-    const tmpCanvas = document.createElement('canvas');
-    tmpCanvas.width = moduleCount;
-    tmpCanvas.height = moduleCount;
-    const tmpCtx = tmpCanvas.getContext('2d');
-    tmpCtx.drawImage(overlayImage, 0, 0, moduleCount, moduleCount);
-    const imgData = tmpCtx.getImageData(0, 0, moduleCount, moduleCount);
-
-    // Main canvas
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, size, size);
-
-    // Bayer-like ordered dithering matrix for 3x3
-    const bayerOrder = [
-      [0, 7, 3],
-      [6, 5, 2],
-      [4, 1, 8]
-    ];
+    // Draw QR at pixel level
+    const qrCanvas = document.createElement('canvas');
+    qrCanvas.width = qrImageSize;
+    qrCanvas.height = qrImageSize;
+    const qrCtx = qrCanvas.getContext('2d');
+    qrCtx.fillStyle = '#ffffff';
+    qrCtx.fillRect(0, 0, qrImageSize, qrImageSize);
 
     for (let row = 0; row < moduleCount; row++) {
       for (let col = 0; col < moduleCount; col++) {
-        const isDark = modules.get(row, col);
-        const isFinder = isInFinderPattern(row, col, moduleCount);
-
-        if (isFinder) {
-          // Solid black or white for finder patterns — must stay intact for scanning
-          if (isDark) {
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(
-              margin + col * subGrid * pixelSize,
-              margin + row * subGrid * pixelSize,
-              subGrid * pixelSize,
-              subGrid * pixelSize
-            );
-          }
-          continue;
-        }
-
-        // Get grayscale value (0=black, 255=white)
-        const idx = (row * moduleCount + col) * 4;
-        const r = imgData.data[idx];
-        const g = imgData.data[idx + 1];
-        const b = imgData.data[idx + 2];
-        const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-
-        // QR data + image brightness determine sub-pixel fill
-        // Dark modules stay predominantly dark, light stay predominantly light
-        const darkness = 1 - gray / 255; // 0=white, 1=black
-        let numDark;
-        if (isDark) {
-          // QR dark module: 2-4 sub-pixels dark (image modulates intensity)
-          numDark = 4 + Math.round(darkness * 5);  // 4-9 out of 9
-        } else {
-          // QR light module: 0-1 sub-pixels dark (slight image texture only)
-          numDark = Math.round(darkness * 3);  // 0-3 out of 9
-        }
-
-        for (let sy = 0; sy < subGrid; sy++) {
-          for (let sx = 0; sx < subGrid; sx++) {
-            const threshold = bayerOrder[sy][sx];
-            const shouldBeDark = threshold < numDark;
-
-            if (shouldBeDark) {
-              ctx.fillStyle = '#000000';
-              ctx.fillRect(
-                margin + (col * subGrid + sx) * pixelSize,
-                margin + (row * subGrid + sy) * pixelSize,
-                pixelSize,
-                pixelSize
-              );
-            }
-          }
+        if (modules.get(row, col)) {
+          const x = (col + qrMargin) * unit;
+          const y = (row + qrMargin) * unit;
+          qrCtx.fillStyle = '#000000';
+          qrCtx.fillRect(x, y, unit, unit);
         }
       }
     }
+
+    // Step 2: Resize uploaded image to same size as QR image
+    const bgCanvas = document.createElement('canvas');
+    bgCanvas.width = qrImageSize;
+    bgCanvas.height = qrImageSize;
+    const bgCtx = bgCanvas.getContext('2d');
+    bgCtx.fillStyle = '#ffffff';
+    bgCtx.fillRect(0, 0, qrImageSize, qrImageSize);
+
+    // Crop to square and resize
+    const img = overlayImage;
+    const imgMin = Math.min(img.width, img.height);
+    const sx = (img.width - imgMin) / 2;
+    const sy = (img.height - imgMin) / 2;
+    bgCtx.drawImage(img, sx, sy, imgMin, imgMin, 0, 0, qrImageSize, qrImageSize);
+
+    const bgData = bgCtx.getImageData(0, 0, qrImageSize, qrImageSize);
+    const qrPixels = qrCtx.getImageData(0, 0, qrImageSize, qrImageSize);
+
+    // Step 3: Merge - replace QR pixels with image pixels except protected areas
+    const resultData = qrCtx.createImageData(qrImageSize, qrImageSize);
+
+    for (let y = 0; y < qrImageSize; y++) {
+      for (let x = 0; x < qrImageSize; x++) {
+        const idx = (y * qrImageSize + x) * 4;
+
+        // Convert to module-relative coordinates
+        const moduleCol = Math.floor(x / unit) - qrMargin;
+        const moduleRow = Math.floor(y / unit) - qrMargin;
+        const subX = x % unit;
+        const subY = y % unit;
+
+        const prot = isProtectedPixel(moduleRow, moduleCol, subX, subY, moduleCount);
+
+        if (prot) {
+          // Keep QR data
+          resultData.data[idx] = qrPixels.data[idx];
+          resultData.data[idx + 1] = qrPixels.data[idx + 1];
+          resultData.data[idx + 2] = qrPixels.data[idx + 2];
+          resultData.data[idx + 3] = 255;
+        } else {
+          // Use image pixel
+          resultData.data[idx] = bgData.data[idx];
+          resultData.data[idx + 1] = bgData.data[idx + 1];
+          resultData.data[idx + 2] = bgData.data[idx + 2];
+          resultData.data[idx + 3] = 255;
+        }
+      }
+    }
+
+    qrCtx.putImageData(resultData, 0, 0);
+
+    // Step 4: Scale to output size
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false; // keep pixel art crisp
+    ctx.drawImage(qrCanvas, 0, 0, size, size);
 
     canvas.style.display = 'block';
     hint.style.display = 'none';
     downloadBtn.disabled = false;
   }
 
-  function isInFinderPattern(row, col, size) {
-    if (row < 7 && col < 7) return true;
-    if (row < 7 && col >= size - 7) return true;
-    if (row >= size - 7 && col < 7) return true;
+  function isProtectedPixel(moduleRow, moduleCol, subX, subY, moduleCount) {
+    // Outside QR area (margin)
+    if (moduleRow < 0 || moduleCol < 0 || moduleRow >= moduleCount || moduleCol >= moduleCount) {
+      return true; // keep margin white
+    }
+
+    // Center pixel of each module (carries QR data)
+    if (subX === 1 && subY === 1) {
+      return true;
+    }
+
+    // Finder patterns (top-left, top-right, bottom-left) + 1 module separator
+    if (moduleRow <= 7 && moduleCol <= 7) return true;         // top-left
+    if (moduleRow <= 7 && moduleCol >= moduleCount - 8) return true;  // top-right
+    if (moduleRow >= moduleCount - 8 && moduleCol <= 7) return true;  // bottom-left
+
+    // Timing patterns (row 6, col 6)
+    if (moduleRow === 6 || moduleCol === 6) return true;
+
     return false;
   }
 
