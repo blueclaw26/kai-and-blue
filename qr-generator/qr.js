@@ -8,7 +8,7 @@
   const overlayGroup = document.getElementById('overlay-group');
   const clearOverlayBtn = document.getElementById('clear-overlay');
   const generateBtn = document.getElementById('generate-btn');
-  const shuffleBtn = document.getElementById('shuffle-btn');
+
   const filterGroup = document.getElementById('filter-group');
   const filterSelect = document.getElementById('color-filter');
   const downloadBtn = document.getElementById('download-btn');
@@ -33,12 +33,12 @@
     if (currentMode === 'art') {
       errorLevelGroup.style.display = 'none';
       overlayLabel.textContent = 'アート用画像（必須）';
-      shuffleBtn.style.display = '';
+
       filterGroup.style.display = '';
     } else {
       errorLevelGroup.style.display = '';
       overlayLabel.textContent = '中央に画像を配置（任意）';
-      shuffleBtn.style.display = 'none';
+
       filterGroup.style.display = 'none';
     }
   }
@@ -72,8 +72,7 @@
     }
   });
 
-  shuffleBtn.addEventListener('click', () => {
-    generateArt(true);
+    generateArt();
   });
 
   // Generate on load with default text
@@ -161,7 +160,7 @@
     }
   }
 
-  function generateArt(shuffle) {
+  function generateArt() {
     let text = input.value.trim();
     if (!text || !overlayImage) {
       if (!overlayImage) {
@@ -171,10 +170,8 @@
       return;
     }
 
-    if (shuffle) {
-      const sep = text.includes('?') ? '&' : '?';
+    const sep = text.includes('?') ? '&' : '?';
       text = text + sep + '_=' + randomSuffix(6);
-    }
 
     // Pad text to force higher QR version (more modules = better image resolution)
     // QR version 10+ has 57+ modules, giving much better image detail
