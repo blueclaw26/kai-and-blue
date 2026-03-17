@@ -19,7 +19,7 @@
 
     <section>
       <h2>概要</h2>
-      <p>CRM（Pipedrive）から取引データを毎日自動で取得し、カテゴリ別の件数と金額を集計して、Google Sheetsの指定セルに書き込む自動化ツール。</p>
+      <p>CRMから取引データを毎日自動で取得し、カテゴリ別の件数と金額を集計して、Google Sheetsの指定セルに書き込む自動化ツール。</p>
     </section>
 
     <section>
@@ -27,7 +27,7 @@
 
       <div class="step">
         <span class="step-number">Step 1</span>
-        <h3>Pipedrive APIの調査</h3>
+        <h3>CRM APIの調査</h3>
         <p>CRMのデータにAPIでアクセスする方法を調査し、最適なAPIバージョンを選定した。</p>
         <ul>
           <li>CRMのデータにAPIでアクセスする方法を調査</li>
@@ -62,7 +62,7 @@
         <ul>
           <li>カテゴリ別に金額を合算</li>
           <li>日付フィルタリング（当日分のみ抽出）</li>
-          <li>Pipedriveのフィルター機能（<code>filter_id</code>）も併用してサーバー側で絞り込み</li>
+          <li>CRMのフィルター機能（<code>filter_id</code>）も併用してサーバー側で絞り込み</li>
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
@@ -130,7 +130,7 @@
       <h2>使用技術まとめ</h2>
       <ul class="tech-list">
         <li>Node.js</li>
-        <li>Pipedrive API v2</li>
+        <li>CRM API v2</li>
         <li>Google Sheets API</li>
         <li>サービスアカウント認証</li>
         <li>cron</li>
