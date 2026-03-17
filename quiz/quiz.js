@@ -146,6 +146,8 @@ function renderQuestion() {
   if (oldFeedback) oldFeedback.remove();
   const oldExplanation = document.querySelector('.explanation');
   if (oldExplanation) oldExplanation.remove();
+  const oldNextBtn = document.querySelector('.next-btn');
+  if (oldNextBtn) oldNextBtn.remove();
 
   progressFill.style.width = ((current + 1) / questions.length * 100) + '%';
   progressText.textContent = (current + 1) + ' / ' + questions.length;
@@ -202,15 +204,29 @@ function handleAnswer(selected, btn) {
 
   choicesEl.parentNode.appendChild(feedback);
 
-  const delay = (selected === q.answer) ? 1000 : 3500;
-  setTimeout(() => {
-    current++;
-    if (current < questions.length) {
-      renderQuestion();
-    } else {
-      showResult();
-    }
-  }, delay);
+  if (selected === q.answer) {
+    setTimeout(() => {
+      current++;
+      if (current < questions.length) {
+        renderQuestion();
+      } else {
+        showResult();
+      }
+    }, 1000);
+  } else {
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'next-btn';
+    nextBtn.textContent = '次へ';
+    nextBtn.addEventListener('click', () => {
+      current++;
+      if (current < questions.length) {
+        renderQuestion();
+      } else {
+        showResult();
+      }
+    });
+    choicesEl.parentNode.appendChild(nextBtn);
+  }
 }
 
 function showResult() {

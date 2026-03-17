@@ -220,6 +220,24 @@ body {
   color: #c0392b;
 }
 
+.next-btn {
+  display: block;
+  margin: 16px auto 0;
+  padding: 10px 32px;
+  background: #4a8f7f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.next-btn:hover {
+  background: #3d7a6b;
+}
+
 .explanation {
   margin-top: 12px;
   padding: 16px;
