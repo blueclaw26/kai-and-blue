@@ -58,6 +58,143 @@
         </ul>
       </div>
     </details>
+
+    <div class="encyclopedia">
+      <h2>パターン図鑑</h2>
+
+      <div class="category">
+        <h3>静止物体 — Still Lifes</h3>
+        <p class="category-desc">変化しない安定したパターン</p>
+        <div class="pattern-row">
+          <div class="pattern-card" data-pattern="block">
+            <canvas class="pattern-canvas" width="100" height="100"></canvas>
+            <div class="pattern-info">
+              <span class="pattern-name">Block</span>
+              <span class="pattern-desc">最も単純な静止物体</span>
+            </div>
+          </div>
+          <div class="pattern-card" data-pattern="beehive">
+            <canvas class="pattern-canvas" width="100" height="100"></canvas>
+            <div class="pattern-info">
+              <span class="pattern-name">Beehive</span>
+              <span class="pattern-desc">2番目に小さい静止物体</span>
+            </div>
+          </div>
+          <div class="pattern-card" data-pattern="loaf">
+            <canvas class="pattern-canvas" width="100" height="100"></canvas>
+            <div class="pattern-info">
+              <span class="pattern-name">Loaf</span>
+              <span class="pattern-desc">非対称な静止物体</span>
+            </div>
+          </div>
+          <div class="pattern-card" data-pattern="boat">
+            <canvas class="pattern-canvas" width="100" height="100"></canvas>
+            <div class="pattern-info">
+              <span class="pattern-name">Boat</span>
+              <span class="pattern-desc">最小の非対称静止物体</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="category">
+        <h3>振動子 — Oscillators</h3>
+        <p class="category-desc">一定周期で元に戻るパターン</p>
+        <div class="pattern-row">
+          <div class="pattern-card" data-pattern="blinker">
+            <canvas class="pattern-canvas" width="100" height="100"></canvas>
+            <div class="pattern-info">
+              <span class="pattern-name">Blinker</span>
+              <span class="pattern-desc">最も単純な振動子</span>
+            </div>
+          </div>
+          <div class="pattern-card" data-pattern="toad">
+            <canvas class="pattern-canvas" width="100" height="100"></canvas>
+            <div class="pattern-info">
+              <span class="pattern-name">Toad</span>
+              <span class="pattern-desc">Blinkerの次に単純</span>
+            </div>
+          </div>
+          <div class="pattern-card" data-pattern="beacon">
+            <canvas class="pattern-canvas" width="100" height="100"></canvas>
+            <div class="pattern-info">
+              <span class="pattern-name">Beacon</span>
+              <span class="pattern-desc">2つのBlockが点滅</span>
+            </div>
+          </div>
+          <div class="pattern-card" data-pattern="pulsar">
+            <canvas class="pattern-canvas" width="100" height="100"></canvas>
+            <div class="pattern-info">
+              <span class="pattern-name">Pulsar</span>
+              <span class="pattern-desc">最も有名な周期3振動子</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="category">
+        <h3>移動物体 — Spaceships</h3>
+        <p class="category-desc">移動しながら形を繰り返すパターン</p>
+        <div class="pattern-row">
+          <div class="pattern-card" data-pattern="glider">
+            <canvas class="pattern-canvas" width="100" height="100"></canvas>
+            <div class="pattern-info">
+              <span class="pattern-name">Glider</span>
+              <span class="pattern-desc">最も有名なパターン。斜めに進み続ける</span>
+            </div>
+          </div>
+          <div class="pattern-card" data-pattern="lwss">
+            <canvas class="pattern-canvas" width="100" height="100"></canvas>
+            <div class="pattern-info">
+              <span class="pattern-name">LWSS</span>
+              <span class="pattern-desc">最小の水平移動物体</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="category">
+        <h3>長寿パターン — Methuselahs</h3>
+        <p class="category-desc">少数のセルから予想外に長く展開</p>
+        <div class="pattern-row">
+          <div class="pattern-card" data-pattern="rpentomino">
+            <canvas class="pattern-canvas" width="100" height="100"></canvas>
+            <div class="pattern-info">
+              <span class="pattern-name">R-pentomino</span>
+              <span class="pattern-desc">たった5セルから1103世代も変化し続ける</span>
+            </div>
+          </div>
+          <div class="pattern-card" data-pattern="diehard">
+            <canvas class="pattern-canvas" width="100" height="100"></canvas>
+            <div class="pattern-info">
+              <span class="pattern-name">Diehard</span>
+              <span class="pattern-desc">130世代後に完全に消滅する</span>
+            </div>
+          </div>
+          <div class="pattern-card" data-pattern="acorn">
+            <canvas class="pattern-canvas" width="100" height="100"></canvas>
+            <div class="pattern-info">
+              <span class="pattern-name">Acorn</span>
+              <span class="pattern-desc">7セルから壮大な展開</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="category">
+        <h3>生成器 — Guns</h3>
+        <p class="category-desc">周期的にグライダーを生み出す</p>
+        <div class="pattern-row">
+          <div class="pattern-card" data-pattern="gospergun">
+            <canvas class="pattern-canvas" width="100" height="100"></canvas>
+            <div class="pattern-info">
+              <span class="pattern-name">Gosper Glider Gun</span>
+              <span class="pattern-desc">世界初のGun。周期30でGliderを射出し続ける</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <a href="../life-docs/" class="docs-link" title="制作記録">📖</a>
