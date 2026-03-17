@@ -14,15 +14,15 @@
   ];
 
   // ─── Config ───
-  const BASE_SPEED = 0.4;          // px per frame at wave 1
-  const SPEED_INCREMENT = 0.08;    // added per wave
-  const BASE_SPAWN_INTERVAL = 3000; // ms between spawns at wave 1
-  const MIN_SPAWN_INTERVAL = 800;
-  const SPAWN_DECREASE = 200;      // ms less per wave
+  const BASE_SPEED = 0.7;          // px per frame at wave 1
+  const SPEED_INCREMENT = 0.15;    // added per wave
+  const BASE_SPAWN_INTERVAL = 2200; // ms between spawns at wave 1
+  const MIN_SPAWN_INTERVAL = 600;
+  const SPAWN_DECREASE = 250;      // ms less per wave
   const MAX_LIVES = 3;
   const INPUT_BOTTOM_ZONE = 100;   // px from bottom reserved for input
   const TOTAL_WAVES = 5;
-  const WAVE_WORD_COUNTS = [8, 10, 12, 14, 16]; // words per wave
+  const WAVE_WORD_COUNTS = [5, 8, 11, 14, 17]; // words per wave
   const BREATHER_DURATION = 3000;  // ms between waves
   const COMBO_SLOW_DURATION = 3000; // ms for slow effect
   const COMBO_SLOW_THRESHOLD = 3;
@@ -67,6 +67,8 @@
   let effectText = null;         // { text, startTime, duration }
   let slowActive = false;
   let slowEndTime = 0;
+  let lastCorrectTime = 0;       // timestamp of last correct answer
+  const COMBO_TIME_WINDOW = 2000; // ms — must answer within this to keep combo
 
   // ─── Canvas sizing ───
   function resizeCanvas() {
@@ -278,8 +280,16 @@
 
   // ─── Combo system ───
   function onComboIncrease() {
-    combo++;
-    comboDisplayTimer = 120; // ~2 seconds at 60fps
+    const now = performance.now();
+    if (lastCorrectTime > 0 && (now - lastCorrectTime) <= COMBO_TIME_WINDOW) {
+      combo++;
+    } else {
+      combo = 1; // first hit or too slow — start at 1 (display only shows >= 2)
+    }
+    lastCorrectTime = now;
+    if (combo >= 2) {
+      comboDisplayTimer = 120; // ~2 seconds at 60fps
+    }
 
     if (combo >= COMBO_CLEAR_THRESHOLD) {
       // Clear all words on screen
@@ -329,11 +339,8 @@
   }
 
   function drawCombo(now) {
-    if (combo < 2 && comboDisplayTimer <= 0) return;
-    if (comboDisplayTimer > 0) comboDisplayTimer--;
-
-    const displayCombo = combo >= 2 ? combo : 0;
-    if (displayCombo < 2 && comboDisplayTimer <= 0) return;
+    if (combo < 2 || comboDisplayTimer <= 0) return;
+    comboDisplayTimer--;
 
     ctx.save();
     const cx = canvas.width / 2;
@@ -349,7 +356,7 @@
     ctx.shadowColor = `rgb(${brightness}, ${brightness}, 50)`;
     ctx.shadowBlur = 10 + combo * 3;
     ctx.fillStyle = `rgb(${brightness}, ${brightness}, 50)`;
-    ctx.fillText(`x${displayCombo >= 2 ? displayCombo : combo} COMBO`, cx, 50);
+    ctx.fillText(`x${combo} COMBO`, cx, 50);
     ctx.restore();
   }
 
@@ -577,6 +584,7 @@
     effectText = null;
     slowActive = false;
     waveClearText = null;
+    lastCorrectTime = 0;
     updateHUD();
 
     // Reset gameover heading in case it was changed to "ALL CLEAR!"
