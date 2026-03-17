@@ -35,7 +35,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          setInterval/clearInterval、状態遷移パターン、時間計算
+          <span class="term" data-explain="setIntervalは指定ミリ秒ごとに関数を繰り返し実行する。clearIntervalで停止。タイマーの1秒ごとのカウントダウンに使う。戻り値のIDを保存して停止に使う。">setInterval/clearInterval</span><span class="term" data-explain="アプリが取りうる状態（作業中・休憩中・停止中）を定義し、イベントに応じて状態を切り替える設計。状態によってUIや動作を変える。">状態遷移パターン</span><span class="term" data-explain="秒数から分:秒の表示形式に変換する処理。Math.floor(seconds / 60)で分、seconds % 60で秒を求める。">時間計算</span>
         </div>
       </div>
 
@@ -49,7 +49,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          SVGの基本、stroke属性、動的なスタイル変更
+          <span class="term" data-explain="SVG（Scalable Vector Graphics）はXMLベースの画像形式。circle, rect, pathなどの要素で図形を描画する。拡大してもぼやけない。">SVGの基本</span><span class="term" data-explain="SVGの線の描画に関する属性。stroke-dasharrayで破線パターン、stroke-dashoffsetで開始位置を制御。これを動的に変更してプログレスリングのアニメーションを実現する。">stroke属性</span><span class="term" data-explain="JavaScriptからelement.style.strokeやclassList.addで要素のスタイルを変更すること。作業→休憩の切替時に色やアニメーションを動的に変える。">動的なスタイル変更</span>
         </div>
       </div>
 
@@ -63,7 +63,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          イベントハンドリング、状態に応じたUI更新
+          <span class="term" data-explain="ボタンクリックなどのイベントを検知して適切な処理を実行すること。Start→タイマー開始、Pause→一時停止、Reset→初期化、それぞれに対応する関数を紐づける。">イベントハンドリング</span><span class="term" data-explain="現在の状態（実行中か停止中か）によってボタンのdisabled属性やテキストを変更する。実行中はStartを無効化してPauseを有効化する、など。">状態に応じたUI更新</span>
         </div>
       </div>
 
@@ -76,7 +76,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          Notification API、権限管理、ブラウザの機能活用
+          <span class="term" data-explain="ブラウザからデスクトップ通知を送る機能。Notification.requestPermission()で権限を要求し、new Notification('タイトル', {body: '本文'})で通知を表示する。">Notification API</span><span class="term" data-explain="ブラウザの機能（通知、カメラ、位置情報など）を使う前に、ユーザーの許可を得る仕組み。一度許可すれば次回以降は聞かれない。">権限管理</span>
         </div>
       </div>
 
@@ -89,7 +89,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          Web Audio API、音声合成の基本
+          <span class="term" data-explain="ブラウザで音を生成・再生するためのAPI。AudioContextを作成し、OscillatorNodeで波形（サイン波など）を生成してスピーカーから出力する。外部音声ファイル不要。">Web Audio API</span><span class="term" data-explain="周波数と波形の種類（sine, square, sawtooth等）を指定して音を生成する仕組み。440Hzのサイン波は「ラ」の音。複数の音を時間差で鳴らせばメロディになる。">音声合成の基本</span>
         </div>
       </div>
 
@@ -104,7 +104,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          localStorage API、フォーム入力の処理、タブタイトルの動的更新
+          <span class="term" data-explain="ブラウザにキーと値のペアでデータを保存する仕組み。ページを閉じてもデータが残る。setItem('key', 'value')で保存、getItem('key')で取得。">localStorage API</span><span class="term" data-explain="input要素からvalueを取得し、数値に変換（parseInt）して使う。バリデーション（範囲チェックなど）も必要。">フォーム入力の処理</span><span class="term" data-explain="document.titleを変更するとブラウザのタブに表示されるタイトルが変わる。「25:00 - Work」のように残り時間を表示して、別タブにいても進捗がわかるようにする。">タブタイトルの動的更新</span>
         </div>
       </div>
     </section>
@@ -134,5 +134,21 @@
       <p><a href="../index.html">Kai & Blue</a> — 2026</p>
     </footer>
   </div>
+<script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+</script>
 </body>
 </html>

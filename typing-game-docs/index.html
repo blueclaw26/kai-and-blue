@@ -35,7 +35,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          Canvas 2D API、ゲームループパターン、requestAnimationFrame
+          <span class="term" data-explain="HTMLのcanvas要素に図形やテキストを描画するためのAPI。fillRect（四角）、fillText（文字）、arc（円）などの描画命令を使う。ゲームやグラフの描画に使われる。">Canvas 2D API</span><span class="term" data-explain="毎フレーム「入力処理→状態更新→描画」を繰り返すパターン。ゲーム開発の基本構造で、滑らかなアニメーションを実現する。">ゲームループパターン</span><span class="term" data-explain="ブラウザの描画タイミングに合わせて関数を繰り返し実行するAPI。setIntervalより滑らかで、タブが非アクティブの時は自動で停止する。">requestAnimationFrame</span>
         </div>
       </div>
 
@@ -49,7 +49,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          オブジェクト指向的なデータ管理、物理シミュレーションの基本
+          <span class="term" data-explain="落下する各単語を{text, x, y, speed, matched}のようなオブジェクトで管理すること。各単語が独立したデータを持ち、個別に更新・描画できる。">オブジェクト指向的なデータ管理</span><span class="term" data-explain="位置を速度×時間で更新する仕組み。y += speed * deltaTimeで単語が下に落ちていく。速度を変えれば落下速度も変わる。">物理シミュレーションの基本</span>
         </div>
       </div>
 
@@ -63,7 +63,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          文字列マッチング、リアルタイム入力処理、パーティクルシステム
+          <span class="term" data-explain="入力されたテキストと落下中の単語を比較する処理。startsWith()で部分一致、完全一致で正解判定。大文字小文字の区別も考慮する。">文字列マッチング</span><span class="term" data-explain="キーが押されるたびにinputイベントで即座に処理する仕組み。入力中の文字と候補の単語をリアルタイムで照合する。">リアルタイム入力処理</span><span class="term" data-explain="小さな粒子（パーティクル）を大量に生成して散らすエフェクト。各粒子に位置・速度・寿命を持たせ、フレームごとに更新・描画して消滅させる。">パーティクルシステム</span>
         </div>
       </div>
 
@@ -77,7 +77,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          ゲームフェーズの設計、難易度曲線、勝利条件
+          <span class="term" data-explain="ゲーム全体を「開始画面→Wave1→ブリーザー→Wave2→...→クリア/ゲームオーバー」のようにフェーズに分けて管理すること。">ゲームフェーズの設計</span><span class="term" data-explain="ゲームの進行に伴って難しさをどう変化させるかの設計。速度を上げる、同時出現数を増やす、などを段階的に調整する。">難易度曲線</span><span class="term" data-explain="ゲームクリアの判定ロジック。タイピングゲームでは「全ウェーブの全単語が処理された」かつ「ライフが残っている」で勝利。">勝利条件</span>
         </div>
       </div>
 
@@ -92,7 +92,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          タイムベースの状態管理、ゲームメカニクス設計、報酬システム
+          <span class="term" data-explain="performance.now()で現在時刻を記録し、前回のイベントからの経過時間で判定する仕組み。コンボの2秒窓やスロー効果の3秒間の管理に使う。">タイムベースの状態管理</span><span class="term" data-explain="ゲームのルールや仕組みを設計すること。コンボ→報酬→さらにコンボを狙うモチベーション、のような循環を作る。">ゲームメカニクス設計</span><span class="term" data-explain="プレイヤーの上手なプレイに対してご褒美を与える仕組み。スロー効果や全消しのような即座のフィードバックが、プレイの満足度を上げる。">報酬システム</span>
         </div>
       </div>
 
@@ -106,7 +106,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          ゲームバランス調整、視覚的フィードバック、アニメーション
+          <span class="term" data-explain="難しすぎず簡単すぎない、ちょうどいい難易度を見つけること。速度、単語数、ライフ数、コンボ閾値などのパラメータを繰り返し調整する。">ゲームバランス調整</span><span class="term" data-explain="スコアポップアップ（+1, +3が浮き上がる）、緑/赤フラッシュ、パーティクルなど、プレイヤーの行動結果を視覚的に伝える演出。">視覚的フィードバック</span><span class="term" data-explain="時間の経過とともに位置・サイズ・透明度などを変化させて動きを表現すること。ポップアップが上昇しながらフェードアウトする演出など。">アニメーション</span>
         </div>
       </div>
     </section>
@@ -140,5 +140,21 @@
       <p><a href="../index.html">Kai & Blue</a> — 2026</p>
     </footer>
   </div>
+<script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+</script>
 </body>
 </html>

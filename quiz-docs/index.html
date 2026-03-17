@@ -35,7 +35,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          データ構造の設計、配列とオブジェクトの使い分け
+          <span class="term" data-explain="データをどんな形で保持するかを決めること。クイズでは{q: 質問, choices: 選択肢配列, answer: 正解番号}のようなオブジェクトの配列を使う。">データ構造の設計</span><span class="term" data-explain="配列は順序のあるデータの並び [a, b, c]。オブジェクトは名前付きデータの集まり {name: 'Kai', age: 30}。組み合わせて複雑なデータを表現する。">配列とオブジェクト</span>の使い分け
         </div>
       </div>
 
@@ -49,7 +49,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          動的なDOM生成、プログレスバーの実装
+          <span class="term" data-explain="HTMLの要素をJavaScriptで動的に作成・追加すること。document.createElementで要素を作り、appendChildで画面に追加する。問題ごとにボタンを生成するのに使う。">動的なDOM生成</span><span class="term" data-explain="進捗を視覚的に表示するUI要素。CSSのwidthをパーセントで動的に変更して、どこまで進んだかを示す。">プログレスバー</span>の実装
         </div>
       </div>
 
@@ -63,7 +63,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          条件分岐、外部ライブラリ（CDN）の利用、UXの設計
+          <span class="term" data-explain="if/elseで処理を分けること。正解か不正解かで表示を変える、スコアに応じてメッセージを変える、など。プログラムの基本構造の一つ。">条件分岐</span><span class="term" data-explain="Content Delivery Network。外部ライブラリをインストールせずに、URLを指定するだけで読み込める仕組み。canvas-confettiはCDN経由で1行で追加できる。">CDNの利用</span><span class="term" data-explain="ユーザー体験（User Experience）を意識した設計。正解時の紙吹雪、不正解時の解説表示、自動遷移vs手動遷移の使い分けなど、使っていて気持ちいいかどうか。">UXの設計</span>
         </div>
       </div>
 
@@ -78,7 +78,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          スコアリングロジック、状態のリセット
+          <span class="term" data-explain="点数の計算方法を設計すること。正解数÷総問題数で正答率を出す、正答率に応じてメッセージを変える、など。">スコアリングロジック</span><span class="term" data-explain="ゲームやアプリを初期状態に戻す処理。スコア・問題番号・表示をすべて初期値に戻してやり直せるようにする。">状態のリセット</span>
         </div>
       </div>
     </section>
@@ -108,5 +108,21 @@
       <p><a href="../index.html">Kai & Blue</a> — 2026</p>
     </footer>
   </div>
+<script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+</script>
 </body>
 </html>
