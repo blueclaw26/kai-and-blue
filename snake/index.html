@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>スネークゲーム — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-top">
+        <a href="../index.html" class="back-link">← Kai & Blue</a>
+        <a href="../snake-docs/" class="docs-link">📖 docs</a>
+      </div>
+      <h1>スネークゲーム</h1>
+    </header>
+
+    <div class="game-area">
+      <div class="score-bar">
+        <span id="score">Score: 0</span>
+        <span id="high-score">Best: 0</span>
+      </div>
+      <div class="canvas-wrapper">
+        <canvas id="game-canvas"></canvas>
+        <div id="overlay" class="overlay">
+          <div class="overlay-content">
+            <h2 id="overlay-title">🐍 スネークゲーム</h2>
+            <p id="overlay-message">矢印キー / WASD で操作<br>モバイル: スワイプ</p>
+            <button id="start-btn">スタート</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>Kai & Blue — 2026</p>
+    </footer>
+  </div>
+  <script src="snake.js"></script>
+</body>
+</html>

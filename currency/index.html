@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>為替レートモニター — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-top">
+        <a href="../index.html" class="back-link">← Kai & Blue</a>
+        <a href="../currency-docs/" class="docs-link">📖 docs</a>
+      </div>
+      <h1>為替レートモニター</h1>
+      <p class="subtitle">リアルタイム為替レート＆コンバーター</p>
+    </header>
+
+    <section class="converter-section">
+      <div class="converter-card">
+        <div class="input-row">
+          <div class="field">
+            <label for="base-currency">基準通貨</label>
+            <select id="base-currency">
+              <option value="USD">🇺🇸 USD — 米ドル</option>
+              <option value="EUR">🇪🇺 EUR — ユーロ</option>
+              <option value="JPY">🇯🇵 JPY — 日本円</option>
+              <option value="GBP">🇬🇧 GBP — 英ポンド</option>
+              <option value="CNY">🇨🇳 CNY — 人民元</option>
+              <option value="KRW">🇰🇷 KRW — 韓国ウォン</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="amount">金額</label>
+            <input type="number" id="amount" value="1" min="0" step="any">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="rates-section">
+      <div class="rates-header">
+        <h2>換算結果</h2>
+        <div class="status-bar">
+          <span id="last-updated"></span>
+          <span id="countdown"></span>
+        </div>
+      </div>
+      <div id="rates-grid" class="rates-grid">
+        <div class="rate-placeholder">読み込み中...</div>
+      </div>
+      <div id="error-message" class="error-message" hidden></div>
+    </section>
+
+    <section class="chart-section">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2>30日間の推移</h2>
+          <select id="chart-target"></select>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="rate-chart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p>Kai & Blue — 2026 | Data: <a href="https://frankfurter.app" target="_blank">Frankfurter API</a></p>
+    </footer>
+  </div>
+  <script src="currency.js"></script>
+</body>
+</html>
