@@ -247,19 +247,18 @@
           resultData.data[idx + 2] = qrPixels.data[idx + 2];
           resultData.data[idx + 3] = 255;
         } else if (isQRDark) {
-          // Dark modules: solid block with thin gap (outer ring is image, inner 1px is black)
-          // At 3x3: outer ring = 8 pixels, center = 1 pixel
-          // We want bigger blocks, so use: only the very outer edge pixels show image
-          // subX==0 && subY==0 (corners only) → image. Rest → black
-          // This gives slight gaps at corners between adjacent blocks
-          const isOuterCorner = (subX === 0 && subY === 0) || (subX === 2 && subY === 0) ||
-                                (subX === 0 && subY === 2) || (subX === 2 && subY === 2);
-          if (isOuterCorner) {
+          // Dark modules: full 3×3 solid black block
+          // Randomly skip some modules entirely (show image instead)
+          // ~25% of dark modules are skipped for image visibility
+          const hash = ((moduleRow * 7919 + moduleCol * 6271 + moduleRow * moduleCol * 31) % 100);
+          if (hash < 25) {
+            // Skip: show image
             resultData.data[idx] = bgData.data[idx];
             resultData.data[idx + 1] = bgData.data[idx + 1];
             resultData.data[idx + 2] = bgData.data[idx + 2];
             resultData.data[idx + 3] = 255;
           } else {
+            // Keep: solid black block
             resultData.data[idx] = qrPixels.data[idx];
             resultData.data[idx + 1] = qrPixels.data[idx + 1];
             resultData.data[idx + 2] = qrPixels.data[idx + 2];
