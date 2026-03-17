@@ -190,6 +190,12 @@
       text = text + sep + '_=' + randomSuffix(6);
     }
 
+    // Pad text to force higher QR version (more modules = better image resolution)
+    // QR version 10+ has 57+ modules, giving much better image detail
+    while (text.length < 120) {
+      text += text.includes('?') ? '&_p=' + randomSuffix(20) : '?_p=' + randomSuffix(20);
+    }
+
     const size = parseInt(sizeSelect.value);
 
     // Step 1: Generate QR to a temp canvas at module resolution * 3
@@ -294,13 +300,13 @@
       return true;
     }
 
-    // Finder patterns (top-left, top-right, bottom-left) + 1 module separator
-    if (moduleRow <= 7 && moduleCol <= 7) return true;         // top-left
-    if (moduleRow <= 7 && moduleCol >= moduleCount - 8) return true;  // top-right
-    if (moduleRow >= moduleCount - 8 && moduleCol <= 7) return true;  // bottom-left
+    // Finder patterns (top-left, top-right, bottom-left) - core 7x7 only
+    if (moduleRow < 7 && moduleCol < 7) return true;         // top-left
+    if (moduleRow < 7 && moduleCol >= moduleCount - 7) return true;  // top-right
+    if (moduleRow >= moduleCount - 7 && moduleCol < 7) return true;  // bottom-left
 
-    // Timing patterns (row 6, col 6)
-    if (moduleRow === 6 || moduleCol === 6) return true;
+    // Timing patterns (row 6, col 6) - only protect center pixel
+    // (center pixel protection above already handles this)
 
     return false;
   }
