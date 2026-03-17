@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>タイピングゲーム — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; Kai & Blue</a>
+
+    <header>
+      <h1>タイピングゲーム</h1>
+      <p class="subtitle">AI用語タイピングゲームの制作記録</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>AI・Web用語が画面上部から降ってきて、正しくタイプして消すゲーム。Canvas APIでのリアルタイム描画とゲームデザインを学ぶ目的で制作。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>Canvas APIでゲーム画面を構築</h3>
+        <ul>
+          <li>HTML5 Canvasで描画エリアを作成</li>
+          <li><code>requestAnimationFrame</code>によるゲームループの実装</li>
+          <li>背景のグリッド描画、危険ゾーンの破線表示</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          Canvas 2D API、ゲームループパターン、requestAnimationFrame
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>単語の生成と落下</h3>
+        <ul>
+          <li>AI・Web用語の配列からランダムに選択して画面上部に配置</li>
+          <li>各単語に速度・位置を持たせてフレームごとに更新</li>
+          <li>モノスペースフォントでターミナル風の見た目に</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          オブジェクト指向的なデータ管理、物理シミュレーションの基本
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>入力マッチングとタイプ中ハイライト</h3>
+        <ul>
+          <li><code>input</code>要素でキーボード入力を受け取り、落下中の単語と照合</li>
+          <li>タイプ中の部分一致をシアン色でハイライト表示</li>
+          <li>完全一致→緑フラッシュ＋パーティクル演出＋スコアポップアップ（+1, +3等）</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          文字列マッチング、リアルタイム入力処理、パーティクルシステム
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>ウェーブ制の導入</h3>
+        <ul>
+          <li>無限ループ→3ウェーブ制に変更（6→10→15語）</li>
+          <li>ウェーブ間に3秒のブリーザー（休憩）を挿入</li>
+          <li>全ウェーブクリアで「ALL CLEAR!」勝利画面</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          ゲームフェーズの設計、難易度曲線、勝利条件
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 5</span>
+        <h3>コンボシステム</h3>
+        <ul>
+          <li>2秒以内に連続正解でコンボ発動（タイムベース）</li>
+          <li>3コンボ→全単語スロー（30%速度、3秒間）</li>
+          <li>5コンボ→画面上の全単語消去＋スコアボーナス</li>
+          <li>コンボスコアボーナス（2コンボで+1, 3コンボで+2...）</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          タイムベースの状態管理、ゲームメカニクス設計、報酬システム
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 6</span>
+        <h3>ライフとスコアリング</h3>
+        <ul>
+          <li>ライフ3、ミスでライフ-1、0でゲームオーバー</li>
+          <li>クリア時にライフボーナス（残りライフ×10点）</li>
+          <li>スコアポップアップが単語の位置から浮き上がって消える演出</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          ゲームバランス調整、視覚的フィードバック、アニメーション
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kaiのレビューで変わったこと</h2>
+      <ul class="review-list">
+        <li>Wave 1を5語→6語に、全体速度を大幅UP（「簡単すぎる」）</li>
+        <li>無限モード→3ウェーブ制に変更（「死ぬまでの消化試合になる」問題を解決）</li>
+        <li>コンボを時間ベースに変更（「正解しただけでコンボは意味がない」）</li>
+        <li>x1 COMBO表示を削除（「2つ目からがコンボ」）</li>
+        <li>コンボスロー効果を50%→30%に強化（「ご褒美感を出す」）</li>
+        <li>単語リストをWeb用語→AI用語メインに変更</li>
+        <li>スコアポップアップ追加（「スコアが増えた嬉しさを見せて」）</li>
+        <li>ゲームオーバーとクリアの画面を明確に分ける</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術まとめ</h2>
+      <ul class="tech-list">
+        <li>HTML5 Canvas</li>
+        <li>JavaScript</li>
+        <li>requestAnimationFrame</li>
+        <li>パーティクルシステム</li>
+        <li>タイムベースコンボ</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+</body>
+</html>

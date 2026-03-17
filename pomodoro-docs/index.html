@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ポモドーロタイマー — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; Kai & Blue</a>
+
+    <header>
+      <h1>ポモドーロタイマー</h1>
+      <p class="subtitle">集中タイマーアプリの制作記録</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>25分作業→5分休憩のポモドーロテクニックを実装したタイマーアプリ。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>タイマーの基本ロジック</h3>
+        <ul>
+          <li><code>setInterval</code>で1秒ごとにカウントダウン</li>
+          <li>「作業中」「休憩中」「停止中」の3状態を管理</li>
+          <li>作業→休憩の自動切替</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          setInterval/clearInterval、状態遷移パターン、時間計算
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>SVGプログレスリング</h3>
+        <ul>
+          <li>SVGの円（<code>circle</code>）でプログレスリングを描画</li>
+          <li><code>stroke-dasharray</code>と<code>stroke-dashoffset</code>で進捗を表現</li>
+          <li>作業中はティール、休憩中はアンバーに色変更</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          SVGの基本、stroke属性、動的なスタイル変更
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>Start / Pause / Reset操作</h3>
+        <ul>
+          <li>3つのボタンで操作</li>
+          <li>Pause→Resumeのトグル</li>
+          <li>Resetで状態を初期化</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          イベントハンドリング、状態に応じたUI更新
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>ブラウザ通知</h3>
+        <ul>
+          <li>Notification APIで権限をリクエスト</li>
+          <li>タイマー終了時にデスクトップ通知を送信</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          Notification API、権限管理、ブラウザの機能活用
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 5</span>
+        <h3>終了音（Web Audio API）</h3>
+        <ul>
+          <li>Web Audio APIでビープ音を生成（外部ファイル不要）</li>
+          <li><code>OscillatorNode</code>で2トーンの短いメロディ</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          Web Audio API、音声合成の基本
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 6</span>
+        <h3>設定のカスタマイズと保存</h3>
+        <ul>
+          <li>作業時間・休憩時間をユーザーが変更可能</li>
+          <li><code>localStorage</code>に設定を保存、次回アクセス時に復元</li>
+          <li>セッションカウンター（完了したポモドーロ数）</li>
+          <li>タブタイトルに残り時間を表示</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          localStorage API、フォーム入力の処理、タブタイトルの動的更新
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kaiのレビューで変わったこと</h2>
+      <ul class="review-list">
+        <li>このアプリはサブエージェントで一発作成、大きな修正なし</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術まとめ</h2>
+      <ul class="tech-list">
+        <li>HTML</li>
+        <li>CSS</li>
+        <li>SVG</li>
+        <li>JavaScript</li>
+        <li>setInterval</li>
+        <li>Notification API</li>
+        <li>Web Audio API</li>
+        <li>localStorage</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+</body>
+</html>
