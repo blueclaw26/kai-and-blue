@@ -247,25 +247,19 @@
           resultData.data[idx + 2] = qrPixels.data[idx + 2];
           resultData.data[idx + 3] = 255;
         } else if (isQRDark) {
-          // Dark modules: full 3×3 solid black square
-          // BUT in bright image areas, randomly skip entire modules to show image
-          // Use module coordinates as seed for consistent randomness per module
-          const bgGray = 0.299 * bgData.data[idx] + 0.587 * bgData.data[idx+1] + 0.114 * bgData.data[idx+2];
-          // Pseudo-random per module (consistent across 3×3 sub-pixels of same module)
-          const hash = ((moduleRow * 7919 + moduleCol * 6271) % 100);
-          // Brighter image = more likely to skip block. threshold: 0-100
-          // gray 255 (white) → skip if hash < 60 (60% chance)
-          // gray 128 (mid) → skip if hash < 20 (20% chance)
-          // gray 0 (black) → never skip
-          const skipChance = Math.max(0, (bgGray - 80) / 175 * 60);
-          if (hash < skipChance) {
-            // Skip this dark module entirely: show image
+          // Dark modules: solid block with thin gap (outer ring is image, inner 1px is black)
+          // At 3x3: outer ring = 8 pixels, center = 1 pixel
+          // We want bigger blocks, so use: only the very outer edge pixels show image
+          // subX==0 && subY==0 (corners only) → image. Rest → black
+          // This gives slight gaps at corners between adjacent blocks
+          const isOuterCorner = (subX === 0 && subY === 0) || (subX === 2 && subY === 0) ||
+                                (subX === 0 && subY === 2) || (subX === 2 && subY === 2);
+          if (isOuterCorner) {
             resultData.data[idx] = bgData.data[idx];
             resultData.data[idx + 1] = bgData.data[idx + 1];
             resultData.data[idx + 2] = bgData.data[idx + 2];
             resultData.data[idx + 3] = 255;
           } else {
-            // Keep as solid black block
             resultData.data[idx] = qrPixels.data[idx];
             resultData.data[idx + 1] = qrPixels.data[idx + 1];
             resultData.data[idx + 2] = qrPixels.data[idx + 2];
