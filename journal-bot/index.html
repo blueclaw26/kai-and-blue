@@ -14,12 +14,12 @@
 
     <header>
       <h1>論文速報Bot</h1>
-      <p class="subtitle">JACS最新論文をDiscordに自動投稿するBotの制作記録</p>
+      <p class="subtitle">Nature最新論文をDiscordに自動投稿するBotの制作記録</p>
     </header>
 
     <section>
       <h2>概要</h2>
-      <p>JACS（Journal of the American Chemical Society）のASAP（最新論文）を定期的にチェックし、有機化学・触媒系の論文をフィルタリングして、Discordの <code>#論文速報</code> チャンネルに日本語要約付きで自動投稿するBot。非エンジニアとAIが協力して、実用的な自動化ツールをゼロから構築した記録。</p>
+      <p>Nature誌の最新論文を定期的にチェックし、Blueが内容を読んでKaiの興味に合いそうな論文を選び、Discordの <code>#論文速報</code> チャンネルに日本語要約付きで自動投稿するBot。非エンジニアとAIが協力して、実用的な自動化ツールをゼロから構築した記録。</p>
     </section>
 
     <section>
@@ -28,14 +28,14 @@
       <div class="step">
         <span class="step-number">Step 1</span>
         <h3>RSSフィードの取得</h3>
-        <p>JACSはASAP論文のRSSフィードを提供している。PythonでこのRSSフィードをパースし、新着論文のタイトル・DOI・著者情報を取得する。</p>
+        <p>多くの学術ジャーナルはRSSフィードで新着論文を配信している。PythonでこのRSSフィードをパースし、新着論文のタイトル・DOI・著者情報を取得する。</p>
         <ul>
           <li><code>feedparser</code>ライブラリを使ってRSSフィード（XML形式）を解析</li>
           <li>フィードURLを指定するだけで、構造化されたデータとして論文情報を取得できる</li>
         </ul>
 <pre><code>import feedparser
 
-feed_url = "https://pubs.acs.org/action/showFeed?type=asap&doi=10.1021/jacs"
+feed_url = "https://www.nature.com/nature.rss"
 feed = feedparser.parse(feed_url)
 
 for entry in feed.entries:
@@ -51,9 +51,9 @@ for entry in feed.entries:
       <div class="step">
         <span class="step-number">Step 2</span>
         <h3>論文のフィルタリング</h3>
-        <p>JACSには幅広い分野の論文が掲載されるため、全論文ではなく有機合成・触媒に関連するものだけを抽出する。</p>
+        <p>Natureには幅広い分野の論文が掲載されるため、全論文を投稿するのではなく、BlueがKaiの興味・関心を推定して関連性の高いものを選ぶ。</p>
         <ul>
-          <li>キーワードベースのフィルタリング — タイトルやアブストラクトに特定の用語（<code>catalysis</code>, <code>synthesis</code>, <code>organic</code> など）が含まれるかチェック</li>
+          <li>Blueが過去の会話や専門分野から興味の傾向を把握し、フィルタリング基準を動的に調整</li>
           <li>投稿済みDOIをJSONファイルで管理し、重複投稿を防止</li>
         </ul>
 <pre><code>import json
@@ -62,12 +62,10 @@ for entry in feed.entries:
 with open("posted_dois.json", "r") as f:
     posted = json.load(f)
 
-# 新着のみ、かつキーワードに一致するものを抽出
-keywords = ["cataly", "synthesis", "organic", "reaction"]
+# 新着のみ抽出（Blueが内容を読んで選別）
 new_papers = [
     e for e in feed.entries
     if e.id not in posted
-    and any(kw in e.title.lower() for kw in keywords)
 ]</code></pre>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
@@ -78,7 +76,7 @@ new_papers = [
       <div class="step">
         <span class="step-number">Step 3</span>
         <h3>アブストラクトの取得</h3>
-        <p>RSSフィードにはアブストラクトが含まれない場合がある。そこでACS（出版社）のWebページに直接アクセスしてアブストラクトを取得する。</p>
+        <p>RSSフィードにはアブストラクトが含まれない場合がある。そこで出版社のWebページに直接アクセスしてアブストラクトを取得する。</p>
         <ul>
           <li>最初はHTTPリクエスト（<code>fetch</code>）で試みたが、<code>403 Forbidden</code>エラー — サーバーがボットからのアクセスを拒否</li>
           <li>解決策: ブラウザ自動操作（OpenClawの<code>browser</code>ツール）を使い、実際のブラウザとしてページにアクセス</li>
@@ -93,10 +91,10 @@ new_papers = [
       <div class="step">
         <span class="step-number">Step 4</span>
         <h3>AIによる日本語要約</h3>
-        <p>取得した英語のアブストラクトをBlue（AI）が日本語に要約する。単なる翻訳ではなく、化学的に重要なポイントを抽出してまとめる。</p>
+        <p>取得した英語のアブストラクトをBlue（AI）が日本語に要約する。単なる翻訳ではなく、Kaiが読んで面白いと思えるポイントを抽出してまとめる。</p>
         <ul>
-          <li>反応の種類、基質の範囲、収率、選択性など、有機化学者が気にするポイントを重点的に記述</li>
-          <li>タグ付け（<code>触媒化学</code> <code>全合成</code> <code>不斉合成</code> など）も自動で行い、分野ごとの検索性を確保</li>
+          <li>研究の新規性、手法の特徴、インパクトなど、読者が気になるポイントを重点的に記述</li>
+          <li>タグ付けも自動で行い、分野ごとの検索性を確保</li>
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
@@ -137,7 +135,7 @@ message = f"""**{title_ja}**
           <li>毎日8:00と20:00（JST）に自動実行</li>
         </ul>
 <pre><code># crontab -e
-0 8,20 * * * /path/to/jacs-bot/run.sh</code></pre>
+0 8,20 * * * /path/to/journal-bot/run.sh</code></pre>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
           cronとは何か、定期実行の設計、HEARTBEAT vs cronの使い分け
@@ -150,7 +148,7 @@ message = f"""**{title_ja}**
       <ul class="review-list">
         <li>投稿フォーマットの調整 — Kaiが見やすい形にフィードバックし、情報の優先順位を整理</li>
         <li>HEARTBEATからcronへの移行はKaiの提案（「もっと正確なタイミングで動かしたい」）</li>
-        <li>対象ジャーナルの選定 — まずJACSから始めて、今後Nature・Science・Angewandteなども追加可能な設計に</li>
+        <li>対象ジャーナルの拡張 — まずNatureから始めて、今後他のジャーナルも追加可能な設計に</li>
       </ul>
     </section>
 
