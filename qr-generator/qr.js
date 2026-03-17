@@ -243,16 +243,21 @@
         const subX = x % unit;
         const subY = y % unit;
 
-        const prot = isProtectedPixel(moduleRow, moduleCol, subX, subY, moduleCount);
+        // Check if this module is a dark QR module
+        const isQRDark = (moduleRow >= 0 && moduleCol >= 0 && 
+                          moduleRow < moduleCount && moduleCol < moduleCount) 
+                          ? modules.get(moduleRow, moduleCol) : false;
+        const isFinderArea = isProtectedPixel(moduleRow, moduleCol, subX, subY, moduleCount);
 
-        if (prot) {
-          // Keep QR data
+        if (isFinderArea || isQRDark) {
+          // Dark modules: keep as solid QR blocks (creates connected QR-like patterns)
+          // Finder patterns: always keep QR data
           resultData.data[idx] = qrPixels.data[idx];
           resultData.data[idx + 1] = qrPixels.data[idx + 1];
           resultData.data[idx + 2] = qrPixels.data[idx + 2];
           resultData.data[idx + 3] = 255;
         } else {
-          // Use image pixel
+          // Light modules: show image (this is where the picture appears)
           resultData.data[idx] = bgData.data[idx];
           resultData.data[idx + 1] = bgData.data[idx + 1];
           resultData.data[idx + 2] = bgData.data[idx + 2];
@@ -281,10 +286,10 @@
       return true; // keep margin white
     }
 
-    // Center pixel of each module (carries QR data)
-    if (subX === 1 && subY === 1) {
-      return true;
-    }
+    // For dark QR modules: protect ALL pixels (solid black blocks, QR-like)
+    // For light QR modules: not protected (image shows through)
+    // We need access to module data here, so we pass isDark
+    // This is handled in the main loop instead
 
     // Finder patterns (top-left, top-right, bottom-left) - core 7x7 only
     if (moduleRow < 7 && moduleCol < 7) return true;         // top-left
