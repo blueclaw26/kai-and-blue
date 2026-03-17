@@ -7,6 +7,7 @@
   let beatsPerMeasure = 4;
   let subdivision = 1;
   let volume = 0.7;
+  let accentEnabled = true;
 
   // Audio scheduling
   let audioCtx = null;
@@ -22,6 +23,9 @@
   let tapTimes = [];
   let tapTimeout = null;
 
+  // Cached noise buffers (so every click sounds identical)
+  let noiseBufferCache = null;
+
   // --- DOM ---
   const bpmValueEl = document.getElementById('bpm-value');
   const bpmInput = document.getElementById('bpm-input');
@@ -31,6 +35,7 @@
   const timeSigSelect = document.getElementById('time-sig');
   const subdivisionSelect = document.getElementById('subdivision');
   const volumeSlider = document.getElementById('volume');
+  const accentModeSelect = document.getElementById('accent-mode');
   const beatDisplay = document.getElementById('beat-display');
   const bpmBtns = document.querySelectorAll('.bpm-btn');
 
@@ -151,7 +156,10 @@
     const gain = audioCtx.createGain();
     const filter = audioCtx.createBiquadFilter();
 
-    noise.buffer = createNoiseBuffer(0.05);
+    if (!noiseBufferCache) {
+      noiseBufferCache = createNoiseBuffer(0.05);
+    }
+    noise.buffer = noiseBufferCache;
     noise.connect(filter);
     filter.connect(gain);
     gain.connect(audioCtx.destination);
@@ -194,7 +202,7 @@
   function scheduleNote(time) {
     let type;
     if (currentSubBeat === 0) {
-      type = currentBeat === 0 ? 'accent' : 'beat';
+      type = (accentEnabled && currentBeat === 0) ? 'accent' : 'beat';
     } else {
       type = 'sub';
     }
@@ -311,6 +319,10 @@
     subdivisionSelect.addEventListener('change', () => {
       updateSubdivision();
       if (isRunning) { stop(); start(); }
+    });
+
+    accentModeSelect.addEventListener('change', () => {
+      accentEnabled = accentModeSelect.value === 'on';
     });
 
     volumeSlider.addEventListener('input', () => {
