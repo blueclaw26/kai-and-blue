@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>メトロノーム — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; Kai & Blue</a>
+
+    <header>
+      <h1>メトロノーム</h1>
+      <p class="subtitle">ドラム練習用メトロノームアプリの制作記録</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>BPM制御、タップテンポ、拍子設定、サブディビジョンを備えたメトロノームアプリ。Web Audio APIによる正確なタイミング制御が特徴。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>Web Audio APIによる音の生成</h3>
+        <p>ブラウザ内で音を生成するWeb Audio APIを使用。ノイズベースのクリック音を作り、アクセント・通常ビート・サブディビジョンで音色を変える。</p>
+        <ul>
+          <li>ホワイトノイズ → ハイパスフィルター → 短いエンベロープでクリック音を生成</li>
+          <li>フィルター周波数と音量でアクセント・通常ビート・サブディビジョンを差別化</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="ブラウザ内で音を生成・再生するためのAPI。AudioContextを作成し、ノードを接続して音の生成・加工・出力を行う。外部音声ファイルなしで音が作れる。">Web Audio API</span>
+          <span class="term" data-explain="ランダムな値を配列に入れてAudioBufferを作ると、ホワイトノイズ（ザーッという音）になる。これをフィルターで加工してクリック音やドラム音を作れる。">ノイズ生成</span>
+          <span class="term" data-explain="Web Audio APIの音声フィルター。highpass（低音カット）、lowpass（高音カット）などで音色を加工する。周波数のしきい値を変えると音の印象が変わる。">BiquadFilter</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>正確なタイミング制御（AudioContext Scheduling）</h3>
+        <p>setIntervalだけではタイミングがずれる（ブラウザのイベントループに依存するため）。audioCtx.currentTimeを使った先読みスケジューリングで正確な再生を実現。</p>
+        <ul>
+          <li>25msごとにスケジューラーが走り、100ms先までの音をあらかじめ予約</li>
+          <li>AudioContextの高精度タイマーにより、音楽用途に耐えるタイミング精度を確保</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="Web Audio APIのcurrentTimeプロパティを使って、音の再生タイミングを高精度に指定する方法。setIntervalのタイミングのずれを回避できる。">AudioContext scheduling</span>
+          <span class="term" data-explain="音を実際の再生時刻より少し前にスケジュールしておく手法。ブラウザが一瞬処理に詰まっても音が途切れない。メトロノームやDAWで必須の技術。">先読みバッファ</span>
+          <span class="term" data-explain="setIntervalはJavaScriptのイベントループに依存するため、±10ms程度のズレが生じる。音楽用途ではこのズレが聞き取れるため、AudioContext schedulingが必要。">setIntervalの限界</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>BPM制御とタップテンポ</h3>
+        <p>スライダー、数値入力、±ボタンの3通りの操作方法を実装。タップテンポでは直近4回のタップ間隔の平均からBPMを算出する。</p>
+        <ul>
+          <li>3つの入力手段（スライダー・数値入力・±ボタン）を同期</li>
+          <li>タップテンポ: 直近4回のタップ間隔の平均からBPMを算出</li>
+          <li>2秒間タップがなければリセット</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="連続するタップの時間間隔を記録し、平均値からBPMを計算する。interval(ms) = 60000 / BPM の関係。直近数回の平均を取ることで安定した値になる。">タップテンポの算出</span>
+          <span class="term" data-explain="同じ値（BPM）をスライダー、テキスト入力、ボタンの3つの方法で操作できるようにする設計。どれを変更しても他のUIが同期する必要がある。">複数の入力手段</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>拍子とサブディビジョン</h3>
+        <p>拍子設定（2/4, 3/4, 4/4, 5/4, 6/8, 7/8）に対応。1拍目は自動でアクセント（異なる音色＋視覚的なアンバー色）。サブディビジョンで8分音符、3連符、16分音符の分割が可能。</p>
+        <ul>
+          <li>拍子によってビートインジケーターの数とアクセント位置が変わる</li>
+          <li>サブディビジョン: 1拍を2分割（8分音符）、3分割（3連符）、4分割（16分音符）</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="音楽における拍子は「1小節に何拍入るか」を定義する。4/4は4拍子で最も一般的。拍子によってビートインジケーターの数とアクセント位置が変わる。">拍子の概念</span>
+          <span class="term" data-explain="1拍をさらに細かく分割すること。8分音符は1拍を2分割、3連符は3分割、16分音符は4分割。分割数に応じてスケジューリング間隔を変える。">サブディビジョン</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 5</span>
+        <h3>ビジュアルビートインジケーター</h3>
+        <p>拍数分の円を表示し、現在の拍を色で強調。通常拍はティール、アクセントはアンバー。サブディビジョンは小さい点で表示。</p>
+        <ul>
+          <li>拍子が変わるたびにインジケーターの数を動的に変更</li>
+          <li>音のスケジューリングとUIの更新を同期させる</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="音のスケジューリングはAudioContextの時間で行い、UIの更新はsetIntervalで行う。両者のタイミングを合わせるために、次の拍の時刻を共有する。">音とUIの同期</span>
+          <span class="term" data-explain="拍子が変わるたびにビートインジケーターの数を動的に変更する。innerHTMLをクリアして、新しい拍子に合わせた要素を再生成する。">動的なUI生成</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 6</span>
+        <h3>キーボードショートカット</h3>
+        <p>Space: 開始/停止、T: タップテンポ、↑↓: BPM ±1。練習中にマウスを触らずに操作できる。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="キーボード入力を検知するイベント。event.keyでどのキーが押されたかを判定し、対応する処理を実行する。event.preventDefault()で意図しないスクロール等を防ぐ。">keydownイベント</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kaiのレビューで変わったこと</h2>
+      <ul class="review-list">
+        <li>電子音（オシレーター）のピコピコ感を指摘 → ノイズベースのクリック音に変更</li>
+        <li>「ドラムの練習で使いたい」というユースケースが明確だったため、AudioContext schedulingで精度を確保</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術まとめ</h2>
+      <ul class="tech-list">
+        <li><a href="../tech/#html">HTML</a></li>
+        <li><a href="../tech/#css">CSS</a></li>
+        <li><a href="../tech/#javascript">JavaScript</a></li>
+        <li><a href="../tech/#webaudio">Web Audio API</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+<script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+</script>
+</body>
+</html>
