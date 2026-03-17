@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ライフゲーム — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; Kai & Blue</a>
+
+    <header>
+      <h1>ライフゲーム</h1>
+      <p class="subtitle">Conway's Game of Lifeの制作記録</p>
+    </header>
+
+    <section>
+      <p>セルの生死が単純な4つのルールで決まるセル・オートマトン。クリックでセルを配置し、シミュレーションを実行する。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>セル・オートマトンのルール設計</h3>
+        <p>誕生(周囲3)、生存(周囲2-3)、過疎(周囲0-1)、過密(周囲4+)。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="格子状に並んだセルが、近隣セルの状態に基づいて次の状態を決定する離散的な計算モデル。単純なルールから複雑なパターンが創発する。">セル・オートマトン</span><span class="term" data-explain="あるセルの周囲8マス（ムーア近傍）のこと。ライフゲームでは各セルの生死を、この8つの隣接セルの生存数で判定する。">近傍</span><span class="term" data-explain="全セルの状態を同時に次の状態へ更新する1ステップのこと。現在の世代から次の世代を計算する際、全セルを同時に評価して一括更新する。">世代更新</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>Canvas上のグリッド描画</h3>
+        <p>50x50のグリッドをCanvasに描画、セルの状態で色分け。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="HTMLのcanvas要素の2D描画コンテキスト。fillRect、strokeRect、clearRectなどのメソッドで矩形を描画し、グリッドのセルを表現する。">Canvas 2D</span><span class="term" data-explain="セルの論理的な位置を表す座標（行・列のインデックス）。配列のインデックスに対応し、セルの状態管理に使う。">グリッド座標</span><span class="term" data-explain="グリッド座標にセルサイズを掛けてCanvas上の描画位置（ピクセル）に変換する処理。クリック位置の逆変換にも使う。">ピクセル座標変換</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>ユーザーインタラクション</h3>
+        <p>クリック/ドラッグでセル切り替え、マウス座標→グリッド座標変換。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="マウスボタンを押した瞬間（mousedown）と、押したまま動かしている間（mousemove）のイベント。組み合わせることでドラッグ操作を検出する。">mousedown/mousemove</span><span class="term" data-explain="マウスのクライアント座標からCanvasのオフセットを引き、セルサイズで割ることで、クリック位置をグリッドの行・列に変換する計算。">座標変換</span><span class="term" data-explain="mousedownでフラグを立て、mousemoveでセルを切り替え、mouseupでフラグを解除するパターン。連続的なセル配置を実現する。">ドラッグ操作</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>シミュレーション制御</h3>
+        <p>Play/Pause/Step/Clear/Random、速度調節。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="一定間隔で関数を繰り返し実行するタイマー。ライフゲームでは世代更新の間隔制御に使い、clearIntervalで停止する。">setInterval</span><span class="term" data-explain="ブラウザの描画タイミングに合わせて関数を呼び出すAPI。60fps基準でスムーズなアニメーションを実現する。setIntervalより描画と同期しやすい。">requestAnimationFrame</span><span class="term" data-explain="アプリの動作状態（再生中・停止中・速度設定など）を変数で管理し、UIの操作に応じて適切に更新する設計パターン。">状態管理</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 5</span>
+        <h3>プリセットパターン</h3>
+        <p>Glider、Blinker、Pulsar、Gosper Glider Gunの配置。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="有名パターンのセル座標をあらかじめ配列として定義しておくデータ構造。選択時にグリッドに展開して配置する。">パターン配列</span><span class="term" data-explain="パターンの各セルを原点(0,0)からの相対位置で定義する方法。配置時にオフセットを加えることで、グリッド上の任意の位置に展開できる。">相対座標</span><span class="term" data-explain="ライフゲームの研究で発見された代表的なパターン。Glider（移動）、Blinker（振動）、Pulsar（周期）、Gosper Glider Gun（生成）など。">有名パターン</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 6</span>
+        <h3>ラップアラウンド</h3>
+        <p>端のセルが反対側と接続。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="余りを求める演算子(%)。グリッドの端を超えた座標を反対側に折り返すために使う。例: (x + width) % width で負の座標も正しく処理する。">モジュロ演算</span><span class="term" data-explain="上下の端と左右の端がそれぞれ繋がった面の形状。ドーナツの表面と同じ位相で、グリッドの端が反対側に接続されている状態を表す。">トーラス構造</span><span class="term" data-explain="シミュレーション領域の端をどう扱うかの設定。固定境界（端は常に死）、ラップアラウンド（反対側に接続）などの選択肢がある。">境界条件</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kaiのレビュー</h2>
+      <ul class="review-list">
+        <li>ルール説明の追加をリクエスト→detailsタグで折りたたみ式に実装</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術</h2>
+      <ul class="tech-list">
+        <li><a href="../tech/#html">HTML5 Canvas</a></li>
+        <li><a href="../tech/#javascript">JavaScript</a></li>
+        <li><a href="../tech/#css">CSS</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+
+  <script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+  </script>
+</body>
+</html>

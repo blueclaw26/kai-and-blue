@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>名刺デザイナー — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; Kai & Blue</a>
+
+    <header>
+      <h1>名刺デザイナー</h1>
+      <p class="subtitle">名刺デザイン・エクスポートツールの制作記録</p>
+    </header>
+
+    <section>
+      <p>テキスト入力とテンプレート選択でリアルタイムに名刺をプレビューし、PNGとして出力できるツール。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>名刺のサイズと比率</h3>
+        <p>標準名刺サイズ（91×55mm）をCanvas上で再現。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="幅と高さの比率。名刺は91:55（約1.65:1）。Canvas上でこの比率を維持しつつ、表示サイズに合わせてスケーリングする。">アスペクト比</span><span class="term" data-explain="Canvasの描画領域はピクセル単位で管理される。左上が原点(0,0)で、右方向がX+、下方向がY+。mmからピクセルへの変換が必要。">Canvas座標系</span><span class="term" data-explain="Dots Per Inchの略。印刷時の解像度を表す。名刺印刷では通常300DPIが必要で、91mm×55mmなら約1076×650ピクセルになる。">DPIとピクセル</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>テンプレートシステム</h3>
+        <p>4テンプレート（Classic/Modern/Minimal/Creative）の切り替え。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="共通の構造を持つデザインのバリエーションをパターンとして定義し、切り替え可能にする設計。各テンプレートが同じインターフェースを持つことで統一的に扱える。">テンプレートパターン</span><span class="term" data-explain="各テンプレートの描画ロジックを独立した関数に分離する設計。テンプレート追加時に他のコードに影響せず、保守性と拡張性が向上する。">描画関数の分離</span><span class="term" data-explain="テンプレートの色、フォント、レイアウトなどをオブジェクトとして定義し、描画関数に渡すパターン。設定と描画ロジックを分離することでコードの見通しが良くなる。">設定オブジェクト</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>リアルタイムプレビュー</h3>
+        <p>inputイベントで入力のたびにCanvasを再描画。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="テキストフィールドの値が変わるたびに発火するイベント。changeイベントと違い、キー入力のたびにリアルタイムで反映される。">inputイベント</span><span class="term" data-explain="入力が変わるたびにCanvas全体をクリアして再描画する処理。背景→テキスト→装飾の順に描画し、常に最新の入力内容を反映する。">Canvas再描画</span><span class="term" data-explain="短時間に大量のイベントが発火する場合、最後のイベントから一定時間待ってから処理を実行するテクニック。パフォーマンス最適化に使う。">デバウンス</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>カラースキーム</h3>
+        <p>5つの配色セットの切り替え。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="背景色・テキスト色・アクセント色などをセットで定義した配色の組み合わせ。調和のとれた色選びがデザインの品質を左右する。">カラーパレット</span><span class="term" data-explain="ユーザーの選択に応じてアプリ全体の配色を切り替える機能。色の定義をオブジェクトで管理し、選択時に一括適用する。">テーマ切り替え</span><span class="term" data-explain="CSSのカスタムプロパティ（--primary-colorなど）。JavaScriptから動的に値を変更でき、テーマカラーの一括切り替えに便利。">CSS変数</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 5</span>
+        <h3>表裏の切り替え</h3>
+        <p>フロント（個人情報）とバック（会社名/ロゴ）の切り替え表示。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="「表」「裏」どちらを表示中かをフラグ変数で管理するパターン。ボタン操作で状態を切り替え、対応する描画処理を呼び出す。">表示状態の管理</span><span class="term" data-explain="現在の表示状態（表/裏）に応じて異なる描画ロジックを実行する実装。if文やswitch文で状態を判定し、適切なテンプレートを描画する。">条件分岐描画</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 6</span>
+        <h3>PNG出力</h3>
+        <p>CanvasをPNG画像としてダウンロード。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="Canvas要素の内容をBase64エンコードされたデータURLとして取得するメソッド。image/pngを指定してCanvas上の描画結果を画像データに変換する。">toDataURL</span><span class="term" data-explain="aタグを動的に生成し、href属性にデータURL、download属性にファイル名を設定してclickを呼ぶことで、ブラウザのダウンロードを発動させるパターン。">ダウンロードリンク生成</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kaiのレビュー</h2>
+      <ul class="review-list">
+        <li>初回作成、大きな修正なし</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術</h2>
+      <ul class="tech-list">
+        <li><a href="../tech/#html">HTML</a></li>
+        <li><a href="../tech/#css">CSS</a></li>
+        <li><a href="../tech/#javascript">JavaScript</a></li>
+        <li><a href="../tech/#canvas-api">Canvas API</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+
+  <script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+  </script>
+</body>
+</html>

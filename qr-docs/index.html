@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QRコード生成器 — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; Kai & Blue</a>
+
+    <header>
+      <h1>QRコード生成器</h1>
+      <p class="subtitle">QRコード生成・画像埋め込みツールの制作記録</p>
+    </header>
+
+    <section>
+      <p>URLを入力するとQRコードを生成し、画像の埋め込みやアートモード（画像をQRのピクセルに反映）にも対応するツール。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>QRコード生成ライブラリの導入</h3>
+        <p>CDN経由でqrcodeライブラリを読み込み、Canvas上にQRを描画。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="Content Delivery Networkの略。ライブラリやフォントなどの静的ファイルを、世界中のサーバーから高速に配信する仕組み。npmインストール不要で手軽に外部ライブラリを利用できる。">CDN</span><span class="term" data-explain="HTMLのcanvas要素を使って図形や画像を描画するためのAPI。2Dコンテキストを取得し、パスの描画・塗りつぶし・画像合成などをJavaScriptで制御する。">Canvas API</span><span class="term" data-explain="プロジェクトの要件に合ったライブラリを比較・選択するプロセス。バンドルサイズ、メンテナンス状況、APIの使いやすさ、ライセンスなどを考慮する。">ライブラリの選定</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>エラー訂正レベル</h3>
+        <p>QRコードの冗長性を制御。L(7%)/M(15%)/Q(25%)/H(30%)の4段階。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="QRコードが汚れや破損で一部読めなくなっても、元のデータを復元できる仕組み。リード・ソロモン符号を使い、冗長なデータを付加することで実現する。">エラー訂正</span><span class="term" data-explain="同じ情報を複数の方法で持つことで、データの一部が失われても復元可能にする性質。エラー訂正レベルが高いほど冗長性が増し、破損耐性が上がる。">冗長性</span><span class="term" data-explain="データが正しく・完全に伝わることの保証度合い。QRコードでは、印刷品質や読み取り環境を考慮してエラー訂正レベルを選択する。">データ信頼性</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>画像埋め込み（センターオーバーレイ）</h3>
+        <p>QRの中央に画像を配置。エラー訂正Hで最大30%を壊しても読み取り可能。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="ユーザーが選択したファイルをブラウザ上で読み込むためのAPI。readAsDataURLでBase64文字列に変換し、画像のプレビューやCanvas描画に使う。">FileReader API</span><span class="term" data-explain="Canvas上で複数の画像やグラフィックを重ね合わせる技法。globalCompositeOperationで合成モードを制御し、QRコードの上にロゴ画像を重ねて描画する。">Canvas compositing</span><span class="term" data-explain="エラー訂正レベルHの30%復元能力を利用し、QR中央部のモジュールを画像で上書きしても読み取り可能にするテクニック。画像サイズは全体の30%以内に抑える。">エラー訂正の活用</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>アートモード</h3>
+        <p>画像のピクセル色でQRモジュールを着色。ファインダーパターンは保護。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="CanvasのgetImageDataメソッドで画像の各ピクセルのRGBA値を配列として取得し、色の分析や変換を行う手法。QRモジュールの位置に対応するピクセル色を抽出する。">ピクセル操作(getImageData)</span><span class="term" data-explain="画像のピクセル色から明度を計算し、QRの黒モジュール（暗い色）と白モジュール（明るい色）に適切な色を割り当てる処理。読み取り精度を保ちつつアート表現する。">色の明暗変換</span><span class="term" data-explain="QRコードの3隅にある大きな四角形パターン。スキャナーがQRコードの位置と向きを検出するために使う。アートモードでもこの部分は白黒のまま保護する必要がある。">ファインダーパターン</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 5</span>
+        <h3>PNG出力</h3>
+        <p>CanvasをPNG画像としてダウンロード。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="Canvas要素の内容をBase64エンコードされたデータURLとして取得するメソッド。image/pngやimage/jpegを指定して、Canvas上の描画結果を画像データに変換する。">toDataURL</span><span class="term" data-explain="Canvas等のデータをBlobオブジェクトに変換し、URL.createObjectURLで一時URLを生成してaタグのdownload属性でファイル保存させるパターン。">Blobダウンロード</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kaiのレビュー</h2>
+      <ul class="review-list">
+        <li>CDNのバージョン指定が404→修正</li>
+        <li>ラベルを「URL」に変更</li>
+        <li>アートモード追加のリクエスト</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術</h2>
+      <ul class="tech-list">
+        <li><a href="../tech/#html">HTML</a></li>
+        <li><a href="../tech/#css">CSS</a></li>
+        <li><a href="../tech/#javascript">JavaScript</a></li>
+        <li><a href="../tech/#canvas-api">Canvas API</a></li>
+        <li>qrcode(CDN)</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+
+  <script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+  </script>
+</body>
+</html>
