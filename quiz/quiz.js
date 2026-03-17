@@ -142,16 +142,33 @@ function handleAnswer(selected, btn) {
 
   buttons.forEach(b => b.classList.add('disabled'));
 
+  // Remove any previous feedback
+  const oldFeedback = document.querySelector('.answer-feedback');
+  if (oldFeedback) oldFeedback.remove();
+
+  const feedback = document.createElement('div');
+  feedback.className = 'answer-feedback';
+
   if (selected === q.answer) {
     btn.classList.add('correct');
     btn.textContent = '✓ ' + btn.textContent;
     score++;
+    feedback.textContent = '正解！';
+    feedback.classList.add('feedback-correct');
+    // Confetti!
+    if (typeof confetti === 'function') {
+      confetti({ particleCount: 80, spread: 60, origin: { y: 0.7 } });
+    }
   } else {
     btn.classList.add('wrong');
     btn.textContent = '✗ ' + btn.textContent;
     buttons[q.answer].classList.add('correct');
     buttons[q.answer].textContent = '✓ ' + buttons[q.answer].textContent;
+    feedback.textContent = '不正解...';
+    feedback.classList.add('feedback-wrong');
   }
+
+  choicesEl.parentNode.appendChild(feedback);
 
   setTimeout(() => {
     current++;
