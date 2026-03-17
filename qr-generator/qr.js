@@ -8,7 +8,9 @@
   const overlayGroup = document.getElementById('overlay-group');
   const clearOverlayBtn = document.getElementById('clear-overlay');
   const generateBtn = document.getElementById('generate-btn');
-
+  const shuffleBtn = document.getElementById('shuffle-btn');
+  const filterGroup = document.getElementById('filter-group');
+  const filterSelect = document.getElementById('color-filter');
   const downloadBtn = document.getElementById('download-btn');
   const canvas = document.getElementById('qr-canvas');
   const hint = document.getElementById('preview-hint');
@@ -31,11 +33,13 @@
     if (currentMode === 'art') {
       errorLevelGroup.style.display = 'none';
       overlayLabel.textContent = 'アート用画像（必須）';
-
+      shuffleBtn.style.display = '';
+      filterGroup.style.display = '';
     } else {
       errorLevelGroup.style.display = '';
       overlayLabel.textContent = '中央に画像を配置（任意）';
-
+      shuffleBtn.style.display = 'none';
+      filterGroup.style.display = 'none';
     }
   }
 
@@ -66,6 +70,10 @@
     } else {
       generate();
     }
+  });
+
+  shuffleBtn.addEventListener('click', () => {
+    generateArt(true);
   });
 
   // Generate on load with default text
@@ -153,7 +161,7 @@
     }
   }
 
-  function generateArt() {
+  function generateArt(shuffle) {
     let text = input.value.trim();
     if (!text || !overlayImage) {
       if (!overlayImage) {
@@ -163,8 +171,10 @@
       return;
     }
 
-    const sep = text.includes('?') ? '&' : '?';
+    if (shuffle) {
+      const sep = text.includes('?') ? '&' : '?';
       text = text + sep + '_=' + randomSuffix(6);
+    }
 
     // Pad text to force higher QR version (more modules = better image resolution)
     // QR version 10+ has 57+ modules, giving much better image detail
@@ -217,8 +227,7 @@
     bgCtx.drawImage(img, sx, sy, imgMin, imgMin, 0, 0, qrImageSize, qrImageSize);
 
     const bgData = bgCtx.getImageData(0, 0, qrImageSize, qrImageSize);
-    applyFilter(bgData, 'bw');
-    bgCtx.putImageData(bgData, 0, 0);
+    applyFilter(bgData, filterSelect.value);
     const qrPixels = qrCtx.getImageData(0, 0, qrImageSize, qrImageSize);
 
     // Step 3: Merge - replace QR pixels with image pixels except protected areas
@@ -240,14 +249,32 @@
                           ? modules.get(moduleRow, moduleCol) : false;
         const isFinderArea = isProtectedPixel(moduleRow, moduleCol, subX, subY, moduleCount);
 
-        if (isFinderArea || isQRDark) {
-          // Dark module or finder: solid black
-          resultData.data[idx] = 0;
-          resultData.data[idx + 1] = 0;
-          resultData.data[idx + 2] = 0;
+        if (isFinderArea) {
+          // Finder patterns: always keep QR data
+          resultData.data[idx] = qrPixels.data[idx];
+          resultData.data[idx + 1] = qrPixels.data[idx + 1];
+          resultData.data[idx + 2] = qrPixels.data[idx + 2];
           resultData.data[idx + 3] = 255;
+        } else if (isQRDark) {
+          // Dark modules: keep center cross (5 of 9 pixels) as QR, corners as image
+          // Center pixel + 4 edge-centers = cross shape
+          const isCenter = (subX === 1 && subY === 1);
+          const isEdgeCenter = (subX === 1 || subY === 1) && !(subX === subY);
+          if (isCenter || isEdgeCenter) {
+            // QR data (black)
+            resultData.data[idx] = qrPixels.data[idx];
+            resultData.data[idx + 1] = qrPixels.data[idx + 1];
+            resultData.data[idx + 2] = qrPixels.data[idx + 2];
+            resultData.data[idx + 3] = 255;
+          } else {
+            // Corners: blend - use image
+            resultData.data[idx] = bgData.data[idx];
+            resultData.data[idx + 1] = bgData.data[idx + 1];
+            resultData.data[idx + 2] = bgData.data[idx + 2];
+            resultData.data[idx + 3] = 255;
+          }
         } else {
-          // Light module: show image
+          // Light modules: show image
           resultData.data[idx] = bgData.data[idx];
           resultData.data[idx + 1] = bgData.data[idx + 1];
           resultData.data[idx + 2] = bgData.data[idx + 2];
