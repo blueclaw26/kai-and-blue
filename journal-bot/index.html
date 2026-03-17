@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>論文速報Bot — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; Kai & Blue</a>
+
+    <header>
+      <h1>論文速報Bot</h1>
+      <p class="subtitle">JACS最新論文をDiscordに自動投稿するBotの制作記録</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>JACS（Journal of the American Chemical Society）のASAP（最新論文）を定期的にチェックし、有機化学・触媒系の論文をフィルタリングして、Discordの <code>#論文速報</code> チャンネルに日本語要約付きで自動投稿するBot。非エンジニアとAIが協力して、実用的な自動化ツールをゼロから構築した記録。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>RSSフィードの取得</h3>
+        <p>JACSはASAP論文のRSSフィードを提供している。PythonでこのRSSフィードをパースし、新着論文のタイトル・DOI・著者情報を取得する。</p>
+        <ul>
+          <li><code>feedparser</code>ライブラリを使ってRSSフィード（XML形式）を解析</li>
+          <li>フィードURLを指定するだけで、構造化されたデータとして論文情報を取得できる</li>
+        </ul>
+<pre><code>import feedparser
+
+feed_url = "https://pubs.acs.org/action/showFeed?type=asap&doi=10.1021/jacs"
+feed = feedparser.parse(feed_url)
+
+for entry in feed.entries:
+    title = entry.title
+    doi = entry.id
+    authors = entry.get("author", "Unknown")</code></pre>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          RSSフィードとは何か、XMLデータの構造、Pythonでの外部ライブラリ利用
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>論文のフィルタリング</h3>
+        <p>JACSには幅広い分野の論文が掲載されるため、全論文ではなく有機合成・触媒に関連するものだけを抽出する。</p>
+        <ul>
+          <li>キーワードベースのフィルタリング — タイトルやアブストラクトに特定の用語（<code>catalysis</code>, <code>synthesis</code>, <code>organic</code> など）が含まれるかチェック</li>
+          <li>投稿済みDOIをJSONファイルで管理し、重複投稿を防止</li>
+        </ul>
+<pre><code>import json
+
+# 投稿済みDOIの読み込み
+with open("posted_dois.json", "r") as f:
+    posted = json.load(f)
+
+# 新着のみ、かつキーワードに一致するものを抽出
+keywords = ["cataly", "synthesis", "organic", "reaction"]
+new_papers = [
+    e for e in feed.entries
+    if e.id not in posted
+    and any(kw in e.title.lower() for kw in keywords)
+]</code></pre>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          テキストフィルタリング、JSONファイルによる状態管理
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>アブストラクトの取得</h3>
+        <p>RSSフィードにはアブストラクトが含まれない場合がある。そこでACS（出版社）のWebページに直接アクセスしてアブストラクトを取得する。</p>
+        <ul>
+          <li>最初はHTTPリクエスト（<code>fetch</code>）で試みたが、<code>403 Forbidden</code>エラー — サーバーがボットからのアクセスを拒否</li>
+          <li>解決策: ブラウザ自動操作（OpenClawの<code>browser</code>ツール）を使い、実際のブラウザとしてページにアクセス</li>
+          <li>ページのHTML構造を解析し、アブストラクトのテキストを抽出</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          HTTPステータスコード（403の意味）、スクレイピングの基本、ブラウザ自動操作
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>AIによる日本語要約</h3>
+        <p>取得した英語のアブストラクトをBlue（AI）が日本語に要約する。単なる翻訳ではなく、化学的に重要なポイントを抽出してまとめる。</p>
+        <ul>
+          <li>反応の種類、基質の範囲、収率、選択性など、有機化学者が気にするポイントを重点的に記述</li>
+          <li>タグ付け（<code>触媒化学</code> <code>全合成</code> <code>不斉合成</code> など）も自動で行い、分野ごとの検索性を確保</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          AIによるテキスト処理、要約と翻訳の違い、ドメイン知識の活用
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 5</span>
+        <h3>Discord投稿</h3>
+        <p>OpenClawの<code>message</code>ツールを使ってDiscordの特定チャンネルに投稿する。</p>
+        <ul>
+          <li>フォーマット: タイトル（日本語訳）、著者、DOIリンク、要約、タグ</li>
+          <li>TOC画像（論文のグラフィカルアブストラクト）も可能な場合は添付</li>
+          <li>Discordのマークダウンに合わせた整形処理</li>
+        </ul>
+<pre><code># 投稿フォーマットの例
+message = f"""**{title_ja}**
+{authors}
+
+{summary_ja}
+
+{tags}
+[DOI]({doi_url})"""</code></pre>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          Discord APIの基本、メッセージフォーマット、画像添付
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 6</span>
+        <h3>自動実行（cron）</h3>
+        <p>最初はHEARTBEAT（OpenClawの定期チェック機能）で実行していたが、より正確なタイミングのためにcronジョブに移行した。</p>
+        <ul>
+          <li>HEARTBEATは会話コンテキスト内で動作し、タイミングはおおよそ</li>
+          <li>cronはOSレベルで正確なスケジュール実行が可能</li>
+          <li>毎日8:00と20:00（JST）に自動実行</li>
+        </ul>
+<pre><code># crontab -e
+0 8,20 * * * /path/to/jacs-bot/run.sh</code></pre>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          cronとは何か、定期実行の設計、HEARTBEAT vs cronの使い分け
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kaiのレビューで変わったこと</h2>
+      <ul class="review-list">
+        <li>投稿フォーマットの調整 — Kaiが見やすい形にフィードバックし、情報の優先順位を整理</li>
+        <li>HEARTBEATからcronへの移行はKaiの提案（「もっと正確なタイミングで動かしたい」）</li>
+        <li>対象ジャーナルの選定 — まずJACSから始めて、今後Nature・Science・Angewandteなども追加可能な設計に</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術まとめ</h2>
+      <ul class="tech-list">
+        <li>Python</li>
+        <li>feedparser</li>
+        <li>ブラウザ自動操作</li>
+        <li>Discord API (messageツール)</li>
+        <li>cron</li>
+        <li>JSON状態管理</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+</body>
+</html>
