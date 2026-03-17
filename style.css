@@ -13,9 +13,9 @@ body {
 }
 
 .container {
-  max-width: 800px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 80px 24px 60px;
+  padding: 48px 24px;
 }
 
 /* Header */
@@ -43,23 +43,13 @@ h1 {
   line-height: 1.7;
 }
 
-/* About */
-.about {
-  margin-bottom: 56px;
-}
-
-.about p {
-  font-size: 1.05rem;
-  line-height: 1.8;
-  color: #1a1a1a;
-}
-
 /* Projects */
 .projects {
   margin-bottom: 56px;
 }
 
-.projects h2 {
+.projects h2,
+.roadmap h2 {
   font-size: 0.8rem;
   font-weight: 500;
   text-transform: uppercase;
@@ -133,6 +123,41 @@ a.project-card {
   margin-top: 16px;
 }
 
+/* Roadmap */
+.roadmap {
+  margin-bottom: 56px;
+}
+
+.roadmap-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 32px;
+}
+
+.roadmap-column h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 16px;
+}
+
+.roadmap-column ul {
+  list-style: none;
+  padding: 0;
+}
+
+.roadmap-column li {
+  font-size: 0.85rem;
+  color: #4a4a4a;
+  line-height: 1.7;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.roadmap-column li:last-child {
+  border-bottom: none;
+}
+
 /* Links */
 .links {
   margin-bottom: 48px;
@@ -159,9 +184,15 @@ footer p {
 }
 
 /* Responsive */
+@media (max-width: 700px) {
+  .roadmap-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 600px) {
   .container {
-    padding: 48px 20px 40px;
+    padding: 32px 16px;
   }
 
   .project-grid {
