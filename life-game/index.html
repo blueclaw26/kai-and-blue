@@ -15,19 +15,6 @@
       <p class="subtitle">Conway's Game of Life</p>
     </header>
 
-    <details class="rules">
-      <summary>ルール</summary>
-      <div class="rules-body">
-        <p>各セルは「生存」か「死亡」の2状態。毎世代、隣接する8マスの生存数で次の状態が決まる。</p>
-        <ul>
-          <li><strong>誕生</strong> — 死亡セルの周囲にちょうど3つの生存セルがあれば、次の世代で生まれる</li>
-          <li><strong>生存</strong> — 生存セルの周囲に2つか3つの生存セルがあれば、生き続ける</li>
-          <li><strong>過疎</strong> — 生存セルの周囲の生存セルが1つ以下なら、孤独で死ぬ</li>
-          <li><strong>過密</strong> — 生存セルの周囲の生存セルが4つ以上なら、密集で死ぬ</li>
-        </ul>
-      </div>
-    </details>
-
     <div class="game-area">
       <canvas id="life-canvas"></canvas>
     </div>
@@ -58,6 +45,19 @@
         <button class="btn btn-small" data-preset="gun">Gosper Glider Gun</button>
       </div>
     </div>
+
+    <details class="rules">
+      <summary>ルール</summary>
+      <div class="rules-body">
+        <p>各セルは「生存」か「死亡」の2状態。毎世代、隣接する8マスの生存数で次の状態が決まる。</p>
+        <ul>
+          <li><strong>誕生</strong> — 死亡セルの周囲にちょうど3つの生存セルがあれば、次の世代で生まれる</li>
+          <li><strong>生存</strong> — 生存セルの周囲に2つか3つの生存セルがあれば、生き続ける</li>
+          <li><strong>過疎</strong> — 生存セルの周囲の生存セルが1つ以下なら、孤独で死ぬ</li>
+          <li><strong>過密</strong> — 生存セルの周囲の生存セルが4つ以上なら、密集で死ぬ</li>
+        </ul>
+      </div>
+    </details>
   </div>
 
   <a href="../life-docs/" class="docs-link" title="制作記録">📖</a>
