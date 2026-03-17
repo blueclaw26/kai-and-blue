@@ -8,9 +8,6 @@
   const overlayGroup = document.getElementById('overlay-group');
   const clearOverlayBtn = document.getElementById('clear-overlay');
   const generateBtn = document.getElementById('generate-btn');
-  const shuffleBtn = document.getElementById('shuffle-btn');
-  const filterGroup = document.getElementById('filter-group');
-  const filterSelect = document.getElementById('color-filter');
   const downloadBtn = document.getElementById('download-btn');
   const canvas = document.getElementById('qr-canvas');
   const hint = document.getElementById('preview-hint');
@@ -27,19 +24,14 @@
       currentMode = btn.dataset.mode;
       updateUI();
     });
-  });
 
   function updateUI() {
     if (currentMode === 'art') {
       errorLevelGroup.style.display = 'none';
       overlayLabel.textContent = 'アート用画像（必須）';
-      shuffleBtn.style.display = '';
-      filterGroup.style.display = '';
     } else {
       errorLevelGroup.style.display = '';
       overlayLabel.textContent = '中央に画像を配置（任意）';
-      shuffleBtn.style.display = 'none';
-      filterGroup.style.display = 'none';
     }
   }
 
@@ -72,7 +64,6 @@
     }
   });
 
-  shuffleBtn.addEventListener('click', () => {
     generateArt(true);
   });
 
@@ -227,7 +218,7 @@
     bgCtx.drawImage(img, sx, sy, imgMin, imgMin, 0, 0, qrImageSize, qrImageSize);
 
     const bgData = bgCtx.getImageData(0, 0, qrImageSize, qrImageSize);
-    applyFilter(bgData, filterSelect.value);
+    applyFilter(bgData, 'bw');
     const qrPixels = qrCtx.getImageData(0, 0, qrImageSize, qrImageSize);
 
     // Step 3: Merge - replace QR pixels with image pixels except protected areas
