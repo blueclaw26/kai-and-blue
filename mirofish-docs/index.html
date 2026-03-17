@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MiroFish — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; Kai & Blue</a>
+
+    <header>
+      <h1>MiroFish</h1>
+      <p class="subtitle">AI同士が対話する将来シミュレーションツールのセットアップ記録</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>MiroFishは複数のAIエージェントがSNS上の社会をシミュレーションし、未来を推演するオープンソースのAI予測エンジン。既存のOSSプロジェクトを自分の環境にセットアップして動かす経験として取り組んだ。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>プロジェクトの調査と選定</h3>
+        <ul>
+          <li>GitHubでMiroFishのリポジトリを調査</li>
+          <li>技術スタック（Next.js + Flask/Python + OASISエンジン）を確認</li>
+          <li>ナレッジグラフ（GraphRAG）によるAIエージェント間の関係性モデリングに注目</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="オープンソースソフトウェア。ソースコードが公開されていて、誰でも使用・改変・再配布できるソフトウェア。GitHubで公開されていることが多い。">OSS</span>
+          <span class="term" data-explain="プロジェクトで使用する技術の組み合わせ。MiroFishの場合はフロント(Next.js) + バックエンド(Flask) + AI(OASIS) + グラフDB(Zep)という構成。">技術スタック</span>
+          <span class="term" data-explain="情報をノード（点）とエッジ（線）のネットワークとして表現するデータ構造。人物関係やトピック間の関連性を可視化・検索できる。">ナレッジグラフ</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>開発環境の構築</h3>
+        <ul>
+          <li>Python 3.12のインストール（3.14では一部ライブラリがビルドできない）</li>
+          <li>uvパッケージマネージャのインストール（pipより高速な依存解決）</li>
+          <li>Rustコンパイラのインストール（tiktokenのビルドに必要）</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="Pythonはバージョンによってライブラリの互換性が異なる。プロジェクトが要求するバージョンを確認し、brewやpyenvで適切なバージョンをインストールする。">Pythonバージョン管理</span>
+          <span class="term" data-explain="ライブラリの依存関係を管理するツール。Pythonではpip, uv, poetry等がある。uvはRust製で高速。npmはNode.js用。">パッケージマネージャ</span>
+          <span class="term" data-explain="Pythonの一部ライブラリはCやRustで書かれた高速な部分を含む。これをビルドするにはコンパイラ（gcc, rustc等）が必要。tiktokenはRust製のトークナイザー。">ネイティブ拡張のビルド</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>依存パッケージのインストール</h3>
+        <ul>
+          <li>フロントエンド: <code>npm run setup</code>でNext.jsの依存をインストール</li>
+          <li>バックエンド: <code>uv sync --python python3.12</code>でPython依存をインストール</li>
+          <li>依存解決で発生するエラーへの対処（バージョン競合、ビルド失敗等）</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="Node.jsのパッケージマネージャ。package.jsonに記載された依存ライブラリを一括インストールする。node_modulesフォルダに保存される。">npm</span>
+          <span class="term" data-explain="ライブラリAがライブラリBのバージョン2を要求し、ライブラリCがバージョン3を要求する、というような競合を解消するプロセス。">依存解決</span>
+          <span class="term" data-explain="エラーメッセージを読んで原因を特定し、不足しているツールやライブラリをインストールする。OSS利用時に最も多く遭遇する壁。">ビルドエラーの対処</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>環境変数の設定</h3>
+        <ul>
+          <li><code>.env</code>ファイルの作成（テンプレートからコピー）</li>
+          <li>LLM APIキー（OpenAI互換）の設定</li>
+          <li>Zep Cloud APIキー（ナレッジグラフ用）の設定</li>
+          <li>API互換性の概念（OpenAI互換APIなら異なるプロバイダーでも動く）</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="APIキーやパスワードなどの機密情報をコードとは別のファイルに保存する仕組み。.gitignoreに追加してGitHubに公開されないようにする。">環境変数(.env)</span>
+          <span class="term" data-explain="異なるサービスが同じインターフェースを持つこと。OpenAI互換APIなら、OpenAI以外のLLMプロバイダー（Anthropic, qwen等）でも同じコードで動かせる。">API互換性</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 5</span>
+        <h3>フロントエンドとバックエンドの起動</h3>
+        <ul>
+          <li><code>npm run dev</code>で全体を起動（フロント:3000 + バックエンド:5001）</li>
+          <li>ポートの概念と複数サービスの同時実行</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="ネットワーク通信の「窓口番号」。1台のコンピュータで複数のサービスを同時に動かす時、ポート番号で区別する（3000番はフロント、5001番はバックエンド等）。">ポート</span>
+          <span class="term" data-explain="ユーザーが見る画面（フロント）とデータ処理（バックエンド）を別々のプロセスとして動かす構成。API経由で通信する。">フロント/バックエンド分離</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 6</span>
+        <h3>シミュレーションの実行</h3>
+        <ul>
+          <li>複数AIエージェントがSNS上で発言・議論・予測を行う</li>
+          <li>トークン消費が大きいため、最初は40ラウンド以下で実行</li>
+          <li>シミュレーション結果のナレッジグラフでの可視化</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="特定の役割や性格を持たせたAIのインスタンス。複数のエージェントが独立して判断・行動し、相互作用することで社会シミュレーションを実現する。">AIエージェント</span>
+          <span class="term" data-explain="LLMのAPI呼び出しはトークン数に応じて課金される。複数エージェントが複数ラウンド対話すると、消費量が爆発的に増える。コスト管理が重要。">トークン消費</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kaiのレビューで変わったこと</h2>
+      <ul class="review-list">
+        <li>KaiがMiroFishを見つけてきてBlueに共有（Kaiが主導したプロジェクト選定）</li>
+        <li>ナレッジグラフへの興味がプロジェクト選定の決め手</li>
+        <li>セットアップ中のPythonバージョン問題（3.14→3.12に変更）はBlueが検証して解決</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術まとめ</h2>
+      <ul class="tech-list">
+        <li><a href="../tech/#python">Python</a></li>
+        <li><a href="../tech/#nodejs">Node.js</a></li>
+        <li><a href="../tech/#javascript">JavaScript</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+<script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+</script>
+</body>
+</html>
