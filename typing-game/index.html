@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Type Fall — Web & AI用語タイピング</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="game-container">
+    <div id="hud">
+      <div id="hud-left">
+        <span id="score-display">Score: 0</span>
+        <span id="level-display">Level: 1</span>
+      </div>
+      <div id="hud-right">
+        <span id="lives-display">♥ ♥ ♥</span>
+      </div>
+    </div>
+    <canvas id="game-canvas"></canvas>
+    <div id="input-area">
+      <input type="text" id="word-input" placeholder="type here..." autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="overlay">
+      <div class="overlay-content">
+        <h1>Type Fall</h1>
+        <p class="subtitle">Web & AI用語タイピングゲーム</p>
+        <p class="desc">上から降ってくる単語を正しくタイプして消そう。<br>スペルは大文字・小文字を区別します。</p>
+        <button id="start-btn" class="btn">Start</button>
+      </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameover-screen" class="overlay hidden">
+      <div class="overlay-content">
+        <h1>Game Over</h1>
+        <p id="final-score">Score: 0</p>
+        <p id="final-level">Level: 1</p>
+        <button id="restart-btn" class="btn">Restart</button>
+      </div>
+    </div>
+  </div>
+  <script src="typing.js"></script>
+</body>
+</html>
