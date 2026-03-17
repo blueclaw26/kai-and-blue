@@ -134,43 +134,29 @@
   }
 
   function applyFilter(imageData, filter) {
-    if (filter === 'original') return;
     const data = imageData.data;
+    // Color tints: [darkR, darkG, darkB, lightR, lightG, lightB]
+    const tints = {
+      'bw':     [0, 0, 0, 255, 255, 255],
+      'blue':   [0, 30, 100, 200, 220, 255],
+      'green':  [0, 60, 20, 200, 255, 220],
+      'red':    [100, 0, 0, 255, 210, 200],
+      'purple': [50, 0, 80, 230, 200, 255],
+      'teal':   [0, 60, 60, 200, 255, 245],
+    };
+    const tint = tints[filter] || tints['bw'];
     for (let i = 0; i < data.length; i += 4) {
-      let r = data[i], g = data[i+1], b = data[i+2];
-      switch(filter) {
-        case 'bw': {
-          const gray = 0.299*r + 0.587*g + 0.114*b;
-          data[i] = data[i+1] = data[i+2] = gray;
-          break;
-        }
-        case 'sepia': {
-          const gray = 0.299*r + 0.587*g + 0.114*b;
-          data[i] = Math.min(255, gray * 1.2);
-          data[i+1] = Math.min(255, gray * 1.0);
-          data[i+2] = Math.min(255, gray * 0.8);
-          break;
-        }
-        case 'blue': {
-          const gray = 0.299*r + 0.587*g + 0.114*b;
-          data[i] = Math.min(255, gray * 0.7);
-          data[i+1] = Math.min(255, gray * 0.8);
-          data[i+2] = Math.min(255, gray * 1.3);
-          break;
-        }
-        case 'green': {
-          const gray = 0.299*r + 0.587*g + 0.114*b;
-          data[i] = Math.min(255, gray * 0.7);
-          data[i+1] = Math.min(255, gray * 1.2);
-          data[i+2] = Math.min(255, gray * 0.7);
-          break;
-        }
-        case 'high-contrast': {
-          const gray = 0.299*r + 0.587*g + 0.114*b;
-          const threshold = gray > 128 ? 255 : 0;
-          data[i] = data[i+1] = data[i+2] = threshold;
-          break;
-        }
+      const gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+      if (gray > 128) {
+        // Light pixel
+        data[i] = tint[3];
+        data[i+1] = tint[4];
+        data[i+2] = tint[5];
+      } else {
+        // Dark pixel
+        data[i] = tint[0];
+        data[i+1] = tint[1];
+        data[i+2] = tint[2];
       }
     }
   }
