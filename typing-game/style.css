@@ -230,3 +230,8 @@ html, body {
     padding: 8px 12px;
   }
 }
+
+.gameover-overlay.victory h2 {
+  color: #4caf50;
+  text-shadow: 0 0 30px rgba(76, 175, 80, 0.5);
+}

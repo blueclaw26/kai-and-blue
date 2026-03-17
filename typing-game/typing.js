@@ -3,14 +3,16 @@
 
   // ─── Word list ───
   const WORDS = [
-    "HTML", "CSS", "JavaScript", "API", "JSON", "deploy", "server",
-    "localhost", "GitHub", "commit", "push", "pull", "branch", "merge",
-    "frontend", "backend", "database", "token", "prompt", "webhook",
-    "responsive", "component", "framework", "runtime", "endpoint",
-    "middleware", "authentication", "encryption", "bandwidth", "latency",
-    "DNS", "HTTP", "REST", "GraphQL", "Docker", "container", "CLI",
-    "npm", "node", "React", "Next.js", "Vercel", "cron", "SSH",
-    "proxy", "cache", "cookie", "session", "schema", "migration"
+    "GPT", "LLM", "prompt", "token", "embedding", "transformer",
+    "attention", "hallucination", "fine-tuning", "inference",
+    "RAG", "vector", "RLHF", "diffusion", "latent",
+    "Claude", "OpenAI", "Gemini", "Llama", "Mistral",
+    "agent", "chain", "retrieval", "context", "temperature",
+    "top-p", "sampling", "tokenizer", "BERT", "encoder",
+    "decoder", "multimodal", "alignment", "benchmark", "perplexity",
+    "API", "endpoint", "streaming", "batch", "safety",
+    "guardrail", "jailbreak", "system prompt", "few-shot", "zero-shot",
+    "LoRA", "quantization", "distillation", "VRAM", "GPU"
   ];
 
   // ─── Config ───
@@ -270,12 +272,17 @@
     if (spawnTimerId) clearTimeout(spawnTimerId);
     input.disabled = true;
 
+    // Life bonus: +10 per remaining life
+    const lifeBonus = lives * 10;
+    score += lifeBonus;
+
     // Reuse gameover screen with victory text
     const heading = gameoverScreen.querySelector('h2');
-    if (heading) heading.textContent = 'ALL CLEAR!';
-    finalScoreEl.textContent = `Score: ${score}`;
+    if (heading) heading.textContent = 'ALL CLEAR! 🎉';
+    finalScoreEl.textContent = `Score: ${score}` + (lifeBonus > 0 ? ` (Life bonus: +${lifeBonus})` : '');
     finalLevelEl.textContent = `All ${TOTAL_WAVES} waves cleared!`;
     gameoverScreen.classList.remove('hidden');
+    gameoverScreen.classList.add('victory');
   }
 
   // ─── Combo system ───
@@ -287,7 +294,9 @@
       combo = 1; // first hit or too slow — start at 1 (display only shows >= 2)
     }
     lastCorrectTime = now;
+    // Combo score bonus: +1 extra for each combo level above 1
     if (combo >= 2) {
+      score += (combo - 1);
       comboDisplayTimer = 120; // ~2 seconds at 60fps
     }
 
@@ -395,6 +404,7 @@
         fw.flashTimer = 20;
         input.value = '';
         score++;
+        // Combo score bonus (applied after onComboIncrease updates combo)
         wordsResolvedThisWave++;
         // Green flash on input
         flashInput('green');
@@ -593,6 +603,7 @@
 
     startScreen.classList.add('hidden');
     gameoverScreen.classList.add('hidden');
+    gameoverScreen.classList.remove('victory');
     input.value = '';
     input.disabled = false;
     input.focus();
