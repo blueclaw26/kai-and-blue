@@ -1,0 +1,352 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #f7f6f3;
+  font-family: 'Inter', 'Noto Sans JP', sans-serif;
+  color: #2c2c2c;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.container {
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+}
+
+.title {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #888;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 32px;
+}
+
+/* BPM Display */
+.bpm-display {
+  margin-bottom: 20px;
+  line-height: 1;
+}
+
+#bpm-value {
+  font-size: 5rem;
+  font-weight: 700;
+  color: #2c2c2c;
+  letter-spacing: -2px;
+}
+
+.bpm-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #aaa;
+  margin-top: 4px;
+}
+
+/* BPM Controls */
+.bpm-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.bpm-btn {
+  width: 44px;
+  height: 36px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.bpm-btn:hover {
+  background: #eee;
+  border-color: #ccc;
+}
+
+.bpm-btn:active {
+  background: #ddd;
+}
+
+#bpm-input {
+  width: 72px;
+  height: 36px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 500;
+  font-family: inherit;
+  color: #2c2c2c;
+  background: #fff;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+#bpm-input::-webkit-inner-spin-button,
+#bpm-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+#bpm-input:focus {
+  border-color: #4a8f7f;
+}
+
+/* Sliders */
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #ddd;
+  outline: none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #4a8f7f;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #4a8f7f;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.bpm-slider {
+  margin-bottom: 32px;
+}
+
+.volume-slider {
+  margin-top: 6px;
+}
+
+/* Beat Display */
+.beat-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 32px;
+  min-height: 56px;
+  flex-wrap: wrap;
+}
+
+.beat-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e0ddd8;
+  transition: background 0.08s, transform 0.08s;
+  margin: 0 6px;
+  flex-shrink: 0;
+}
+
+.beat-dot.active {
+  background: #4a8f7f;
+  transform: scale(1.2);
+  box-shadow: 0 0 12px rgba(74, 143, 127, 0.4);
+}
+
+.beat-dot.accent.active {
+  background: #e8a44a;
+  box-shadow: 0 0 14px rgba(232, 164, 74, 0.5);
+}
+
+.sub-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #e0ddd8;
+  transition: background 0.06s, transform 0.06s;
+  margin: 0 3px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.sub-dot.active {
+  background: #8bbab0;
+  transform: scale(1.25);
+}
+
+/* Buttons */
+.main-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.start-btn {
+  width: 140px;
+  height: 52px;
+  border: none;
+  border-radius: 14px;
+  background: #4a8f7f;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.02em;
+}
+
+.start-btn:hover {
+  background: #3d7a6b;
+}
+
+.start-btn:active {
+  transform: scale(0.97);
+}
+
+.start-btn.running {
+  background: #c75050;
+}
+
+.start-btn.running:hover {
+  background: #b04444;
+}
+
+.tap-btn {
+  width: 100px;
+  height: 52px;
+  border: 2px solid #ddd;
+  border-radius: 14px;
+  background: #fff;
+  color: #555;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tap-btn:hover {
+  border-color: #bbb;
+  background: #f5f5f5;
+}
+
+.tap-btn:active {
+  transform: scale(0.95);
+  background: #eee;
+}
+
+/* Settings */
+.settings {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 120px;
+}
+
+.setting-group label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.setting-group select {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: #2c2c2c;
+  background: #fff;
+  cursor: pointer;
+  outline: none;
+}
+
+.setting-group select:focus {
+  border-color: #4a8f7f;
+}
+
+/* Shortcuts hint */
+.shortcuts-hint {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 0.7rem;
+  color: #bbb;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  #bpm-value {
+    font-size: 3.5rem;
+  }
+
+  .beat-dot {
+    width: 28px;
+    height: 28px;
+    margin: 0 4px;
+  }
+
+  .sub-dot {
+    width: 10px;
+    height: 10px;
+    margin: 0 2px;
+  }
+
+  .main-buttons {
+    gap: 12px;
+  }
+
+  .start-btn {
+    width: 120px;
+    height: 48px;
+    font-size: 1rem;
+  }
+
+  .tap-btn {
+    width: 90px;
+    height: 48px;
+  }
+
+  .settings {
+    gap: 12px;
+  }
+
+  .setting-group {
+    min-width: 100px;
+  }
+}
