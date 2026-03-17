@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>日次レポート自動化 — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; Kai & Blue</a>
+
+    <header>
+      <h1>日次レポート自動化</h1>
+      <p class="subtitle">CRMデータを毎日集計してGoogle Sheetsに書き込む仕組みの制作記録</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>CRM（Pipedrive）から取引データを毎日自動で取得し、新規・再契約の件数と金額を集計して、Google Sheetsの指定セルに書き込む自動化ツール。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>Pipedrive APIの調査</h3>
+        <p>CRMのデータにAPIでアクセスする方法を調査し、最適なAPIバージョンを選定した。</p>
+        <ul>
+          <li>CRMのデータにAPIでアクセスする方法を調査</li>
+          <li>v1 APIとv2 APIの違いを検証（v1のフィルタリングが不正確であることを発見）</li>
+          <li>v2を使うことに決定 — より正確なフィルタリングとアーカイブ済みデータの自動除外</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          REST APIの基本、APIバージョニング、エンドポイントの調査方法
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>データの取得と分類</h3>
+        <p>APIから取得したDeal（取引）データを、ビジネスロジックに基づいて分類する。</p>
+        <ul>
+          <li>v2 APIからDeal（取引）データを取得</li>
+          <li>カスタムフィールド（弁済予定日、契約締結日、流入経路など）の構造を解析</li>
+          <li>「新規」と「再契約」の分類ロジックを実装（流入経路フィールドの値で判定）</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          APIレスポンスの構造理解、カスタムフィールドの扱い、データ分類ロジック
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>金額の集計</h3>
+        <p>分類されたDealごとに金額を合算し、日次の集計データを生成する。</p>
+        <ul>
+          <li>分類されたDealごとに金額を合算</li>
+          <li>日付フィルタリング（今日の契約のみ抽出）</li>
+          <li>Pipedriveのフィルター機能（<code>filter_id</code>）も併用してサーバー側で絞り込み</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          データの集計処理、日付フィルタリング、クライアント側 vs サーバー側フィルタリング
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>Google Sheets連携</h3>
+        <p>集計結果をGoogle Sheetsの特定セルに自動で書き込む仕組みを構築した。</p>
+        <ul>
+          <li>Google Cloud Platformでサービスアカウントを作成</li>
+          <li>サービスアカウントにスプレッドシートへの編集権限を付与</li>
+          <li><code>googleapis</code> ライブラリでシートの特定セルに書き込み</li>
+          <li>「3月16日」のような日付文字列でB列を検索して行を特定、E列・F列に値を書き込み</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          サービスアカウント認証、Google Sheets API、セル指定の仕組み
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 5</span>
+        <h3>スクリプト化</h3>
+        <p>一連の処理を再利用可能なスクリプトとしてまとめた。</p>
+        <ul>
+          <li>一連の処理をNode.jsスクリプト（<code>pipedrive-daily-report.js</code>）にまとめる</li>
+          <li>環境変数やAPIキーの管理（<code>.gitignore</code>でキーファイルを除外）</li>
+          <li>エラーハンドリング（API接続失敗時のリトライ等）</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          スクリプトの構造化、環境変数管理、.gitignoreの役割
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 6</span>
+        <h3>cron自動実行</h3>
+        <p>毎日決まった時刻に自動で集計・書き込みを実行し、結果をDiscordに報告する。</p>
+        <ul>
+          <li>毎日14:00（中間集計）と19:30（最終集計）にcronで自動実行</li>
+          <li>実行結果をDiscordの <code>#pipedrive</code> チャンネルに自動報告</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          cronスケジューリング、複数回実行の設計、実行結果の通知
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kaiのレビューで変わったこと</h2>
+      <ul class="review-list">
+        <li>v1 APIの不正確さをKaiが実データで確認し、v2への移行を決定</li>
+        <li>書き込み先のシート構造（列の割り当て）はKaiが指定</li>
+        <li>「コード書いたら毎回GitHubにpush」ルールの確立（このプロジェクトがきっかけ）</li>
+        <li>14:00の中間集計追加はKaiの要望（「夕方まで待たずに途中経過が見たい」）</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術まとめ</h2>
+      <ul class="tech-list">
+        <li>Node.js</li>
+        <li>Pipedrive API v2</li>
+        <li>Google Sheets API</li>
+        <li>サービスアカウント認証</li>
+        <li>cron</li>
+        <li>Discord通知</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+</body>
+</html>
