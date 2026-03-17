@@ -133,7 +133,7 @@
     const moduleCount = modules.size;
 
     // Sub-pixel grid per module (3x3 = 9 sub-pixels per module)
-    const subGrid = 3;
+    const subGrid = 2;
     const totalPixels = moduleCount * subGrid;
     const pixelSize = size / (totalPixels + subGrid * 4); // margin
     const margin = Math.floor((size - totalPixels * pixelSize) / 2);
@@ -155,9 +155,8 @@
 
     // Bayer-like ordered dithering matrix for 3x3
     const bayerOrder = [
-      [0, 7, 3],
-      [6, 5, 2],
-      [4, 1, 8]
+      [0, 2],
+      [3, 1]
     ];
 
     for (let row = 0; row < moduleCount; row++) {
