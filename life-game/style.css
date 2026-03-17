@@ -180,3 +180,29 @@ input[type="range"] {
     justify-content: center;
   }
 }
+
+.rules {
+  max-width: 500px;
+  margin: 0 auto 16px;
+}
+.rules summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #4a8f7f;
+  font-weight: 500;
+}
+.rules-body {
+  margin-top: 8px;
+  font-size: 0.82rem;
+  color: #555;
+  line-height: 1.7;
+}
+.rules-body p {
+  margin-bottom: 8px;
+}
+.rules-body ul {
+  padding-left: 20px;
+}
+.rules-body li {
+  margin-bottom: 4px;
+}

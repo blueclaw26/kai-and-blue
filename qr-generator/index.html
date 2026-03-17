@@ -13,17 +13,22 @@
   <div class="container">
     <header>
       <h1>QRコード生成器</h1>
-      <p class="subtitle">テキストやURLからQRコードを生成</p>
+      <p class="subtitle">URLからQRコードを生成</p>
     </header>
 
     <div class="main-layout">
       <div class="controls-panel">
-        <div class="input-group">
-          <label for="qr-input">テキスト / URL</label>
-          <textarea id="qr-input" rows="3" placeholder="URLやテキストを入力...">https://kai-and-blue.vercel.app</textarea>
+        <div class="mode-toggle">
+          <button class="mode-btn active" data-mode="standard">Standard</button>
+          <button class="mode-btn" data-mode="art">Art</button>
         </div>
 
         <div class="input-group">
+          <label for="qr-input">URL</label>
+          <textarea id="qr-input" rows="3" placeholder="URLを入力...">https://kai-and-blue.vercel.app</textarea>
+        </div>
+
+        <div class="input-group" id="error-level-group">
           <label for="error-level">エラー訂正レベル</label>
           <select id="error-level">
             <option value="L">L（7%）</option>
@@ -42,8 +47,8 @@
           </select>
         </div>
 
-        <div class="input-group">
-          <label for="overlay-input">中央に画像を配置（任意）</label>
+        <div class="input-group" id="overlay-group">
+          <label for="overlay-input" id="overlay-label">中央に画像を配置（任意）</label>
           <input type="file" id="overlay-input" accept="image/*">
           <button id="clear-overlay" class="btn btn-small" style="display:none;">画像をクリア</button>
         </div>
