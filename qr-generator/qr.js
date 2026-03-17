@@ -258,17 +258,18 @@
             resultData.data[idx + 2] = bgData.data[idx + 2];
             resultData.data[idx + 3] = 255;
           } else {
-            // Keep: solid black block
-            resultData.data[idx] = qrPixels.data[idx];
-            resultData.data[idx + 1] = qrPixels.data[idx + 1];
-            resultData.data[idx + 2] = qrPixels.data[idx + 2];
+            // Keep: solid black block (force pure black, don't read from qrPixels)
+            resultData.data[idx] = 0;
+            resultData.data[idx + 1] = 0;
+            resultData.data[idx + 2] = 0;
             resultData.data[idx + 3] = 255;
           }
         } else {
-          // Light modules: show image
-          resultData.data[idx] = bgData.data[idx];
-          resultData.data[idx + 1] = bgData.data[idx + 1];
-          resultData.data[idx + 2] = bgData.data[idx + 2];
+          // Light modules: show image but push toward white to maintain QR contrast
+          // Mix image with white: 60% image, 40% white
+          resultData.data[idx] = Math.min(255, Math.floor(bgData.data[idx] * 0.6 + 255 * 0.4));
+          resultData.data[idx + 1] = Math.min(255, Math.floor(bgData.data[idx + 1] * 0.6 + 255 * 0.4));
+          resultData.data[idx + 2] = Math.min(255, Math.floor(bgData.data[idx + 2] * 0.6 + 255 * 0.4));
           resultData.data[idx + 3] = 255;
         }
       }
