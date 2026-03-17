@@ -8,10 +8,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <style>.docs-link{position:fixed;top:16px;right:16px;width:40px;height:40px;background:rgba(255,255,255,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.15);z-index:9999;transition:transform 0.2s,box-shadow 0.2s}.docs-link:hover{transform:scale(1.1);box-shadow:0 4px 12px rgba(0,0,0,0.2)}.docs-link::after{content:"制作記録";position:absolute;right:48px;background:#333;color:#fff;padding:4px 10px;border-radius:6px;font-size:12px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.2s}.docs-link:hover::after{opacity:1}</style>
 </head>
 <body>
-  <a href="../metronome-docs/" class="docs-link" style="position:fixed;top:16px;right:16px;z-index:100;font-size:1.4rem;text-decoration:none;opacity:0.5;transition:opacity 0.2s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'" title="Docs">📖</a>
-
   <div class="container">
     <h1 class="title">Metronome</h1>
 
@@ -87,5 +86,6 @@
   </div>
 
   <script src="metronome.js"></script>
+  <a href="../metronome-docs/" class="docs-link" title="制作記録">📖</a>
 </body>
 </html>

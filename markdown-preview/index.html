@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>.docs-link{position:fixed;top:16px;right:16px;width:40px;height:40px;background:rgba(255,255,255,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.15);z-index:9999;transition:transform 0.2s,box-shadow 0.2s}.docs-link:hover{transform:scale(1.1);box-shadow:0 4px 12px rgba(0,0,0,0.2)}.docs-link::after{content:"制作記録";position:absolute;right:48px;background:#333;color:#fff;padding:4px 10px;border-radius:6px;font-size:12px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.2s}.docs-link:hover::after{opacity:1}</style>
 </head>
 <body>
   <header class="top-bar">
@@ -15,7 +16,6 @@
       <h1>Markdown Preview</h1>
     </div>
     <div class="top-bar-right">
-      <a href="../markdown-docs/" class="docs-link" title="Docs">📖 docs</a>
       <button id="copy-btn" class="btn" title="Copy HTML to clipboard">📋 Copy HTML</button>
       <button id="clear-btn" class="btn" title="Clear editor">🗑 Clear</button>
     </div>
@@ -32,5 +32,6 @@
     </div>
   </main>
   <script src="markdown.js"></script>
+  <a href="../markdown-docs/" class="docs-link" title="制作記録">📖</a>
 </body>
 </html>
