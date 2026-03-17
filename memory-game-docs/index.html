@@ -36,7 +36,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          HTML要素の動的生成の準備、UIレイアウト設計
+          <span class="term" data-explain="JavaScriptでdocument.createElementを使ってHTMLの要素をプログラムから作ること。16枚のカードを手書きするのではなく、ループで自動生成する。">HTML要素の動的生成</span><span class="term" data-explain="画面上の要素（ボタン、スコア表示、ゲームボード等）をどこにどう配置するかを設計すること。ユーザーが直感的に操作できる配置を考える。">UIレイアウト設計</span>
         </div>
       </div>
 
@@ -51,7 +51,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          CSS 3Dトランスフォーム、アニメーション、視覚フィードバック
+          <span class="term" data-explain="CSSのtransformプロパティでrotateY(180deg)のように3D回転を指定する機能。カードの裏表をめくるアニメーションに使う。perspectiveで奥行き感を出す。">CSS 3Dトランスフォーム</span><span class="term" data-explain="3D回転した要素の裏面を表示するかどうかを制御するCSSプロパティ。hiddenにすると、カードが裏返った時に裏面が見えなくなる。">backface-visibility</span><span class="term" data-explain="ユーザーの操作に対して視覚的に応答すること。カードが一致した時に緑色に光る、ホバー時に浮き上がる、など。ユーザーに「反応している」と伝える。">視覚フィードバック</span>
         </div>
       </div>
 
@@ -60,13 +60,14 @@
         <h3>JavaScriptでゲームロジック</h3>
         <p>カードのシャッフル、めくり判定、タイマーなどのゲームロジックをJavaScriptで実装。</p>
         <ul>
+          <li>Fisher-Yatesシャッフルアルゴリズムでカードをランダム配置</li>
           <li>2枚めくり→比較→一致/不一致の状態管理</li>
           <li>800msのディレイで不一致カードを裏返す（<code>setTimeout</code>）</li>
           <li>タイマー — 最初のクリックで開始</li>
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          配列のシャッフル、状態管理パターン、setTimeout、イベントリスナー
+          <span class="term" data-explain="配列をランダムに並べ替えるアルゴリズム。末尾から順にランダムな位置の要素と交換する。Math.random()だけで並べ替えると偏りが出るが、この方法なら均等になる。">Fisher-Yatesシャッフル</span><span class="term" data-explain="アプリケーションの現在の状態（めくったカード、マッチ済みペア、手数など）を変数で追跡し、状態に応じて表示や動作を変えるパターン。">状態管理パターン</span><span class="term" data-explain="指定したミリ秒後に関数を実行するJavaScriptの機能。不一致カードを800ms後に裏返す、のような「ちょっと待ってから処理」に使う。">setTimeout</span><span class="term" data-explain="ユーザーの操作（クリック、キー入力、マウス移動など）を検知して関数を実行する仕組み。addEventListener('click', 関数)の形で登録する。">イベントリスナー</span>
         </div>
       </div>
 
@@ -100,6 +101,7 @@
         <li><a href="../tech/#css3d">CSS 3D Transform</a></li>
         <li><a href="../tech/#javascript">JavaScript</a></li>
         <li><a href="../tech/#dom">DOM操作</a></li>
+        <li>Fisher-Yatesシャッフル</li>
       </ul>
     </section>
 
@@ -107,34 +109,21 @@
       <p><a href="../index.html">Kai & Blue</a> — 2026</p>
     </footer>
   </div>
-</body>
-</html>
-
+<script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
     explain.textContent = term.dataset.explain;
     term.parentNode.insertBefore(explain, term.nextSibling);
   });
 });
 </script>
-</body>
-</html>
-   </ul>
-    </section>
-
-    <footer>
-      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
-    </footer>
-  </div>
-</body>
-</html>
->
-        <li>JavaScript</li>
-        <li>DOM操作</li>
-      </ul>
-    </section>
-
-    <footer>
-      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
-    </footer>
-  </div>
 </body>
 </html>

@@ -36,7 +36,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          REST APIの基本、APIバージョニング、エンドポイントの調査方法
+          <span class="term" data-explain="Webサービスがデータを提供するための設計スタイル。URLにアクセスするとJSON形式でデータが返ってくる。GET（取得）、POST（作成）、PUT（更新）、DELETE（削除）の4操作が基本。">REST API</span><span class="term" data-explain="APIの仕様が変わった時に、v1、v2のようにバージョンを分けて提供すること。古いバージョンを使い続けているアプリが壊れないようにするため。">APIバージョニング</span><span class="term" data-explain="APIのどのURLに何のリクエストを送れば何のデータが返ってくるかを調べること。APIドキュメントを読んだり、実際にリクエストを送って試したりする。">エンドポイントの調査</span>
         </div>
       </div>
 
@@ -51,7 +51,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          APIレスポンスの構造理解、カスタムフィールドの扱い、データ分類ロジック
+          <span class="term" data-explain="APIから返ってくるデータの形。通常はJSON形式で、ネストしたオブジェクトや配列で構成される。どのキーに何のデータが入っているかを把握する必要がある。">APIレスポンスの構造</span><span class="term" data-explain="CRMなどのサービスが標準で持っているフィールド以外に、ユーザーが独自に追加したデータ項目。APIでは内部的なハッシュキーで管理されていることが多い。">カスタムフィールド</span><span class="term" data-explain="取得したデータを条件に基づいてカテゴリに振り分ける処理。if文やswitch文、フィールドの値によるマッピングで実装する。">データ分類ロジック</span>
         </div>
       </div>
 
@@ -66,7 +66,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          データの集計処理、日付フィルタリング、クライアント側 vs サーバー側フィルタリング
+          <span class="term" data-explain="複数のデータレコードから、合計・平均・件数などの統計値を計算する処理。reduceやforループで数値を累積する。">データの集計処理</span><span class="term" data-explain="データを日付で絞り込む処理。「今日の分だけ」「今月の分だけ」のように、日時を比較してフィルタする。タイムゾーンに注意が必要。">日付フィルタリング</span><span class="term" data-explain="データベースやAPIのサーバー側で絞り込みを行うこと。大量データを全件取得してからクライアント側で絞るより効率的。filter_idやクエリパラメータで指定する。">サーバー側フィルタリング</span>
         </div>
       </div>
 
@@ -82,7 +82,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          サービスアカウント認証、Google Sheets API、セル指定の仕組み
+          <span class="term" data-explain="人間のアカウントではなく、プログラム専用のアカウントでAPIにアクセスする仕組み。Google Cloud Platformで作成し、JSONキーファイルで認証する。">サービスアカウント認証</span><span class="term" data-explain="Googleスプレッドシートをプログラムから読み書きするためのAPI。セル範囲を指定してデータの取得・書き込みができる。">Google Sheets API</span><span class="term" data-explain="スプレッドシートのセルを「A1形式」（列+行番号）で指定する方法。プログラムからは行番号と列番号を動的に計算して指定する。">セル指定の仕組み</span>
         </div>
       </div>
 
@@ -97,7 +97,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          スクリプトの構造化、環境変数管理、.gitignoreの役割
+          <span class="term" data-explain="処理を関数に分け、メイン処理から順番に呼び出す形にコードを整理すること。テストやデバッグがしやすくなる。">スクリプトの構造化</span><span class="term" data-explain="APIキーやパスワードなどの機密情報をコードに直接書かず、環境変数やファイルから読み込む仕組み。セキュリティの基本。">環境変数管理</span><span class="term" data-explain="Gitで管理しないファイルを指定するための設定ファイル。APIキーやnode_modulesなど、公開したくないファイルをリポジトリから除外する。">.gitignoreの役割</span>
         </div>
       </div>
 
@@ -111,7 +111,7 @@
         </ul>
         <div class="learn">
           <span class="learn-label">ここで学ぶこと:</span>
-          cronスケジューリング、複数回実行の設計、実行結果の通知
+          <span class="term" data-explain="「分 時 日 月 曜日」の5つの値で実行タイミングを指定する仕組み。「0 14 * * *」は毎日14:00に実行という意味。">cronスケジューリング</span><span class="term" data-explain="同じスクリプトを1日に複数回実行する場合の設計。中間集計と最終集計のように、時間帯によって役割を変えることもある。">複数回実行の設計</span><span class="term" data-explain="スクリプトの実行が成功したか失敗したかを、チャットやメールで自動報告する仕組み。問題が起きたらすぐ気づけるようにするため。">実行結果の通知</span>
         </div>
       </div>
     </section>
@@ -158,20 +158,5 @@ document.querySelectorAll('.term').forEach(term => {
   });
 });
 </script>
-</body>
-</html>
->
-      </ul>
-    </section>
-
-    <footer>
-      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
-    </footer>
-  </div>
-</body>
-</html>
-/p>
-    </footer>
-  </div>
 </body>
 </html>
