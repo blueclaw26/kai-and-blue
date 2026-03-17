@@ -134,6 +134,36 @@ input[type="file"] {
   margin-top: 0.3rem;
 }
 
+.mode-toggle {
+  display: flex;
+  gap: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+  margin-bottom: 4px;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  background: #f0f0ec;
+  color: #666;
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mode-btn.active {
+  background: #4a8f7f;
+  color: white;
+}
+
+.mode-btn:hover:not(.active) {
+  background: #e4e4e0;
+}
+
 .preview-panel {
   background: #fff;
   border-radius: 10px;
