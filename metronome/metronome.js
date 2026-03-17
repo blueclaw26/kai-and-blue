@@ -25,6 +25,7 @@
 
   // Cached noise buffers (so every click sounds identical)
   let noiseBufferCache = null;
+  let accentBufferCache = null;
 
   // --- DOM ---
   const bpmValueEl = document.getElementById('bpm-value');
@@ -158,8 +159,9 @@
 
     if (!noiseBufferCache) {
       noiseBufferCache = createNoiseBuffer(0.05);
+      accentBufferCache = createNoiseBuffer(0.05);
     }
-    noise.buffer = noiseBufferCache;
+    noise.buffer = (type === 'accent') ? accentBufferCache : noiseBufferCache;
     noise.connect(filter);
     filter.connect(gain);
     gain.connect(audioCtx.destination);
