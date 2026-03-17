@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>神経衰弱 — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; Kai & Blue</a>
+
+    <header>
+      <h1>神経衰弱</h1>
+      <p class="subtitle">絵文字カードゲームの制作記録</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>4×4の絵文字カードをめくってペアを見つけるメモリーゲーム。JavaScript入門として制作。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>HTMLでゲームボードを構築</h3>
+        <p>16枚のカード要素を配置するグリッド構造と、ゲームのUIを設計する。</p>
+        <ul>
+          <li>16枚のカード要素を配置するグリッド構造</li>
+          <li>スコア表示（手数、マッチ数、タイマー）のUI</li>
+          <li>リスタートボタン</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          HTML要素の動的生成の準備、UIレイアウト設計
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>CSSでカードめくりアニメーション</h3>
+        <p>CSS 3Dトランスフォームを使って、カードの裏表をめくる演出を実装。</p>
+        <ul>
+          <li>CSS 3D transform（<code>rotateY</code>）でカードの裏表を表現</li>
+          <li><code>perspective</code>、<code>backface-visibility</code>プロパティで奥行きと裏面の非表示を制御</li>
+          <li>マッチ時の緑グロー演出</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          CSS 3Dトランスフォーム、アニメーション、視覚フィードバック
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>JavaScriptでゲームロジック</h3>
+        <p>カードのシャッフル、めくり判定、タイマーなどのゲームロジックをJavaScriptで実装。</p>
+        <ul>
+          <li>Fisher-Yatesシャッフルアルゴリズムでカードをランダム配置</li>
+          <li>2枚めくり→比較→一致/不一致の状態管理</li>
+          <li>800msのディレイで不一致カードを裏返す（<code>setTimeout</code>）</li>
+          <li>タイマー — 最初のクリックで開始</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          配列のシャッフル、状態管理パターン、setTimeout、イベントリスナー
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>クリア判定と演出</h3>
+        <p>全ペアを見つけたらゲームクリア。完了の検出と結果表示を実装。</p>
+        <ul>
+          <li>全ペア完了の検出</li>
+          <li>クリアメッセージの表示</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          ゲーム完了条件の設計、UIフィードバック
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kaiのレビューで変わったこと</h2>
+      <ul class="review-list">
+        <li>サブエージェントでの開発フローを初めて実践（前日のクラッシュの教訓から）</li>
+        <li>動作確認をブラウザで実施してからtanに報告</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術まとめ</h2>
+      <ul class="tech-list">
+        <li>HTML</li>
+        <li>CSS 3D Transform</li>
+        <li>JavaScript</li>
+        <li>DOM操作</li>
+        <li>Fisher-Yatesシャッフル</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+</body>
+</html>

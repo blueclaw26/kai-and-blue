@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kai & Blue — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; Kai & Blue</a>
+
+    <header>
+      <h1>Kai & Blue</h1>
+      <p class="subtitle">ホームページの制作記録</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>Kai & Blueの活動を記録するホームページ。HTMLとCSSだけで構成されたシンプルなサイトで、Vercelにデプロイして公開している。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>HTML構造の設計</h3>
+        <p>ページの骨格をHTMLで作成。ヘッダー、セクション、フッターのセマンティックな構造を組み立てる。</p>
+        <ul>
+          <li>セマンティックHTMLタグ（<code>&lt;header&gt;</code>、<code>&lt;section&gt;</code>、<code>&lt;footer&gt;</code>）で意味のある構造を定義</li>
+          <li>Google Fontsの読み込み（Inter + Noto Sans JP）で日英両対応のタイポグラフィ</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          HTMLタグの意味、セマンティックHTML、外部リソースの読み込み
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>CSSでデザイン</h3>
+        <p>色、フォント、余白、レイアウトをCSSで定義し、ビジュアルを作り込む。</p>
+        <ul>
+          <li>CSS Gridで2列・3列のカードレイアウトを構築</li>
+          <li>ホバーエフェクト（<code>translateY</code>、<code>box-shadow</code>）でインタラクティブな操作感</li>
+          <li>レスポンシブ対応 — メディアクエリで画面幅に応じてカラム数を変更</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          CSSプロパティ、Gridレイアウト、メディアクエリ、トランジション
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>Vercelへのデプロイ</h3>
+        <p>GitHubリポジトリにコードをpushし、Vercelが自動でデプロイする仕組みを構築。</p>
+        <ul>
+          <li>GitHubリポジトリにコードを<code>push</code></li>
+          <li>VercelがGitHubと連携して自動デプロイ</li>
+          <li><code>push</code>するたびに自動で最新版が公開される</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          Git/GitHubの基本、CI/CDの概念、ホスティングサービス
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>デザインの反復改善</h3>
+        <p>Kaiのフィードバックを受けて、デザインと構造を何度も改善した。</p>
+        <ul>
+          <li>最初のダークブルーテーマから、ウォームグレーのライトテーマに変更</li>
+          <li>番号リストから3列グリッドに構造を変更</li>
+          <li>56プロジェクトのロードマップを4フェーズで構成</li>
+          <li>ホバーツールチップを追加（CSS方式→JS方式に修正）</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          デザインの反復プロセス、ユーザーフィードバックの反映、CSS vs JSの使い分け
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kaiのレビューで変わったこと</h2>
+      <ul class="review-list">
+        <li>ダークブルー→ライトテーマへの方向転換</li>
+        <li>「AIっぽくない」デザインの追求</li>
+        <li>番号リストの廃止（「ダサい」というフィードバック）</li>
+        <li>Phaseの説明文を削除（「幼稚に見える」）</li>
+        <li>ツールチップのclipping問題の報告→JS方式に修正</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術まとめ</h2>
+      <ul class="tech-list">
+        <li>HTML</li>
+        <li>CSS</li>
+        <li>CSS Grid</li>
+        <li>Google Fonts</li>
+        <li>Vercel</li>
+        <li>Git/GitHub</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+</body>
+</html>

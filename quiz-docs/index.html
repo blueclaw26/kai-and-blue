@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>クイズアプリ — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; Kai & Blue</a>
+
+    <header>
+      <h1>クイズアプリ</h1>
+      <p class="subtitle">Web & AIクイズの制作記録</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>「AIと開発する人間が知っておくべき20のこと」をテーマにした4択クイズ。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>問題データの設計</h3>
+        <p>20問の問題を配列オブジェクトとして定義。コードの書き方ではなく、概念理解にフォーカス。</p>
+        <ul>
+          <li>各問題: 質問文、4つの選択肢、正解インデックス、解説テキスト</li>
+          <li>テーマ: Web技術、AI概念、インターネットの仕組み</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          データ構造の設計、配列とオブジェクトの使い分け
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>1問ずつ表示するUI</h3>
+        <p>現在の問題を画面に描画し、進捗を視覚的に表示する。</p>
+        <ul>
+          <li>4つのボタンを動的に生成</li>
+          <li>プログレスバーで進捗を表示（current / total）</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          動的なDOM生成、プログレスバーの実装
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>正誤判定とフィードバック</h3>
+        <p>正解・不正解に応じて、異なるフィードバックを表示する。</p>
+        <ul>
+          <li>正解→ボタン緑＋「✓」＋紙吹雪（<code>canvas-confetti</code>）＋「正解！」テキスト→1秒で自動遷移</li>
+          <li>不正解→ボタン赤＋「✗」＋正解を緑で表示＋解説テキスト＋「次へ」ボタン</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          条件分岐、外部ライブラリ（CDN）の利用、UXの設計
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>結果画面</h3>
+        <p>全問回答後にスコアと正答率を表示し、リプレイを促す。</p>
+        <ul>
+          <li>スコアと正答率を表示</li>
+          <li>正答率に応じたメッセージ（100%→「完璧」等）</li>
+          <li>リスタートボタン</li>
+        </ul>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          スコアリングロジック、状態のリセット
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kaiのレビューで変わったこと</h2>
+      <ul class="review-list">
+        <li>正解時の「✓」だけでは確認しづらい→紙吹雪エフェクト追加</li>
+        <li>不正解時の自動遷移→「次へ」ボタンに変更（解説を読む時間確保）</li>
+        <li>間違えた時に解説を表示する機能追加（「ただのチェックじゃなく学べるように」）</li>
+        <li>テーマを「プログラミング」から「Web & AI概念」に変更（「コードはAIが書くから」）</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術まとめ</h2>
+      <ul class="tech-list">
+        <li>HTML</li>
+        <li>CSS</li>
+        <li>JavaScript</li>
+        <li>canvas-confetti (CDN)</li>
+        <li>データ構造設計</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+</body>
+</html>
