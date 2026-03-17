@@ -14,15 +14,15 @@
   ];
 
   // ─── Config ───
-  const BASE_SPEED = 0.7;          // px per frame at wave 1
-  const SPEED_INCREMENT = 0.15;    // added per wave
+  const BASE_SPEED = 1.0;          // px per frame at wave 1
+  const SPEED_INCREMENT = 0.2;     // added per wave
   const BASE_SPAWN_INTERVAL = 2200; // ms between spawns at wave 1
   const MIN_SPAWN_INTERVAL = 600;
   const SPAWN_DECREASE = 250;      // ms less per wave
   const MAX_LIVES = 3;
   const INPUT_BOTTOM_ZONE = 100;   // px from bottom reserved for input
-  const TOTAL_WAVES = 5;
-  const WAVE_WORD_COUNTS = [5, 8, 11, 14, 17]; // words per wave
+  const TOTAL_WAVES = 3;
+  const WAVE_WORD_COUNTS = [6, 10, 15]; // words per wave
   const BREATHER_DURATION = 3000;  // ms between waves
   const COMBO_SLOW_DURATION = 3000; // ms for slow effect
   const COMBO_SLOW_THRESHOLD = 3;
@@ -309,12 +309,12 @@
       combo = 0; // reset after clear
       updateHUD();
     } else if (combo >= COMBO_SLOW_THRESHOLD) {
-      // Slow all words
+      // Slow all words — heavy slow (30% speed)
       slowActive = true;
       slowEndTime = performance.now() + COMBO_SLOW_DURATION;
       for (const fw of fallingWords) {
         if (!fw.matched) {
-          fw.speed = fw.baseSpeed * 0.5;
+          fw.speed = fw.baseSpeed * 0.3;
         }
       }
       effectText = { text: 'SLOW!', startTime: performance.now(), duration: 1500, color: '#4fc3f7' };
