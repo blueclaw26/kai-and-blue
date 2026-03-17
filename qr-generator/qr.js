@@ -217,6 +217,8 @@
     bgCtx.drawImage(img, sx, sy, imgMin, imgMin, 0, 0, qrImageSize, qrImageSize);
 
     const bgData = bgCtx.getImageData(0, 0, qrImageSize, qrImageSize);
+    applyFilter(bgData, 'bw');
+    bgCtx.putImageData(bgData, 0, 0);
     const qrPixels = qrCtx.getImageData(0, 0, qrImageSize, qrImageSize);
 
     // Step 3: Merge - replace QR pixels with image pixels except protected areas
