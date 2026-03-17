@@ -14,14 +14,19 @@
   ];
 
   // ─── Config ───
-  const BASE_SPEED = 0.4;          // px per frame at level 1
-  const SPEED_INCREMENT = 0.08;    // added per level
-  const BASE_SPAWN_INTERVAL = 3000; // ms between spawns at level 1
+  const BASE_SPEED = 0.4;          // px per frame at wave 1
+  const SPEED_INCREMENT = 0.08;    // added per wave
+  const BASE_SPAWN_INTERVAL = 3000; // ms between spawns at wave 1
   const MIN_SPAWN_INTERVAL = 800;
-  const SPAWN_DECREASE = 200;      // ms less per level
-  const LEVEL_UP_EVERY = 5;        // words per level
+  const SPAWN_DECREASE = 200;      // ms less per wave
   const MAX_LIVES = 3;
   const INPUT_BOTTOM_ZONE = 100;   // px from bottom reserved for input
+  const TOTAL_WAVES = 5;
+  const WAVE_WORD_COUNTS = [8, 10, 12, 14, 16]; // words per wave
+  const BREATHER_DURATION = 3000;  // ms between waves
+  const COMBO_SLOW_DURATION = 3000; // ms for slow effect
+  const COMBO_SLOW_THRESHOLD = 3;
+  const COMBO_CLEAR_THRESHOLD = 5;
 
   // ─── DOM refs ───
   const canvas = document.getElementById('game-canvas');
@@ -41,12 +46,27 @@
   let fallingWords = [];
   let score = 0;
   let lives = MAX_LIVES;
-  let level = 1;
   let running = false;
   let animFrameId = null;
   let spawnTimerId = null;
   let lastTime = 0;
   let particles = [];
+
+  // Wave system
+  let currentWave = 1;
+  let wordsSpawnedThisWave = 0;
+  let wordsResolvedThisWave = 0; // cleared + missed
+  let inBreather = false;
+  let breatherStartTime = 0;
+  let waveClearText = null;      // { text, startTime }
+  let victory = false;
+
+  // Combo system
+  let combo = 0;
+  let comboDisplayTimer = 0;     // frames remaining to show combo
+  let effectText = null;         // { text, startTime, duration }
+  let slowActive = false;
+  let slowEndTime = 0;
 
   // ─── Canvas sizing ───
   function resizeCanvas() {
@@ -63,16 +83,20 @@
   }
 
   function currentSpeed() {
-    return BASE_SPEED + (level - 1) * SPEED_INCREMENT;
+    return BASE_SPEED + (currentWave - 1) * SPEED_INCREMENT;
   }
 
   function currentSpawnInterval() {
-    return Math.max(MIN_SPAWN_INTERVAL, BASE_SPAWN_INTERVAL - (level - 1) * SPAWN_DECREASE);
+    return Math.max(MIN_SPAWN_INTERVAL, BASE_SPAWN_INTERVAL - (currentWave - 1) * SPAWN_DECREASE);
+  }
+
+  function currentWaveWordCount() {
+    return WAVE_WORD_COUNTS[currentWave - 1] || 16;
   }
 
   function updateHUD() {
     scoreEl.textContent = `Score: ${score}`;
-    levelEl.textContent = `Level: ${level}`;
+    levelEl.textContent = `Wave ${currentWave}/${TOTAL_WAVES}`;
     const hearts = [];
     for (let i = 0; i < MAX_LIVES; i++) {
       hearts.push(i < lives ? '♥' : '♡');
@@ -119,7 +143,9 @@
 
   // ─── Spawn word ───
   function spawnWord() {
-    if (!running) return;
+    if (!running || inBreather) return;
+    if (wordsSpawnedThisWave >= currentWaveWordCount()) return; // all words for this wave spawned
+
     const word = randomWord();
     // Measure width to keep it within canvas
     ctx.font = '22px Courier New, Consolas, monospace';
@@ -135,14 +161,19 @@
       x,
       y: -10,
       speed: currentSpeed() * speedMult,
+      baseSpeed: currentSpeed() * speedMult,
       opacity: 1,
       matched: false,
       flash: null, // 'green' or null
       flashTimer: 0
     });
 
-    // Schedule next spawn
-    scheduleSpawn();
+    wordsSpawnedThisWave++;
+
+    // Schedule next spawn if more words to go
+    if (wordsSpawnedThisWave < currentWaveWordCount()) {
+      scheduleSpawn();
+    }
   }
 
   function scheduleSpawn() {
@@ -151,8 +182,201 @@
     spawnTimerId = setTimeout(spawnWord, currentSpawnInterval() + jitter);
   }
 
+  // ─── Wave management ───
+  function checkWaveEnd() {
+    if (inBreather || !running) return;
+    const totalNeeded = currentWaveWordCount();
+    // All words spawned and none left on screen (not counting fading matched ones)
+    const activeWords = fallingWords.filter(fw => !fw.matched);
+    if (wordsSpawnedThisWave >= totalNeeded && activeWords.length === 0) {
+      if (currentWave >= TOTAL_WAVES) {
+        // Victory!
+        showVictory();
+      } else {
+        startBreather();
+      }
+    }
+  }
+
+  function startBreather() {
+    inBreather = true;
+    breatherStartTime = performance.now();
+    input.disabled = true;
+    if (spawnTimerId) clearTimeout(spawnTimerId);
+    waveClearText = { text: `WAVE ${currentWave} CLEAR!`, startTime: performance.now() };
+  }
+
+  function updateBreather(now) {
+    if (!inBreather) return;
+    const elapsed = now - breatherStartTime;
+
+    // First 2 seconds: show "WAVE X CLEAR!"
+    // Last 1 second: show upcoming wave "WAVE X"
+    if (elapsed >= BREATHER_DURATION) {
+      // End breather, start next wave
+      inBreather = false;
+      waveClearText = null;
+      currentWave++;
+      wordsSpawnedThisWave = 0;
+      wordsResolvedThisWave = 0;
+      input.disabled = false;
+      input.value = '';
+      input.focus();
+      updateHUD();
+      spawnWord();
+    }
+  }
+
+  function drawBreather(now) {
+    if (!inBreather) return;
+    const elapsed = now - breatherStartTime;
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    if (elapsed < 2000) {
+      // "WAVE X CLEAR!"
+      const alpha = Math.min(1, elapsed / 300);
+      ctx.globalAlpha = alpha;
+      ctx.font = 'bold 42px Courier New, Consolas, monospace';
+      ctx.shadowColor = '#4caf50';
+      ctx.shadowBlur = 30;
+      ctx.fillStyle = '#4caf50';
+      ctx.fillText(`WAVE ${currentWave} CLEAR!`, cx, cy);
+    } else {
+      // "WAVE X" (next wave) with fade-in
+      const fadeElapsed = elapsed - 2000;
+      const alpha = Math.min(1, fadeElapsed / 500);
+      ctx.globalAlpha = alpha;
+      ctx.font = 'bold 48px Courier New, Consolas, monospace';
+      ctx.shadowColor = '#4fc3f7';
+      ctx.shadowBlur = 30;
+      ctx.fillStyle = '#4fc3f7';
+      ctx.fillText(`WAVE ${currentWave + 1}`, cx, cy);
+    }
+
+    ctx.restore();
+  }
+
+  function showVictory() {
+    running = false;
+    victory = true;
+    if (animFrameId) cancelAnimationFrame(animFrameId);
+    if (spawnTimerId) clearTimeout(spawnTimerId);
+    input.disabled = true;
+
+    // Reuse gameover screen with victory text
+    const heading = gameoverScreen.querySelector('h2');
+    if (heading) heading.textContent = 'ALL CLEAR!';
+    finalScoreEl.textContent = `Score: ${score}`;
+    finalLevelEl.textContent = `All ${TOTAL_WAVES} waves cleared!`;
+    gameoverScreen.classList.remove('hidden');
+  }
+
+  // ─── Combo system ───
+  function onComboIncrease() {
+    combo++;
+    comboDisplayTimer = 120; // ~2 seconds at 60fps
+
+    if (combo >= COMBO_CLEAR_THRESHOLD) {
+      // Clear all words on screen
+      let cleared = 0;
+      for (const fw of fallingWords) {
+        if (!fw.matched) {
+          fw.matched = true;
+          fw.flash = 'green';
+          fw.flashTimer = 20;
+          score++;
+          cleared++;
+          wordsResolvedThisWave++;
+          spawnParticles(fw.x + ctx.measureText(fw.text).width / 2, fw.y, '#ff9800');
+        }
+      }
+      effectText = { text: 'CLEAR!', startTime: performance.now(), duration: 1500, color: '#ff9800' };
+      combo = 0; // reset after clear
+      updateHUD();
+    } else if (combo >= COMBO_SLOW_THRESHOLD) {
+      // Slow all words
+      slowActive = true;
+      slowEndTime = performance.now() + COMBO_SLOW_DURATION;
+      for (const fw of fallingWords) {
+        if (!fw.matched) {
+          fw.speed = fw.baseSpeed * 0.5;
+        }
+      }
+      effectText = { text: 'SLOW!', startTime: performance.now(), duration: 1500, color: '#4fc3f7' };
+    }
+  }
+
+  function resetCombo() {
+    combo = 0;
+    comboDisplayTimer = 0;
+  }
+
+  function updateSlow(now) {
+    if (slowActive && now >= slowEndTime) {
+      slowActive = false;
+      // Restore speeds
+      for (const fw of fallingWords) {
+        if (!fw.matched) {
+          fw.speed = fw.baseSpeed;
+        }
+      }
+    }
+  }
+
+  function drawCombo(now) {
+    if (combo < 2 && comboDisplayTimer <= 0) return;
+    if (comboDisplayTimer > 0) comboDisplayTimer--;
+
+    const displayCombo = combo >= 2 ? combo : 0;
+    if (displayCombo < 2 && comboDisplayTimer <= 0) return;
+
+    ctx.save();
+    const cx = canvas.width / 2;
+    const baseSize = 24 + Math.min(combo, 10) * 3;
+    const alpha = Math.min(1, comboDisplayTimer / 30);
+    ctx.globalAlpha = alpha;
+    ctx.font = `bold ${baseSize}px Courier New, Consolas, monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Brighter with higher combos
+    const brightness = Math.min(255, 150 + combo * 20);
+    ctx.shadowColor = `rgb(${brightness}, ${brightness}, 50)`;
+    ctx.shadowBlur = 10 + combo * 3;
+    ctx.fillStyle = `rgb(${brightness}, ${brightness}, 50)`;
+    ctx.fillText(`x${displayCombo >= 2 ? displayCombo : combo} COMBO`, cx, 50);
+    ctx.restore();
+  }
+
+  function drawEffectText(now) {
+    if (!effectText) return;
+    const elapsed = now - effectText.startTime;
+    if (elapsed > effectText.duration) {
+      effectText = null;
+      return;
+    }
+    const alpha = 1 - elapsed / effectText.duration;
+    const yOffset = elapsed * 0.02;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.font = 'bold 36px Courier New, Consolas, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = effectText.color;
+    ctx.shadowBlur = 25;
+    ctx.fillStyle = effectText.color;
+    ctx.fillText(effectText.text, canvas.width / 2, canvas.height / 2 - 60 - yOffset);
+    ctx.restore();
+  }
+
   // ─── Input handling ───
   input.addEventListener('input', () => {
+    if (inBreather) return;
     const typed = input.value;
     // Check against all falling words
     for (let i = 0; i < fallingWords.length; i++) {
@@ -164,14 +388,13 @@
         fw.flashTimer = 20;
         input.value = '';
         score++;
-        // Level up
-        if (score % LEVEL_UP_EVERY === 0) {
-          level++;
-        }
+        wordsResolvedThisWave++;
         // Green flash on input
         flashInput('green');
         // Particles
         spawnParticles(fw.x + ctx.measureText(fw.text).width / 2, fw.y, '#4caf50');
+        // Combo
+        onComboIncrease();
         updateHUD();
         return;
       }
@@ -195,11 +418,18 @@
     lastTime = timestamp;
     // Cap delta to avoid huge jumps on tab switch
     const dt = Math.min(delta, 50) / 16.67;
+    const now = performance.now();
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw subtle grid lines for atmosphere
     drawBackground();
+
+    // Update slow effect timer
+    updateSlow(now);
+
+    // Update breather
+    updateBreather(now);
 
     // Update & draw falling words
     const bottomLimit = canvas.height - INPUT_BOTTOM_ZONE;
@@ -223,6 +453,8 @@
         if (fw.y >= bottomLimit) {
           // Missed!
           lives--;
+          wordsResolvedThisWave++;
+          resetCombo();
           flashInput('red');
           spawnParticles(fw.x + 30, bottomLimit, '#ef5350');
           fallingWords.splice(i, 1);
@@ -246,6 +478,16 @@
 
     // Highlight matching prefix
     drawMatchHint();
+
+    // Draw combo and effects
+    drawCombo(now);
+    drawEffectText(now);
+
+    // Draw breather overlay
+    drawBreather(now);
+
+    // Check if wave ended
+    checkWaveEnd();
 
     animFrameId = requestAnimationFrame(gameLoop);
   }
@@ -322,11 +564,24 @@
   function startGame() {
     score = 0;
     lives = MAX_LIVES;
-    level = 1;
+    currentWave = 1;
+    wordsSpawnedThisWave = 0;
+    wordsResolvedThisWave = 0;
     fallingWords = [];
     particles = [];
     running = true;
+    victory = false;
+    inBreather = false;
+    combo = 0;
+    comboDisplayTimer = 0;
+    effectText = null;
+    slowActive = false;
+    waveClearText = null;
     updateHUD();
+
+    // Reset gameover heading in case it was changed to "ALL CLEAR!"
+    const heading = gameoverScreen.querySelector('h2');
+    if (heading) heading.textContent = 'GAME OVER';
 
     startScreen.classList.add('hidden');
     gameoverScreen.classList.add('hidden');
@@ -346,8 +601,10 @@
 
     input.disabled = true;
 
+    const heading = gameoverScreen.querySelector('h2');
+    if (heading) heading.textContent = 'GAME OVER';
     finalScoreEl.textContent = `Score: ${score}`;
-    finalLevelEl.textContent = `Level: ${level}`;
+    finalLevelEl.textContent = `Wave ${currentWave}/${TOTAL_WAVES}`;
     gameoverScreen.classList.remove('hidden');
   }
 
