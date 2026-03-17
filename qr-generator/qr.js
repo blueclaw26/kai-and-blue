@@ -240,36 +240,17 @@
                           ? modules.get(moduleRow, moduleCol) : false;
         const isFinderArea = isProtectedPixel(moduleRow, moduleCol, subX, subY, moduleCount);
 
-        if (isFinderArea) {
-          // Finder patterns: always keep QR data
-          resultData.data[idx] = qrPixels.data[idx];
-          resultData.data[idx + 1] = qrPixels.data[idx + 1];
-          resultData.data[idx + 2] = qrPixels.data[idx + 2];
+        if (isFinderArea || isQRDark) {
+          // Dark module or finder: solid black
+          resultData.data[idx] = 0;
+          resultData.data[idx + 1] = 0;
+          resultData.data[idx + 2] = 0;
           resultData.data[idx + 3] = 255;
-        } else if (isQRDark) {
-          // Dark modules: full 3×3 solid black block
-          // Randomly skip some modules entirely (show image instead)
-          // ~25% of dark modules are skipped for image visibility
-          const hash = ((moduleRow * 7919 + moduleCol * 6271 + moduleRow * moduleCol * 31) % 100);
-          if (hash < 25) {
-            // Skip: show image
-            resultData.data[idx] = bgData.data[idx];
-            resultData.data[idx + 1] = bgData.data[idx + 1];
-            resultData.data[idx + 2] = bgData.data[idx + 2];
-            resultData.data[idx + 3] = 255;
-          } else {
-            // Keep: solid black block (force pure black, don't read from qrPixels)
-            resultData.data[idx] = 0;
-            resultData.data[idx + 1] = 0;
-            resultData.data[idx + 2] = 0;
-            resultData.data[idx + 3] = 255;
-          }
         } else {
-          // Light modules: show image but push toward white to maintain QR contrast
-          // Mix image with white: 60% image, 40% white
-          resultData.data[idx] = Math.min(255, Math.floor(bgData.data[idx] * 0.6 + 255 * 0.4));
-          resultData.data[idx + 1] = Math.min(255, Math.floor(bgData.data[idx + 1] * 0.6 + 255 * 0.4));
-          resultData.data[idx + 2] = Math.min(255, Math.floor(bgData.data[idx + 2] * 0.6 + 255 * 0.4));
+          // Light module: show image
+          resultData.data[idx] = bgData.data[idx];
+          resultData.data[idx + 1] = bgData.data[idx + 1];
+          resultData.data[idx + 2] = bgData.data[idx + 2];
           resultData.data[idx + 3] = 255;
         }
       }
