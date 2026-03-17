@@ -230,7 +230,7 @@ footer a:hover {
   transition: color 0.2s;
 }
 .term + .term::before {
-  content: "、";
+  content: " / ";
   color: #999;
   border-bottom: none;
   cursor: default;
