@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web & AI クイズ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="quiz-container">
+    <header class="quiz-header">
+      <h1>Web & AI クイズ</h1>
+      <p class="subtitle">AIと開発する人間が知っておくべき20のこと</p>
+    </header>
+
+    <div class="progress-wrapper">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <span class="progress-text" id="progressText">1 / 20</span>
+    </div>
+
+    <main id="quizBody">
+      <div id="questionScreen">
+        <h2 class="question-text" id="questionText"></h2>
+        <div class="choices" id="choices"></div>
+      </div>
+
+      <div id="resultScreen" class="hidden">
+        <h2 class="result-score" id="resultScore"></h2>
+        <p class="result-message" id="resultMessage"></p>
+        <button class="restart-btn" id="restartBtn">もう一度挑戦する</button>
+      </div>
+    </main>
+  </div>
+
+  <script src="quiz.js"></script>
+</body>
+</html>
