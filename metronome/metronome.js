@@ -7,7 +7,7 @@
   let beatsPerMeasure = 4;
   let subdivision = 1;
   let volume = 0.7;
-  let accentEnabled = true;
+  let accentBeat = 0; // 0-indexed beat to accent, -1 = no accent
 
   // Audio scheduling
   let audioCtx = null;
@@ -83,7 +83,7 @@
     beatDisplay.innerHTML = '';
     for (let i = 0; i < beatsPerMeasure; i++) {
       const dot = document.createElement('div');
-      dot.className = 'beat-dot' + (i === 0 ? ' accent' : '');
+      dot.className = 'beat-dot' + (i === accentBeat ? ' accent' : '');
       dot.dataset.beat = i;
       beatDisplay.appendChild(dot);
 
@@ -204,7 +204,7 @@
   function scheduleNote(time) {
     let type;
     if (currentSubBeat === 0) {
-      type = (accentEnabled && currentBeat === 0) ? 'accent' : 'beat';
+      type = (accentBeat >= 0 && currentBeat === accentBeat) ? 'accent' : 'beat';
     } else {
       type = 'sub';
     }
@@ -324,7 +324,9 @@
     });
 
     accentModeSelect.addEventListener('change', () => {
-      accentEnabled = accentModeSelect.value === 'on';
+      const val = accentModeSelect.value;
+      accentBeat = val === 'off' ? -1 : parseInt(val) - 1; // convert 1-based to 0-indexed
+      buildBeatIndicators();
     });
 
     volumeSlider.addEventListener('input', () => {
