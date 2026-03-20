@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>画像生成ツール — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; Kai & Blue</a>
+
+    <header>
+      <h1>画像生成ツール</h1>
+      <p class="subtitle">AI画像生成ツールの制作記録</p>
+    </header>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>画像生成APIの選定</h3>
+        <p>Pollinations AI（無料、キー不要）を選定。APIキーなしで画像生成が可能なサービスを比較検討し、手軽さと品質のバランスからPollinationsを採用。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="テキストの説明文（プロンプト）から画像を自動生成するAI技術。Stable Diffusion、DALL-E、Midjourneyなどが代表的。モデルが大量の画像とテキストの対応関係を学習することで実現している。">画像生成AI</span><span class="term" data-explain="テキストから画像を生成する無料のAPIサービス。APIキー不要でURLにプロンプトを含めるだけで画像が返ってくるシンプルな設計。学習・プロトタイプに最適。">Pollinations AI</span><span class="term" data-explain="APIが公開しているURL。このURLにリクエストを送ることでサービスの機能を利用できる。Pollinationsの場合、URLパスにプロンプトを含め、クエリパラメータでサイズやシードを指定する。">APIエンドポイント</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>プロンプト設計</h3>
+        <p>テキストからの画像生成、スタイルプリセット、ネガティブプロンプトの仕組みを実装。ユーザーの入力にスタイル指定や除外条件を自動付加する設計。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="AIに望む出力を得るためのプロンプト（指示文）の書き方を工夫する技術。具体的な描写、スタイル指定、品質キーワードの追加などで生成結果の質が大きく変わる。">プロンプトエンジニアリング</span><span class="term" data-explain="画像生成で『避けたい要素』を指定するプロンプト。例えば『ぼやけた、低品質、テキスト』などを指定すると、それらの特徴を持つ画像が生成されにくくなる。">ネガティブプロンプト</span><span class="term" data-explain="よく使うスタイル（写真風、アニメ、水彩など）をあらかじめ用意しておき、ワンクリックでプロンプトに追加できる仕組み。ユーザーが専門知識なしでも高品質な指示を出せる。">スタイルプリセット</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>UIの実装</h3>
+        <p>入力フォーム、ローディング状態、画像表示、ダウンロード機能を実装。APIのレスポンスがimg要素のsrcとして直接使える特性を活用したシンプルな設計。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="JavaScriptでimg要素のsrc属性を書き換えることで、表示画像を動的に変更する手法。Pollinations APIはURLが画像そのものを返すため、生成したURLをsrcにセットするだけで画像が表示される。">img要素のsrc動的変更</span><span class="term" data-explain="処理中であることをユーザーに伝えるためのUI要素。スピナーアニメーションや『生成中...』テキストの表示により、待ち時間のストレスを軽減し、アプリが正常に動作していることを示す。">ローディングUI</span><span class="term" data-explain="画像をダウンロード可能にする手法。Canvas要素に画像を描画し、toBlob()でPNGデータに変換、URL.createObjectURL()で一時URLを作成してaタグのdownload属性でファイル保存させる。">Blob/URLダウンロード</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>ユーザー体験の改善</h3>
+        <p>履歴保存、ランダムプロンプト、シード固定による再現性の確保。過去のプロンプトをクリックで再利用できるチップUIと、創造性を刺激するランダム機能。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="ブラウザのlocalStorageに過去のプロンプトを保存し、次回アクセス時にも履歴を表示する仕組み。JSON.stringify/parseで配列を文字列として保存・復元する。最大10件に制限し古いものを削除。">localStorage履歴</span><span class="term" data-explain="画像生成AIの乱数生成器の初期値。同じシード値と同じプロンプトを使えば、同じ画像が再現される。気に入った画像の微調整や、結果の共有に役立つ。">シード値</span><span class="term" data-explain="同じ入力条件から同じ出力が得られること。画像生成ではシード値を固定することで再現性を確保できる。デバッグやA/Bテスト、パラメータの微調整時に重要な概念。">再現性</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kaiのレビュー</h2>
+      <ul class="review-list">
+        <li>まず無料APIで動くUIを確認し、品質に応じてAPI差し替え可能な設計に</li>
+        <li>プロンプトの組み立てロジックをbuildPrompt()関数に集約して差し替えやすくした</li>
+        <li>スタイルプリセットでAI知識がなくても使いやすいUIに</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術</h2>
+      <ul class="tech-list">
+        <li><a href="../tech/#html">HTML</a></li>
+        <li><a href="../tech/#css">CSS</a></li>
+        <li><a href="../tech/#javascript">JavaScript</a></li>
+        <li>Pollinations AI API</li>
+        <li>localStorage</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+
+  <script>
+    document.querySelectorAll('.term').forEach(term => {
+      term.addEventListener('click', () => {
+        const existing = term.nextElementSibling;
+        if (existing && existing.classList.contains('term-explain')) {
+          existing.remove();
+          return;
+        }
+        document.querySelectorAll('.term-explain').forEach(el => el.remove());
+        const explain = document.createElement('div');
+        explain.className = 'term-explain';
+        explain.textContent = term.dataset.explain;
+        term.parentNode.insertBefore(explain, term.nextSibling);
+      });
+    });
+  </script>
+</body>
+</html>

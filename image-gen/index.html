@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>画像生成ツール — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎨 画像生成ツール</h1>
+      <p class="subtitle">テキストから画像を生成するAIツール</p>
+    </header>
+
+    <div class="prompt-section">
+      <label for="prompt">プロンプト</label>
+      <div class="prompt-row">
+        <textarea id="prompt" placeholder="生成したい画像を説明してください..." rows="3"></textarea>
+        <button id="random-btn" class="btn-secondary" title="ランダムプロンプト">🎲</button>
+      </div>
+
+      <div class="negative-section">
+        <label for="negative">ネガティブプロンプト <span class="label-hint">（任意）</span></label>
+        <textarea id="negative" placeholder="避けたい要素..." rows="2"></textarea>
+      </div>
+
+      <div class="controls">
+        <div class="control-group">
+          <label for="style-select">スタイル</label>
+          <select id="style-select">
+            <option value="">なし</option>
+            <option value="photographic style, high quality, detailed">写真風</option>
+            <option value="illustration style, digital art, vibrant colors">イラスト</option>
+            <option value="anime style, cel shading, vibrant">アニメ</option>
+            <option value="oil painting style, textured brushstrokes, classical">油絵</option>
+            <option value="watercolor style, soft edges, translucent colors">水彩</option>
+            <option value="3d render, octane render, highly detailed, realistic lighting">3Dレンダー</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="size-select">サイズ</label>
+          <select id="size-select">
+            <option value="512">512px</option>
+            <option value="768" selected>768px</option>
+            <option value="1024">1024px</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="ratio-select">比率</label>
+          <select id="ratio-select">
+            <option value="1:1" selected>1:1</option>
+            <option value="16:9">16:9</option>
+            <option value="9:16">9:16</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="seed-input">シード <span class="label-hint">（任意）</span></label>
+          <input type="number" id="seed-input" placeholder="ランダム" min="0">
+        </div>
+      </div>
+
+      <button id="generate-btn" class="btn-primary">生成する</button>
+    </div>
+
+    <div id="history-section" class="history-section" style="display:none;">
+      <label>履歴</label>
+      <div id="history-chips" class="history-chips"></div>
+    </div>
+
+    <div id="result-section" class="result-section" style="display:none;">
+      <div id="loading" class="loading" style="display:none;">
+        <div class="spinner"></div>
+        <p>生成中...</p>
+      </div>
+      <img id="generated-image" alt="生成された画像">
+      <button id="download-btn" class="btn-secondary download-btn" style="display:none;">📥 ダウンロード</button>
+    </div>
+  </div>
+
+  <a href="../image-gen-docs/" class="docs-link" title="制作記録">📖</a>
+  <script src="image-gen.js"></script>
+</body>
+</html>
