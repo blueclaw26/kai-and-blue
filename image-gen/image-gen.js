@@ -138,25 +138,30 @@ function generate() {
 
   const url = buildUrl(fullPrompt);
 
-  // Directly set src on the displayed image element
-  generatedImage.onload = () => {
-    generatedImage.style.display = '';
-    loadingEl.style.display = 'none';
-    downloadBtn.style.display = '';
-    generateBtn.disabled = false;
-    generateBtn.textContent = '生成する';
-  };
-
-  generatedImage.onerror = () => {
-    loadingEl.style.display = 'none';
-    generatedImage.style.display = 'none';
-    downloadBtn.style.display = 'none';
-    generateBtn.disabled = false;
-    generateBtn.textContent = '生成する';
-    alert('画像の生成に失敗しました。英語のプロンプトで試してみてください。');
-  };
-
-  generatedImage.src = url;
+  // Fetch image as blob to avoid CORS/loading issues
+  fetch(url)
+    .then(res => {
+      if (!res.ok) throw new Error('API error: ' + res.status);
+      return res.blob();
+    })
+    .then(blob => {
+      const blobUrl = URL.createObjectURL(blob);
+      generatedImage.src = blobUrl;
+      generatedImage.style.display = '';
+      loadingEl.style.display = 'none';
+      downloadBtn.style.display = '';
+      generateBtn.disabled = false;
+      generateBtn.textContent = '生成する';
+    })
+    .catch(err => {
+      console.error('Image generation failed:', err);
+      loadingEl.style.display = 'none';
+      generatedImage.style.display = 'none';
+      downloadBtn.style.display = 'none';
+      generateBtn.disabled = false;
+      generateBtn.textContent = '生成する';
+      alert('画像の生成に失敗しました。英語のプロンプトで試してみてください。');
+    });
 }
 
 // Download
