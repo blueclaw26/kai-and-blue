@@ -139,7 +139,6 @@ function generate() {
   const url = buildUrl(fullPrompt);
 
   const img = new Image();
-  img.crossOrigin = 'anonymous';
 
   img.onload = () => {
     generatedImage.src = img.src;
@@ -154,7 +153,6 @@ function generate() {
     // Retry without extra params (may help with some prompts)
     const simpleUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}`;
     const retryImg = new Image();
-    retryImg.crossOrigin = 'anonymous';
     retryImg.onload = () => {
       generatedImage.src = retryImg.src;
       generatedImage.style.display = '';
