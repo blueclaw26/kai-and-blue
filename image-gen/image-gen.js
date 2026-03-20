@@ -69,13 +69,12 @@ function buildPrompt() {
 function buildUrl(prompt) {
   const { width, height } = getDimensions();
   const encoded = encodeURIComponent(prompt);
-  let url = `https://image.pollinations.ai/prompt/${encoded}?width=${width}&height=${height}&nologo=true`;
+  let url = `https://image.pollinations.ai/prompt/${encoded}?width=${width}&height=${height}`;
 
   const seed = seedInput.value.trim();
   if (seed) url += `&seed=${seed}`;
 
   // Cache bust to avoid browser caching
-  url += `&_t=${Date.now()}`;
   return url;
 }
 
