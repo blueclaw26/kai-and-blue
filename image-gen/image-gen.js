@@ -151,12 +151,27 @@ function generate() {
   };
 
   img.onerror = () => {
+    // Retry without extra params (may help with some prompts)
+    const simpleUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}`;
+    const retryImg = new Image();
+    retryImg.crossOrigin = 'anonymous';
+    retryImg.onload = () => {
+      generatedImage.src = retryImg.src;
+      generatedImage.style.display = '';
+      loadingEl.style.display = 'none';
+      downloadBtn.style.display = '';
+      generateBtn.disabled = false;
+      generateBtn.textContent = '生成する';
+    };
+    retryImg.onerror = () => {
     loadingEl.style.display = 'none';
     generatedImage.style.display = 'none';
     downloadBtn.style.display = 'none';
     generateBtn.disabled = false;
     generateBtn.textContent = '生成する';
-    alert('画像の生成に失敗しました。もう一度お試しください。');
+    alert('画像の生成に失敗しました。英語のプロンプトで試してみてください。');
+    };
+    retryImg.src = simpleUrl;
   };
 
   img.src = url;
