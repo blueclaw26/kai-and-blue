@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KPIダッシュボード — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; フルスタックWebサービス</a>
+
+    <header>
+      <h1>KPIダッシュボード</h1>
+      <p class="subtitle">経営指標の集計・可視化・予測で意思決定を支援</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>サービスの経営状況を可視化するKPIダッシュボードを構築した。KPI設計、データ集計、ダッシュボードUI、売上予測まで、データドリブンな意思決定を支援するシステムの全工程を記録。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>KPI設計</h3>
+        <p>サービスに必要な経営指標を定義した。何を計測し、どの数値を改善すべきかを明確にすることで、ダッシュボードの設計方針を決定。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="事業目標の達成度を測定するための定量的な指標。申込数、完了率、平均処理時間など、改善すべきポイントを数値で把握する。">KPI(重要業績評価指標)</span>
+          <span class="term" data-explain="ある処理の開始から完了までにかかる時間。申込受付から完了までの日数など、業務効率を測る重要な指標。">リードタイム</span>
+          <span class="term" data-explain="特定のアクション（申込、完了など）に至った割合。LP訪問者のうち申込に進んだ割合など、サービスの成果を定量的に評価する。">コンバージョン率</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>データ集計</h3>
+        <p>DBから必要なデータを集計・加工する処理を実装した。SQLクエリで期間別・ステータス別の集計を行い、ダッシュボード表示用のデータを準備。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="SQLのCOUNT、SUM、AVGなどの集約関数を使ってデータを要約する処理。大量のレコードから必要な統計値を効率的に算出する。">SQL集計</span>
+          <span class="term" data-explain="SQLで特定のカラムの値ごとにデータをグループ化する句。ステータス別件数や月別合計など、分類ごとの集計に必須。">GROUP BY</span>
+          <span class="term" data-explain="時間の経過とともに記録されたデータ。日別・月別の推移をグラフ化することで、トレンドや季節性のパターンを発見できる。">時系列データ</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>ダッシュボードUI</h3>
+        <p>経営サマリー、月次指標、アクションリストを一画面に表示するダッシュボードUIを構築した。重要な数値が一目で把握できるレイアウトを設計。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="複数のKPIや指標を一画面にまとめて表示するUIの設計手法。情報の優先順位を決め、最も重要な指標を目立つ位置に配置する。">ダッシュボード設計</span>
+          <span class="term" data-explain="KPIの値を背景色付きのカード形式で表示するUI要素。数値、ラベル、前期比などを含み、重要指標を視覚的に強調する。">KPIカード</span>
+          <span class="term" data-explain="数値データをグラフやチャートに変換して視覚的に表現すること。棒グラフ、折れ線グラフ、円グラフなど、データの特性に応じた表現を選ぶ。">データ可視化</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>売上予測</h3>
+        <p>過去データから将来の推移を推定するロジックを実装した。現在の案件パイプラインから、将来の見込みを算出する機能。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="時系列データの傾向（上昇・下降・横ばい）を分析する手法。過去の推移パターンから将来の方向性を推測する基礎となる。">トレンド分析</span>
+          <span class="term" data-explain="直近の一定期間のデータの平均値を計算し、データの短期的なノイズを除去する手法。7日移動平均、30日移動平均などが一般的。">移動平均</span>
+          <span class="term" data-explain="現在進行中の案件（申込済み・処理中など）を段階別に管理し、各段階の完了確率から将来の成果を予測する手法。">パイプライン管理</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>ふりかえり</h2>
+      <ul class="review-list">
+        <li>KPI設計のプロセスを通じて、事業にとって本当に重要な指標を見極める力がついた</li>
+        <li>SQL集計の技術を実践的に活用し、複雑なデータ加工を実装</li>
+        <li>ダッシュボードUIの設計で、情報の優先順位付けと視覚的表現を学んだ</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術</h2>
+      <ul class="tech-list">
+        <li><a href="../../tech/#python">Python</a></li>
+        <li>FastAPI</li>
+        <li>SQLite</li>
+        <li><a href="../../tech/#html">HTML</a></li>
+        <li><a href="../../tech/#css">CSS</a></li>
+        <li><a href="../../tech/#javascript">JavaScript</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p>Kai & Blue — 2026</p>
+    </footer>
+  </div>
+<script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+</script>
+</body>
+</html>

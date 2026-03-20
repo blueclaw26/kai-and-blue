@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQ — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; フルスタックWebサービス</a>
+
+    <header>
+      <h1>FAQ</h1>
+      <p class="subtitle">顧客の自己解決を促進するFAQページの設計と実装</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>顧客からのよくある質問をまとめたFAQページを設計・実装した。カテゴリ分類、2段階アコーディオンUI、視認性改善まで、情報設計からUI実装の全工程を記録。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>FAQ設計</h3>
+        <p>サービス全体を俯瞰してFAQの内容と構成を設計した。顧客がどの段階でどんな疑問を持つかを分析し、カテゴリと質問を整理。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="よくある質問の内容、順序、グルーピングを設計するプロセス。顧客の行動パターンを分析し、必要な情報を探しやすい構造にまとめる。">FAQ設計</span>
+          <span class="term" data-explain="関連する質問をグループ化して分類する手法。「サービスについて」「お支払いについて」など、ユーザーが直感的に目的の情報にたどり着ける。">カテゴリ分類</span>
+          <span class="term" data-explain="顧客がサービスを認知してから利用完了するまでの一連の体験の流れ。各段階で発生する疑問を先回りしてFAQに反映する。">顧客ジャーニー</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>2段階アコーディオンUI</h3>
+        <p>カテゴリ→質問の階層的な折りたたみUIを実装した。カテゴリをクリックすると質問一覧が展開し、さらに質問をクリックすると回答が表示される。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="クリックで内容の表示/非表示を切り替えるUIパターン。限られたスペースに多くの情報を整理して表示でき、FAQや設定画面でよく使われる。">アコーディオンUI</span>
+          <span class="term" data-explain="CSSのtransitionやJavaScriptを使って、要素の開閉をスムーズに表現する技術。高さの変化やフェードイン/アウトで、UIの操作感を向上させる。">CSS/JSアニメーション</span>
+          <span class="term" data-explain="情報を大分類→中分類→詳細のように階層的に整理する手法。ユーザーが段階的に情報を絞り込めるため、大量のFAQでも探しやすくなる。">情報の階層化</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>視認性改善</h3>
+        <p>カテゴリと質問の視覚的区別を明確にし、ユーザーが情報の階層を直感的に把握できるようにデザインを改善した。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="フォントサイズ、太さ、色、余白などを使って、情報の重要度や親子関係を視覚的に表現するデザイン手法。カテゴリ見出しと個別質問の区別などに活用する。">視覚的階層</span>
+          <span class="term" data-explain="情報のまとまりをカード状の枠で囲むデザインパターン。背景色や影をつけることで、各セクションの境界が明確になり、読みやすさが向上する。">カード化</span>
+          <span class="term" data-explain="カテゴリ、質問、回答などの要素に異なる背景色を割り当てることで、階層構造を色で表現する手法。視覚的な区別がつきやすくなる。">背景色の使い分け</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>ふりかえり</h2>
+      <ul class="review-list">
+        <li>顧客ジャーニーに沿ったFAQ設計により、的確な質問配置を実現</li>
+        <li>2段階アコーディオンで情報量が多くても探しやすいUIを構築</li>
+        <li>視覚的階層の明確化で、カテゴリと質問の区別が直感的に</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術</h2>
+      <ul class="tech-list">
+        <li><a href="../../tech/#html">HTML</a></li>
+        <li><a href="../../tech/#css">CSS</a></li>
+        <li><a href="../../tech/#javascript">JavaScript</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p>Kai & Blue — 2026</p>
+    </footer>
+  </div>
+<script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+</script>
+</body>
+</html>

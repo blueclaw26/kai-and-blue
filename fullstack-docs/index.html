@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>フルスタックWebサービス — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; Kai & Blue</a>
+
+    <header>
+      <h1>フルスタックWebサービス</h1>
+      <p class="subtitle">8つのモジュールで構成されたWebサービスの制作記録</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>顧客向けLP、申込フォーム、管理画面、チャットBot連携、PDF生成、FAQ、KPIダッシュボード、インフラまで、フルスタックのWebサービスをゼロから構築した記録。各モジュールの詳細は個別ページに記載。</p>
+    </section>
+
+    <section>
+      <h2>モジュール一覧</h2>
+      <div class="module-grid">
+        <a href="lp/" class="module-card">
+          <h3>LP・集客</h3>
+          <span class="module-tag">HTML / CSS / CTA設計</span>
+        </a>
+        <a href="form/" class="module-card">
+          <h3>申込フォーム</h3>
+          <span class="module-tag">バリデーション / DB / ステートマシン</span>
+        </a>
+        <a href="admin/" class="module-card">
+          <h3>管理画面</h3>
+          <span class="module-tag">認証 / 顧客管理 / ステータス</span>
+        </a>
+        <a href="messaging/" class="module-card">
+          <h3>メッセージング連携</h3>
+          <span class="module-tag">webhook / 自動通知 / 自動返信</span>
+        </a>
+        <a href="pdf/" class="module-card">
+          <h3>契約書PDF</h3>
+          <span class="module-tag">動的PDF生成 / 永続保存</span>
+        </a>
+        <a href="faq/" class="module-card">
+          <h3>FAQ</h3>
+          <span class="module-tag">FAQ設計 / アコーディオンUI</span>
+        </a>
+        <a href="kpi/" class="module-card">
+          <h3>KPIダッシュボード</h3>
+          <span class="module-tag">経営指標 / 集計 / 予測</span>
+        </a>
+        <a href="infra/" class="module-card">
+          <h3>インフラ</h3>
+          <span class="module-tag">VPS / cron / デプロイ</span>
+        </a>
+      </div>
+    </section>
+
+    <section>
+      <h2>全体アーキテクチャ</h2>
+      <p>8つのモジュールが連携し、Webサービス全体を構成している。</p>
+      <ul class="arch-list">
+        <li>顧客がLPを見て申込フォームに入力</li>
+        <li>データがDBに保存され、管理画面で確認</li>
+        <li>チャットBotが自動通知・自動返信</li>
+        <li>契約書PDFが自動生成</li>
+        <li>FAQで顧客の自己解決を促進</li>
+        <li>KPIダッシュボードで経営判断</li>
+        <li>すべてVPS上で稼働</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術まとめ</h2>
+      <ul class="tech-list">
+        <li><a href="../tech/#python">Python</a></li>
+        <li>FastAPI</li>
+        <li>SQLite</li>
+        <li><a href="../tech/#html">HTML</a></li>
+        <li><a href="../tech/#css">CSS</a></li>
+        <li><a href="../tech/#javascript">JavaScript</a></li>
+        <li>Tailwind CSS</li>
+        <li>Webhook</li>
+        <li>PDF生成</li>
+        <li><a href="../tech/#cron">cron</a></li>
+        <li>VPS</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p>Kai & Blue — 2026</p>
+    </footer>
+  </div>
+</body>
+</html>

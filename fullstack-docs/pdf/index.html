@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>契約書PDF — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; フルスタックWebサービス</a>
+
+    <header>
+      <h1>契約書PDF</h1>
+      <p class="subtitle">Pythonによる動的PDF生成と永続的なファイル管理</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>顧客データをもとに契約書PDFを動的に生成する機能を実装した。PDF生成ライブラリの選定、日本語フォント対応、テンプレート設計、ファイルの永続保存まで、PDF自動生成の全工程を記録。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>PDF生成ライブラリの選定</h3>
+        <p>PythonでPDFを動的に生成するためのライブラリを比較検討し、ReportLabを採用した。日本語フォントの取り扱いも含め、基本的なPDF出力の仕組みを構築。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="PythonでPDFを生成するためのライブラリ。座標指定でテキストや図形を配置でき、複雑なレイアウトのPDFをプログラムから作成できる。">ReportLab</span>
+          <span class="term" data-explain="PDF（Portable Document Format）はAdobe社が開発した文書フォーマット。OS環境に依存せず同じ見た目で表示でき、印刷にも適している。">PDFフォーマット</span>
+          <span class="term" data-explain="PDFにCJK（中日韓）文字を正しく表示するための処理。TrueTypeフォントの埋め込みやフォントパスの指定が必要になる。">日本語フォント対応</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>テンプレート設計</h3>
+        <p>契約書のレイアウトをPythonコードで定義した。ヘッダー、本文、署名欄などの要素を座標指定で配置し、顧客データを動的に挿入する。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="PDF上の要素（テキスト、線、画像）をX座標・Y座標で位置指定する方式。ReportLabではページ左下が原点(0,0)となる。">座標系レイアウト</span>
+          <span class="term" data-explain="PDF生成時に、顧客名や日付などの変数をテンプレートに埋め込む処理。Pythonの文字列フォーマットやf-stringを活用する。">動的テキスト挿入</span>
+          <span class="term" data-explain="複数ページのPDFを生成する際の、ページ分割とコンテンツ配置の設計。ヘッダー・フッターの繰り返しやページ番号の挿入などを含む。">ページ構成</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>永続保存</h3>
+        <p>生成したPDFをサーバー上の永続ディレクトリに保存する仕組みを構築。/tmpに保存すると再起動で消えるため、専用のストレージパスを設計した。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="サーバー再起動やプロセス終了後もデータが保持されるようにファイルを保存すること。/tmp等の一時ディレクトリではなく、永続ストレージに保存する。">ファイル永続化</span>
+          <span class="term" data-explain="生成ファイルの保存先となるディレクトリ構造の設計。日付別、顧客別などの分類方法により、ファイルの検索性と管理性が決まる。">ディレクトリ設計</span>
+          <span class="term" data-explain="データの消失に備えて複製を別の場所に保存すること。定期的な自動バックアップにより、障害時のデータ復旧が可能になる。">バックアップ</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>ふりかえり</h2>
+      <ul class="review-list">
+        <li>ReportLabで日本語フォントを正しく扱うための設定を習得</li>
+        <li>座標系レイアウトの概念を理解し、複雑な書類のPDF化に対応</li>
+        <li>ファイル永続化の重要性を学び、/tmp回避の設計パターンを適用</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術</h2>
+      <ul class="tech-list">
+        <li><a href="../../tech/#python">Python</a></li>
+        <li>ReportLab</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p>Kai & Blue — 2026</p>
+    </footer>
+  </div>
+<script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+</script>
+</body>
+</html>

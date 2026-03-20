@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>インフラ — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; フルスタックWebサービス</a>
+
+    <header>
+      <h1>インフラ</h1>
+      <p class="subtitle">VPS構築、デプロイ、定期実行、環境変数管理</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>Webサービス全体を稼働させるためのインフラ環境を構築した。VPSの初期設定、アプリケーションのデプロイ、cronによる定期タスク実行、環境変数の安全な管理まで、運用基盤の全工程を記録。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>VPS構築</h3>
+        <p>サーバーの初期設定とアプリケーションのデプロイを行った。SSH接続、systemdによるプロセス管理、リバースプロキシの設定など、本番環境の構築手順を確立。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="Virtual Private Serverの略。クラウド上に仮想的な専用サーバーを持てるサービス。自由にソフトウェアをインストールでき、Webアプリの本番環境として使われる。">VPS</span>
+          <span class="term" data-explain="Secure Shellの略。暗号化された通信でリモートサーバーにログインし、コマンドを実行する仕組み。鍵認証を使うことで、パスワードよりも安全に接続できる。">SSH</span>
+          <span class="term" data-explain="Linuxのサービス管理システム。アプリケーションをサービスとして登録し、自動起動、再起動、ログ管理などを一元的に行える。">systemd</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>cron設定</h3>
+        <p>定期タスクの自動実行をcronで設定した。データ集計、バックアップ、通知処理など、定期的に実行すべき処理をスケジューリング。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="Linuxのタスクスケジューラ。分・時・日・月・曜日の5つのフィールドで実行タイミングを指定し、コマンドやスクリプトを自動実行する設定ファイル。">crontab</span>
+          <span class="term" data-explain="一定の間隔（毎時、毎日、毎週など）で自動的にプログラムを実行すること。手動実行の手間を省き、確実にタスクを遂行する。">定期実行</span>
+          <span class="term" data-explain="プログラムの実行結果やエラーをファイルに記録する仕組み。cronジョブの出力をログファイルにリダイレクトし、問題発生時に原因を特定する。">ログ管理</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>環境変数管理</h3>
+        <p>APIキーや設定値を安全に管理する仕組みを構築した。ソースコードにシークレット情報を含めず、環境変数として外部から注入するパターンを採用。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="環境変数をファイルに定義するための形式。KEY=VALUEの形式で記述し、python-dotenvなどのライブラリで読み込む。Gitにはコミットしない。">.env</span>
+          <span class="term" data-explain="OSレベルで設定されるキーと値のペア。アプリケーションがAPIキーやDB接続先などの設定情報を、コードに直接書かずに参照できる仕組み。">環境変数</span>
+          <span class="term" data-explain="APIキー、パスワード、トークンなどの機密情報を安全に保管・配布する手法。ソースコードへの直接記述を避け、環境変数や専用ツールで管理する。">シークレット管理</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>ふりかえり</h2>
+      <ul class="review-list">
+        <li>VPSの初期設定からデプロイまでの一連のフローを確立</li>
+        <li>systemdでプロセス管理を行い、サーバー再起動時の自動復旧を実現</li>
+        <li>環境変数によるシークレット管理で、セキュリティと運用性を両立</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術</h2>
+      <ul class="tech-list">
+        <li>VPS</li>
+        <li><a href="../../tech/#cron">cron</a></li>
+        <li><a href="../../tech/#python">Python</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p>Kai & Blue — 2026</p>
+    </footer>
+  </div>
+<script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+</script>
+</body>
+</html>

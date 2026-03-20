@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>申込フォーム — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; フルスタックWebサービス</a>
+
+    <header>
+      <h1>申込フォーム</h1>
+      <p class="subtitle">顧客からのデータ入力を受け付け、DBに保存するフォームシステム</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>顧客がサービスに申し込むためのWebフォームを設計・実装した。入力項目の最適化、バリデーション、サーバーサイド処理、ステートマシンによる状態管理まで、フォームの全工程を記録。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>フォーム設計</h3>
+        <p>入力項目の最適化、セクション分け（基本情報→詳細→口座情報）を行い、ユーザーの離脱を最小限にするフォーム構造を設計した。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="フォーム入力時のユーザー体験を最適化する設計思想。入力項目の順序、ラベルの明瞭さ、エラーメッセージの分かりやすさなどが含まれる。">フォームUX</span>
+          <span class="term" data-explain="ユーザーが入力したデータが正しい形式かをチェックする処理。メールアドレスの形式、必須項目の空欄チェック、電話番号の桁数確認などが該当する。">入力バリデーション</span>
+          <span class="term" data-explain="長いフォームを論理的なグループに分割する手法。一度に表示する項目を減らすことで、ユーザーの心理的負担を軽減する。">セクション分け</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>サーバーサイド処理</h3>
+        <p>FastAPIでフォームデータを受け取り、バリデーション後にSQLiteデータベースに保存する処理を実装した。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="Python製の高速なWebフレームワーク。型ヒントを活用した自動バリデーション、非同期処理対応、自動APIドキュメント生成が特徴。">FastAPI</span>
+          <span class="term" data-explain="クライアントからサーバーにデータを送信するHTTPメソッド。フォームの入力内容やファイルのアップロードなど、データの作成・送信に使われる。">POSTリクエスト</span>
+          <span class="term" data-explain="軽量なファイルベースのリレーショナルデータベース。サーバーのセットアップ不要で、1つのファイルにデータを保存できる。小〜中規模のアプリに最適。">SQLite</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>ステートマシン</h3>
+        <p>申込から完了までの状態遷移を定義し、各状態で許可される操作を制御した。不正な状態遷移を防ぎ、データの整合性を保つ。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="システムが取りうる状態と、状態間の遷移ルールを定義する設計パターン。申込→確認→完了のように、許可された順序でのみ状態が変わることを保証する。">ステートマシン</span>
+          <span class="term" data-explain="ステートマシンの状態と遷移を視覚的に表現した図。丸が状態、矢印が遷移を表し、システム全体の振る舞いを俯瞰できる。">状態遷移図</span>
+          <span class="term" data-explain="複数のデータベース操作をひとまとまりとして扱う仕組み。途中でエラーが起きた場合、すべての操作を取り消して整合性を保つ。">トランザクション</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>ふりかえり</h2>
+      <ul class="review-list">
+        <li>セクション分けにより、長いフォームでもユーザーの離脱率を低減できた</li>
+        <li>FastAPIの型ヒントで、サーバーサイドバリデーションを簡潔に実装</li>
+        <li>ステートマシンの導入で、不正な状態遷移をシステムレベルで防止</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術</h2>
+      <ul class="tech-list">
+        <li><a href="../../tech/#python">Python</a></li>
+        <li>FastAPI</li>
+        <li>SQLite</li>
+        <li><a href="../../tech/#html">HTML</a></li>
+        <li><a href="../../tech/#css">CSS</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p>Kai & Blue — 2026</p>
+    </footer>
+  </div>
+<script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+</script>
+</body>
+</html>

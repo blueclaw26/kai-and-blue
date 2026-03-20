@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LP・集客 — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; フルスタックWebサービス</a>
+
+    <header>
+      <h1>LP・集客</h1>
+      <p class="subtitle">顧客向けランディングページの設計と構築</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>Webサービスの入り口となるランディングページを設計・構築した。ターゲット顧客の分析から、レスポンシブ対応、信頼構築要素の配置まで、コンバージョンを意識したLP制作の全工程を記録。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>ターゲット顧客の分析</h3>
+        <p>顧客層の定義、訴求ポイントの設計を行い、LPの方向性を決定した。誰に何を伝えるかを明確にすることで、デザインやコピーの判断基準を作る。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="ターゲットとなる理想的な顧客像を具体的に描く手法。年齢、職業、悩みなどを定義することで、訴求メッセージの方向性が決まる。">ペルソナ設計</span>
+          <span class="term" data-explain="ユーザーに特定の行動（申込、問い合わせなど）を促すボタンやリンクのこと。配置・色・文言がコンバージョン率に直結する。">CTA(Call to Action)</span>
+          <span class="term" data-explain="Webサイトの訪問者が目標とする行動（申込、購入など）を完了すること。LPの成果を測る最も重要な指標。">コンバージョン</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>レスポンシブLP構築</h3>
+        <p>HTML/CSS/Tailwind CSSでモバイルファーストなLPを構築した。スマートフォンでの表示を最優先に設計し、デスクトップにも対応するレイアウトを実装。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="ユーティリティファーストのCSSフレームワーク。class名で直接スタイルを指定でき、カスタムCSSを書かずに高速でUIを構築できる。">Tailwind CSS</span>
+          <span class="term" data-explain="モバイル端末の表示を最初に設計し、画面が大きくなるにつれてレイアウトを拡張していく設計手法。現代のWeb制作では標準的なアプローチ。">モバイルファースト</span>
+          <span class="term" data-explain="LPの最上部に配置される、最初に目に入る大きなビジュアル領域。キャッチコピーとCTAを含み、第一印象を決定づける。">ヒーローセクション</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>信頼構築要素</h3>
+        <p>FAQ埋め込み、利用ステップの視覚化など、訪問者の不安を解消し信頼を獲得するための要素を配置した。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="他のユーザーの利用実績や評価を提示することで、訪問者に安心感を与える心理的テクニック。レビューや実績数などが該当する。">社会的証明</span>
+          <span class="term" data-explain="サービス利用の流れを3〜4ステップで視覚的に表示するUI。ユーザーが全体像を把握しやすくなり、申込のハードルが下がる。">利用ステップUI</span>
+          <span class="term" data-explain="FAQをLP内のどの位置に配置するかの戦略。CTAの直前に置くことで、最後の不安を解消してコンバージョンにつなげる。">FAQの配置戦略</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>ふりかえり</h2>
+      <ul class="review-list">
+        <li>モバイルファースト設計により、スマートフォンからのアクセスに最適化できた</li>
+        <li>Tailwind CSSの導入で、スタイリングの一貫性と開発速度が向上</li>
+        <li>CTAの配置と文言を工夫し、フォームへの導線を改善</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術</h2>
+      <ul class="tech-list">
+        <li><a href="../../tech/#html">HTML</a></li>
+        <li><a href="../../tech/#css">CSS</a></li>
+        <li>Tailwind CSS</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p>Kai & Blue — 2026</p>
+    </footer>
+  </div>
+<script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+</script>
+</body>
+</html>

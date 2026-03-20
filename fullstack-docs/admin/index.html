@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理画面 — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; フルスタックWebサービス</a>
+
+    <header>
+      <h1>管理画面</h1>
+      <p class="subtitle">認証付きの管理インターフェースで顧客データとステータスを管理</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>管理者が顧客データの確認・ステータス変更を行うための管理画面を構築した。Basic認証による保護、一覧・詳細表示、ステータス管理機能を実装。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>認証の実装</h3>
+        <p>Basic認証で管理画面を保護し、認証されていないアクセスを遮断する仕組みを実装した。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="HTTPプロトコルに組み込まれたシンプルな認証方式。ユーザー名とパスワードをBase64エンコードしてヘッダーに含めて送信する。">Basic認証</span>
+          <span class="term" data-explain="HTTPリクエストやレスポンスに付加されるメタ情報。認証情報、コンテンツタイプ、キャッシュ制御などをサーバーとクライアント間でやり取りする。">HTTPヘッダー</span>
+          <span class="term" data-explain="リクエストが実際の処理に到達する前に、認証チェックなどの共通処理を挟む仕組み。FastAPIではDependsを使って実装できる。">認証ミドルウェア</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>顧客一覧と詳細</h3>
+        <p>DBから顧客データを取得し、一覧画面と詳細画面をテンプレートエンジンで表示する機能を実装した。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="HTMLテンプレートにPythonの変数やロジックを埋め込めるライブラリ。FastAPIと組み合わせて、動的なHTMLページを生成できる。">テンプレートエンジン(Jinja2)</span>
+          <span class="term" data-explain="データベースのテーブルをPythonのオブジェクトとして扱える仕組み。SQL文を直接書かずに、Pythonコードでデータの操作ができる。">ORM</span>
+          <span class="term" data-explain="大量のデータを一定件数ごとにページ分割して表示する仕組み。全データを一度に読み込まないため、表示速度とユーザビリティが向上する。">ページネーション</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>ステータス管理</h3>
+        <p>管理者が顧客のステータスを変更できる機能を実装。操作履歴も記録し、誰がいつ何を変更したかを追跡可能にした。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="データの作成(Create)・読取(Read)・更新(Update)・削除(Delete)の4つの基本操作。ほぼすべてのWebアプリケーションの基盤となる。">CRUD操作</span>
+          <span class="term" data-explain="顧客の現在の状態（申込中、確認済み、完了など）を色付きのラベルで視覚的に表示するUI要素。一覧画面での視認性が向上する。">ステータスバッジ</span>
+          <span class="term" data-explain="管理者の操作（ステータス変更、データ編集など）を日時とともに記録する仕組み。問題発生時の原因追跡や監査に役立つ。">操作ログ</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>ふりかえり</h2>
+      <ul class="review-list">
+        <li>Basic認証で最小限のセキュリティを確保しつつ、迅速に管理画面を構築</li>
+        <li>Jinja2テンプレートにより、サーバーサイドレンダリングでシンプルなUI実装</li>
+        <li>操作ログの導入で、管理操作の透明性と追跡可能性を確保</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術</h2>
+      <ul class="tech-list">
+        <li><a href="../../tech/#python">Python</a></li>
+        <li>FastAPI</li>
+        <li>Jinja2</li>
+        <li>SQLite</li>
+        <li><a href="../../tech/#html">HTML</a></li>
+        <li><a href="../../tech/#css">CSS</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p>Kai & Blue — 2026</p>
+    </footer>
+  </div>
+<script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+</script>
+</body>
+</html>

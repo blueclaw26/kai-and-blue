@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>メッセージング連携 — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; フルスタックWebサービス</a>
+
+    <header>
+      <h1>メッセージング連携</h1>
+      <p class="subtitle">メッセージングプラットフォームとの連携による自動通知・自動返信</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>メッセージングプラットフォームのAPIを活用し、顧客への自動通知、自動返信、管理者からの手動メッセージ送信を実装した。Webhookによるイベント受信から、テンプレートメッセージの送信まで、チャットBot連携の全工程を記録。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>Webhook受信</h3>
+        <p>メッセージングプラットフォームからのイベント（メッセージ受信、友だち追加など）をWebhookで受信するエンドポイントを実装した。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="外部サービスがイベント発生時に、指定したURLにHTTPリクエストを自動送信する仕組み。ポーリングと違い、リアルタイムにイベントを受け取れる。">Webhook</span>
+          <span class="term" data-explain="Webhookで受信したリクエストが正規の送信元からのものかを検証する仕組み。リクエストヘッダーに含まれるハッシュ値を照合して、なりすましを防ぐ。">署名検証</span>
+          <span class="term" data-explain="APIが外部からのリクエストを受け付けるURLのこと。FastAPIではデコレータで定義し、特定のパスに対する処理を紐づける。">エンドポイント</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>自動通知</h3>
+        <p>顧客のステータスが変更された際に、メッセージングプラットフォーム経由で自動的にメッセージを送信する機能を実装した。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="外部APIと通信するためのPythonライブラリやクラス。HTTPリクエストの送信、レスポンスの処理、エラーハンドリングなどを担当する。">APIクライアント</span>
+          <span class="term" data-explain="事前に定義されたメッセージのひな形に、顧客名やステータスなどの動的な値を埋め込んで送信する仕組み。一貫性のあるメッセージを効率的に送れる。">テンプレートメッセージ</span>
+          <span class="term" data-explain="メッセージ送信などの時間のかかる処理を、メインの処理をブロックせずにバックグラウンドで実行する手法。ユーザーの待ち時間を短縮できる。">非同期送信</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>自動返信</h3>
+        <p>顧客からのメッセージに対して、定型応答を自動で返す機能を実装した。よくある質問に即座に回答し、対応コストを削減する。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="受信メッセージの内容を解析し、適切な応答を自動で返すプログラムの仕組み。条件分岐やキーワードマッチで応答を決定する。">自動返信ロジック</span>
+          <span class="term" data-explain="受信メッセージに特定のキーワードが含まれているかを判定し、対応する応答を返す手法。正規表現や部分一致で柔軟にマッチングできる。">キーワードマッチ</span>
+          <span class="term" data-explain="どのキーワードにもマッチしなかった場合に返すデフォルトの応答。「担当者が確認します」などの汎用メッセージで、無応答を防ぐ。">フォールバック応答</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>管理画面からの手動送信</h3>
+        <p>管理者が管理画面から個別の顧客にメッセージを送信できる機能を実装した。自動返信では対応できないケースに対応する。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="管理者が操作するための専用のWebインターフェース。フォーム入力やボタン操作で、バックエンドのAPIを呼び出す。">管理者UI</span>
+          <span class="term" data-explain="フロントエンドからバックエンドのAPIに対してHTTPリクエストを送信すること。JavaScriptのfetchやPythonのrequestsライブラリで実装する。">API呼び出し</span>
+          <span class="term" data-explain="誰がいつどのメッセージを送信したかを記録するログ。トラブル対応や対応品質の確認に活用する。">送信ログ</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>ふりかえり</h2>
+      <ul class="review-list">
+        <li>Webhook + 署名検証で、セキュアなイベント受信を実現</li>
+        <li>テンプレートメッセージにより、一貫性のある顧客コミュニケーションを自動化</li>
+        <li>自動返信と手動送信の組み合わせで、効率的な顧客対応フローを構築</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術</h2>
+      <ul class="tech-list">
+        <li><a href="../../tech/#python">Python</a></li>
+        <li>FastAPI</li>
+        <li>Webhook</li>
+        <li><a href="../../tech/#javascript">JavaScript</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p>Kai & Blue — 2026</p>
+    </footer>
+  </div>
+<script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+</script>
+</body>
+</html>
