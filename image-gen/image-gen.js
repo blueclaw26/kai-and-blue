@@ -138,10 +138,8 @@ function generate() {
 
   const url = buildUrl(fullPrompt);
 
-  const img = new Image();
-
-  img.onload = () => {
-    generatedImage.src = img.src;
+  // Directly set src on the displayed image element
+  generatedImage.onload = () => {
     generatedImage.style.display = '';
     loadingEl.style.display = 'none';
     downloadBtn.style.display = '';
@@ -149,30 +147,16 @@ function generate() {
     generateBtn.textContent = '生成する';
   };
 
-  img.onerror = () => {
-    // Retry without extra params (may help with some prompts)
-    const simpleUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}`;
-    const retryImg = new Image();
-    retryImg.onload = () => {
-      generatedImage.src = retryImg.src;
-      generatedImage.style.display = '';
-      loadingEl.style.display = 'none';
-      downloadBtn.style.display = '';
-      generateBtn.disabled = false;
-      generateBtn.textContent = '生成する';
-    };
-    retryImg.onerror = () => {
+  generatedImage.onerror = () => {
     loadingEl.style.display = 'none';
     generatedImage.style.display = 'none';
     downloadBtn.style.display = 'none';
     generateBtn.disabled = false;
     generateBtn.textContent = '生成する';
     alert('画像の生成に失敗しました。英語のプロンプトで試してみてください。');
-    };
-    retryImg.src = simpleUrl;
   };
 
-  img.src = url;
+  generatedImage.src = url;
 }
 
 // Download
