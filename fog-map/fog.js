@@ -207,6 +207,7 @@
       },
       (err) => {
         console.warn('GPS error:', err.message);
+        alert('GPS取得エラー: ' + err.message + '\n\nブラウザの位置情報を許可してください。');
       },
       {
         enableHighAccuracy: true,
