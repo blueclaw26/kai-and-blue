@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wikipedia ガチャ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1 class="page-title">Wikipedia ガチャ</h1>
+  <p class="page-subtitle">ボタンを押してランダムな記事カードをゲットしよう</p>
+
+  <button id="gacha-btn" class="gacha-btn">ガチャを引く</button>
+
+  <div id="card-stage" class="card-stage">
+    <div id="card-container" class="card-container"></div>
+  </div>
+
+  <div id="loading" class="loading hidden">
+    <div class="spinner"></div>
+    <span>読み込み中...</span>
+  </div>
+
+  <div id="error-msg" class="error-msg hidden"></div>
+
+  <div id="history-section" class="history-section hidden">
+    <h2 class="history-title">履歴</h2>
+    <div id="history-list" class="history-list"></div>
+  </div>
+
+  <a href="../wiki-gacha-docs/" class="docs-link" title="制作記録">📖</a>
+  <script src="wiki.js"></script>
+</body>
+</html>
