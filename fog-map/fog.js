@@ -124,39 +124,28 @@
     fogCtx.fillStyle = 'rgba(0, 0, 0, 0.55)';
     fogCtx.fillRect(0, 0, w, h);
 
-    // Cut explored circles
+    // Cut explored grid cells (square tiles)
     fogCtx.globalCompositeOperation = 'destination-out';
+    fogCtx.fillStyle = 'rgba(255, 255, 255, 1)';
 
     explored.forEach(key => {
       const latlng = parseKey(key);
-      const pt = map.latLngToContainerPoint(latlng);
-      const r = metersToPixels(CLEAR_RADIUS_M, latlng.lat);
+      // Calculate the full grid cell bounds
+      const cellLat = latlng.lat;
+      const cellLng = latlng.lng;
+      const halfStep = GRID_STEP / 2;
+      
+      // Four corners of the grid cell
+      const nw = map.latLngToContainerPoint([cellLat + halfStep, cellLng - halfStep]);
+      const se = map.latLngToContainerPoint([cellLat - halfStep, cellLng + halfStep]);
+      
+      const cellW = se.x - nw.x;
+      const cellH = se.y - nw.y;
 
-      // Skip off-screen points (with margin)
-      if (pt.x < -r * 2 || pt.x > w + r * 2 || pt.y < -r * 2 || pt.y > h + r * 2) return;
+      // Skip off-screen cells
+      if (se.x < 0 || nw.x > w || se.y < 0 || nw.y > h) return;
 
-      fogCtx.beginPath();
-      fogCtx.arc(pt.x, pt.y, r, 0, Math.PI * 2);
-      fogCtx.fillStyle = 'rgba(255, 255, 255, 1)';
-      fogCtx.fill();
-    });
-
-    // Soft edge pass (larger, semi-transparent for mysterious glow)
-    explored.forEach(key => {
-      const latlng = parseKey(key);
-      const pt = map.latLngToContainerPoint(latlng);
-      const r = metersToPixels(CLEAR_RADIUS_M, latlng.lat);
-
-      if (pt.x < -r * 2 || pt.x > w + r * 2 || pt.y < -r * 2 || pt.y > h + r * 2) return;
-
-      const gradient = fogCtx.createRadialGradient(pt.x, pt.y, r * 0.8, pt.x, pt.y, r * 1.4);
-      gradient.addColorStop(0, 'rgba(255,255,255,0.5)');
-      gradient.addColorStop(1, 'rgba(255,255,255,0)');
-
-      fogCtx.beginPath();
-      fogCtx.arc(pt.x, pt.y, r * 1.4, 0, Math.PI * 2);
-      fogCtx.fillStyle = gradient;
-      fogCtx.fill();
+      fogCtx.fillRect(nw.x, nw.y, cellW, cellH);
     });
   }
 
