@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>20thライヴサーキット "水" — 会場グルメガイド</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="ripple-bg">
+      <div class="ripple r1"></div>
+      <div class="ripple r2"></div>
+      <div class="ripple r3"></div>
+    </div>
+    <div class="hero-content">
+      <p class="hero-artist">ポルノグラフィティ</p>
+      <h1 class="hero-title">20th<span class="light">ライヴサーキット</span> <span class="water">"水"</span></h1>
+      <p class="hero-sub">会場グルメガイド</p>
+    </div>
+  </header>
+
+  <!-- Schedule -->
+  <main class="container">
+    <section class="schedule" id="schedule">
+      <h2 class="section-title">公演スケジュール</h2>
+      <p class="section-desc">カードをタップするとグルメ情報を表示</p>
+      <div class="timeline" id="timeline">
+        <!-- Cards injected by tour.js -->
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>※ グルメ情報は個人の調査に基づくものです。営業時間・定休日は各店舗にご確認ください。</p>
+  </footer>
+
+  <button class="scroll-btn" id="scrollToNext" title="次の公演へスクロール">▼ NEXT</button>
+
+  <script src="tour.js"></script>
+</body>
+</html>
