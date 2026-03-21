@@ -121,7 +121,7 @@
     // Clear canvas completely first, then draw fog
     fogCtx.clearRect(0, 0, w, h);
     fogCtx.globalCompositeOperation = 'source-over';
-    fogCtx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+    fogCtx.fillStyle = 'rgba(0, 0, 0, 0.75)';
     fogCtx.fillRect(0, 0, w, h);
 
     // Cut explored grid cells (square tiles)
