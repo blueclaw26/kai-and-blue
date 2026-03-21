@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wikipediaガチャ — 制作記録</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">← Kai & Blue</a>
+
+    <header>
+      <h1>Wikipediaガチャ</h1>
+      <p class="subtitle">ランダムWikipedia記事カードアプリの制作記録</p>
+    </header>
+
+    <section>
+      <h2>やったこと</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>Wikipedia APIの調査と検証</h3>
+        <p>REST API（<code>/page/random/summary</code>）とAction API（links取得）の2つを使用。まずcurlで各エンドポイントの挙動を確認し、レスポンス構造を把握してから実装に入った。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="RESTful設計に基づくAPI。Wikipedia REST APIでは /page/random/summary でランダム記事の要約・サムネイル・URLをJSON形式で取得できる。">REST API</span>
+          <span class="term" data-explain="MediaWikiのAction API。action=query&prop=links でページ内リンクを一覧取得できる。plnamespace=0で記事名前空間のみに絞れる。">Action API</span>
+          <span class="term" data-explain="Cross-Origin Resource Sharing。Wikipedia APIはorigin=*パラメータを付けることでCORS制限を回避でき、ブラウザから直接fetchできる。">CORS(origin=*)</span>
+          <span class="term" data-explain="HTTPリクエストヘッダの一つ。Wikipedia APIは利用規約でUser-Agentの設定を推奨しており、プロジェクト名と連絡先を含めるのが慣例。">User-Agent</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>カード風UIの実装</h3>
+        <p>トレーディングカード風のレイアウト（300×420px、金枠）で記事を表示。サムネイル画像・タイトル・抜粋テキストをカード内に配置し、視覚的なインパクトを重視した。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="幅と高さの比率。カードは300×420px（5:7）のアスペクト比で、トレーディングカードに近いプロポーションを採用。">アスペクト比</span>
+          <span class="term" data-explain="CSSのborderプロパティで装飾的な枠線を実装。金色（ゴールド系グラデーション）のボーダーでカードのプレミアム感を演出。">CSSボーダー</span>
+          <span class="term" data-explain="情報を一枚のカードに凝縮するデザインパターン。画像・タイトル・テキスト・リンクを限られたスペースに配置するレイアウト設計。">カードデザイン</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>リンクワードによる記事遷移</h3>
+        <p>記事内リンクからランダムに3〜5個を選び、クリックで次の記事へ遷移する仕組み。Action APIでリンク一覧を取得し、名前空間フィルタで記事ページのみに絞り込む。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="Action APIのprop=linksで取得した記事内リンクの一覧から、表示用のリンクワードを抽出する処理。pllimit=500で十分な数を取得。">記事内リンク抽出</span>
+          <span class="term" data-explain="MediaWikiの名前空間（namespace）でフィルタリング。plnamespace=0を指定し、カテゴリ・テンプレート・ユーザーページなどを除外して記事のみ取得。">名前空間フィルタ</span>
+          <span class="term" data-explain="取得したリンク配列からMath.random()でシャッフルし、先頭3〜5個を選択。Fisher-Yatesシャッフルで偏りのないランダム選択を実現。">ランダム選択</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>履歴管理とアニメーション</h3>
+        <p>カード切り替え時のフリップアニメーションと、閲覧した記事の履歴スタックを実装。「戻る」ボタンで前のカードに戻れるようにした。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="CSS transform: rotateY(180deg)とperspectiveを組み合わせた3D回転アニメーション。カードの表裏を切り替える演出に使用。backface-visibility: hiddenで裏面を非表示に。">CSS 3Dフリップ</span>
+          <span class="term" data-explain="新しいカードがスライドインする際のtransition/animation。translateXとopacityを組み合わせて滑らかな画面遷移を実現。">スライドアニメーション</span>
+          <span class="term" data-explain="配列をスタック（LIFO）として使い、閲覧した記事データをpush/popで管理。「戻る」操作でpop、新しい記事でpushすることでブラウザの戻る/進むに近い体験を提供。">履歴スタック</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kaiのレビュー</h2>
+      <ul class="review-list">
+        <li>前回（画像生成）の反省を活かし、APIを先にcurlで検証→ローカルで動作確認→pushの手順を徹底</li>
+        <li>Wikipedia APIのレスポンス構造を理解してから実装に入ったので、手戻りが少なかった</li>
+        <li>カード風デザインは見た目のインパクトがあり、ガチャ感の演出に効果的だった</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術まとめ</h2>
+      <ul class="tech-list">
+        <li><a href="../tech/#html">HTML</a></li>
+        <li><a href="../tech/#css">CSS</a></li>
+        <li><a href="../tech/#javascript">JavaScript</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p>Kai & Blue — 2026</p>
+    </footer>
+  </div>
+
+  <script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+</script>
+</body>
+</html>
