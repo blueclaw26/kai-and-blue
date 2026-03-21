@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fog of Warマップ — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; Kai & Blue</a>
+
+    <header>
+      <h1>Fog of Warマップ</h1>
+      <p class="subtitle">RPG風マップ探索アプリの制作記録</p>
+    </header>
+
+    <section>
+      <h2>概要</h2>
+      <p>地図全体が霧に覆われていて、実際に歩くとその区域の霧が晴れるアプリ。Leaflet.js + GPS追跡 + Canvas overlayで実装。</p>
+    </section>
+
+    <section>
+      <h2>制作ステップ</h2>
+
+      <div class="step">
+        <span class="step-number">Step 1</span>
+        <h3>地図ライブラリの選定と表示</h3>
+        <p>Leaflet.js + OpenStreetMap（無料、APIキー不要）をCDN経由で導入。Google Maps APIと違って無料で使えるため、個人プロジェクトに最適。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="オープンソースの地図表示ライブラリ。Google Maps APIと違い無料でAPIキー不要。OpenStreetMapと組み合わせて使う。">Leaflet.js</span>
+          <span class="term" data-explain="ボランティアが作った無料の地図データ。商用利用もOK。Leaflet.jsから表示できる。">OpenStreetMap</span>
+          <span class="term" data-explain="外部サーバーからライブラリを読み込む仕組み。unpkg.comやcdnjs.comが有名。">CDN</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 2</span>
+        <h3>Fog of War（霧）の実装</h3>
+        <p>Canvas overlayで地図の上に半透明の黒い膜を描画。探索済みの場所だけ切り抜いて地図を見せる仕組み。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="Leafletの地図の上にCanvas要素を重ねて描画する手法。霧の表示・切り抜きに使う。">Canvas overlay</span>
+          <span class="term" data-explain="Canvasの描画合成モード。'destination-out'を指定すると、描画した部分が透明に切り抜かれる。">globalCompositeOperation</span>
+          <span class="term" data-explain="霧のCanvasを地図タイルの上（見える）、マーカーの下（位置表示が隠れない）に配置するレイヤー管理。">z-index調整</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 3</span>
+        <h3>GPS追跡とグリッド開拓</h3>
+        <p>Geolocation APIで現在地を追跡し、グリッド単位で霧を晴らす。GPSの生の座標を30m×30mのマス目に区切って管理する。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="Geolocation APIの機能。GPSの位置が変わるたびにコールバックを呼び出す。リアルタイム追跡に使う。">watchPosition</span>
+          <span class="term" data-explain="GPSの生の座標を一定間隔のグリッドに丸める処理。30m×30mのマス目に区切ることで、マス単位の開拓を実現。">グリッドスナップ</span>
+          <span class="term" data-explain="地球上の2点間の距離を緯度経度から計算する数式。歩いた距離の計算に使う。">Haversine公式</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 4</span>
+        <h3>データの永続化</h3>
+        <p>localStorageに探索済みグリッドを保存し、次回アクセス時に復元。ブラウザを閉じても探索の進捗が失われない。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="ブラウザを閉じてもデータが残るWebStorage。探索済みマスの座標セットを保存して、次回に復元する。">localStorage永続化</span>
+          <span class="term" data-explain="緯度経度をグリッドステップで丸めた文字列キー（例: '35.68100,139.76700'）。Set型で重複管理する。">グリッドキー</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Step 5</span>
+        <h3>UIとモバイル対応</h3>
+        <p>フルスクリーン地図、フローティングコントロール、レスポンシブ。スマホでの使用を前提にした設計。</p>
+        <div class="learn">
+          <span class="learn-label">ここで学ぶこと:</span>
+          <span class="term" data-explain="スマホでの使用を前提にした設計。タッチ操作、画面サイズ、GPS精度を優先的に考慮する。">モバイルファースト</span>
+          <span class="term" data-explain="地図の上に重ねて表示される半透明のコントロールパネル。地図の操作を邪魔しない位置に配置。">フローティングUI</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kaiのレビューで変わったこと</h2>
+      <ul class="review-list">
+        <li>初期の霧が暗すぎる→透明度を調整（0.85→0.55→0.75で着地）</li>
+        <li>丸い開拓範囲→グリッド（四角マス）に変更（「ドラクエみたいに」）</li>
+        <li>GPSマーカーが霧の下に隠れる→z-index調整</li>
+        <li>GPSエラーがコンソールのみ→ユーザー向けアラート追加</li>
+        <li>霧の重ね塗り問題→clearRectで毎回クリアしてから描画</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術まとめ</h2>
+      <ul class="tech-list">
+        <li><a href="../tech/#html">HTML</a></li>
+        <li><a href="../tech/#css">CSS</a></li>
+        <li><a href="../tech/#javascript">JavaScript</a></li>
+        <li>Leaflet.js (CDN)</li>
+        <li>Geolocation API</li>
+        <li><a href="../tech/#canvas">Canvas API</a></li>
+        <li><a href="../tech/#localstorage">localStorage</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><a href="../index.html">Kai & Blue</a> — 2026</p>
+    </footer>
+  </div>
+<script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+</script>
+</body>
+</html>
