@@ -120,7 +120,7 @@
 
     // Full fog
     fogCtx.globalCompositeOperation = 'source-over';
-    fogCtx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+    fogCtx.fillStyle = 'rgba(0, 0, 0, 0.55)';
     fogCtx.fillRect(0, 0, w, h);
 
     // Cut explored circles
