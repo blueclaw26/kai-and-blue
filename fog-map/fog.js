@@ -88,7 +88,7 @@
     // Create canvas as overlay on map container
     const container = map.getContainer();
     fogCanvas = document.createElement('canvas');
-    fogCanvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:399;';
+    fogCanvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:500;';
     container.appendChild(fogCanvas);
 
     function resize() {
