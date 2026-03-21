@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Fog of War Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="map"></div>
+
+  <div id="stats-panel">
+    <div class="stat-row">
+      <span class="stat-label">歩いた距離</span>
+      <span class="stat-value" id="distance">0.00 km</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">開拓ポイント</span>
+      <span class="stat-value" id="points">0</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">今日の新規</span>
+      <span class="stat-value" id="today-points">0</span>
+    </div>
+  </div>
+
+  <div id="control-panel">
+    <button id="btn-start" class="ctrl-btn start">開始</button>
+    <button id="btn-stop" class="ctrl-btn stop" disabled>停止</button>
+    <button id="btn-reset" class="ctrl-btn reset">リセット</button>
+  </div>
+
+  <a href="../fog-docs/" class="docs-link" title="制作記録">📖</a>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="fog.js"></script>
+</body>
+</html>
