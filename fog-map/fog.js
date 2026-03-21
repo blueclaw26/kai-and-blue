@@ -118,7 +118,8 @@
     const h = fogCanvas.height;
     if (w === 0 || h === 0) return;
 
-    // Full fog
+    // Clear canvas completely first, then draw fog
+    fogCtx.clearRect(0, 0, w, h);
     fogCtx.globalCompositeOperation = 'source-over';
     fogCtx.fillStyle = 'rgba(0, 0, 0, 0.55)';
     fogCtx.fillRect(0, 0, w, h);
