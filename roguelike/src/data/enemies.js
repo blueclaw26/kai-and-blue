@@ -108,5 +108,17 @@ var ENEMY_DATA = {
     maxFloor: 99,
     special: null,
     isShopkeeper: true
+  },
+  guard_dog: {
+    name: '番犬',
+    char: 'W',
+    color: '#ff5722',
+    hp: 80,
+    attack: 30,
+    defense: 15,
+    exp: 0,
+    minFloor: 99,
+    maxFloor: 99,
+    special: null
   }
 };

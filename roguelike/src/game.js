@@ -26,6 +26,8 @@ var Game = (function() {
     this.shopRoom = null; // room object if this floor has a shop
     this.shopkeeperHostile = false;
     this.shopItems = new Set(); // track items that are shop merchandise
+    this.shopDebt = 0; // total unpaid amount for picked-up shop items
+    this.inShop = false; // whether player is currently in the shop room
     // Sell confirmation mode
     this.sellConfirmMode = null; // { item: Item } when awaiting y/n
     // Map revealed by あかりの巻物
@@ -46,6 +48,8 @@ var Game = (function() {
     this.shopRoom = null;
     this.shopkeeperHostile = false;
     this.shopItems = new Set();
+    this.shopDebt = 0;
+    this.inShop = false;
     this.sellConfirmMode = null;
     this.mapRevealed = false;
 
@@ -613,13 +617,13 @@ var Game = (function() {
       // Drop loot when enemy dies
       if (!enemy.isShopkeeper) {
         var dropRoll = Math.random();
-        if (dropRoll < 0.60) {
-          // 60% chance: drop gold (scaled with floor)
+        if (dropRoll < 0.12) {
+          // 12% chance: drop gold (scaled with floor)
           var goldAmount = Math.floor(10 + Math.random() * (20 + this.floorNum * 10));
           var goldItem = this._createGoldItem(enemy.x, enemy.y, goldAmount);
           this.items.push(goldItem);
-        } else if (dropRoll < 0.90) {
-          // 30% chance: drop a random item appropriate to the floor
+        } else if (dropRoll < 0.20) {
+          // 8% chance: drop a random item appropriate to the floor
           var droppedKey = this._pickItemForFloor(this.floorNum);
           var droppedItem = new Item(enemy.x, enemy.y, droppedKey);
           this.items.push(droppedItem);
