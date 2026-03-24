@@ -528,7 +528,7 @@ var Input = (function() {
     // Take item out of pot
     if (key === 'o') {
       if (selectedItem && selectedItem.type === 'pot') {
-        if (selectedItem.effect !== 'storage') {
+        if (selectedItem.effect !== 'storage' && selectedItem.effect !== 'synthesis') {
           ui.addMessage('この壺からは取り出せない！', 'system');
           return;
         }

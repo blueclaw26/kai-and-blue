@@ -93,10 +93,12 @@ var Enemy = (function() {
     if (this.special === 'floorfire') {
       if (this._turnCount % 3 === 0) {
         var fireDmg = 20;
-        // Dragon shield reduces fire damage by 50%
-        if (player.shield && player.shield.special === 'dragon_resist') {
+        // Check for dragon_resist seal on shield
+        var hasDragonResist = (player.shield && player.shield.seals && player.shield.seals.indexOf('dragon_resist') !== -1) ||
+                              (player.shield && player.shield.special === 'dragon_resist');
+        if (hasDragonResist) {
           fireDmg = Math.floor(fireDmg * 0.5);
-          game.ui.addMessage('どこからか炎が飛んできた！ 盾が炎を防いだ！ ' + fireDmg + 'ダメージ', 'enemy_special');
+          game.ui.addMessage('どこからか炎が飛んできた！ [竜]印が炎を防いだ！ ' + fireDmg + 'ダメージ', 'enemy_special');
         } else {
           game.ui.addMessage('どこからか炎が飛んできた！ ' + fireDmg + 'ダメージ！', 'enemy_special');
         }
@@ -115,10 +117,11 @@ var Enemy = (function() {
     if (this.special === 'firebreath' && dist <= 8) {
       if ((dx === 0 || dy === 0) && this._hasLineOfSight(game, this.x, this.y, player.x, player.y)) {
         var fireDmg = 15 + Math.floor(Math.random() * 6); // 15-20
-        // Dragon shield reduces fire damage by 50%
-        if (player.shield && player.shield.special === 'dragon_resist') {
+        var hasDragonResistBreath = (player.shield && player.shield.seals && player.shield.seals.indexOf('dragon_resist') !== -1) ||
+                                    (player.shield && player.shield.special === 'dragon_resist');
+        if (hasDragonResistBreath) {
           fireDmg = Math.floor(fireDmg * 0.5);
-          game.ui.addMessage('ドラゴンが火を吐いた！ 盾が炎を防いだ！ ' + fireDmg + 'ダメージ', 'enemy_special');
+          game.ui.addMessage('ドラゴンが火を吐いた！ [竜]印が炎を防いだ！ ' + fireDmg + 'ダメージ', 'enemy_special');
         } else {
           game.ui.addMessage('ドラゴンが火を吐いた！ ' + fireDmg + 'ダメージ！', 'enemy_special');
         }

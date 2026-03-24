@@ -43,6 +43,16 @@ var Item = (function() {
     if (data.special !== undefined) this.special = data.special;
     if (data.price !== undefined) this.price = data.price;
 
+    // Seal system: weapons and shields have seal slots
+    if (this.type === 'weapon' || this.type === 'shield') {
+      this.seals = [];
+      // Items that are "source" items for seals start with their innate seal
+      var innateSeal = getSealForItem(this);
+      if (innateSeal) {
+        this.seals.push(innateSeal);
+      }
+    }
+
     // Upgrade value for weapons/shields
     this.plus = 0;
 
@@ -92,6 +102,10 @@ var Item = (function() {
     if ((this.type === 'weapon' || this.type === 'shield') && this.plus !== 0) {
       name += (this.plus > 0 ? '+' : '') + this.plus;
     }
+    // Show seals as kanji after name
+    if ((this.type === 'weapon' || this.type === 'shield') && this.seals && this.seals.length > 0) {
+      name += ' [' + getSealsDisplay(this.seals) + ']';
+    }
     if (this.type === 'weapon' && this.attack !== undefined) {
       var totalAtk = this.attack + this.plus;
       name += ' (攻撃+' + totalAtk + ')';
@@ -121,6 +135,10 @@ var Item = (function() {
     }
     if ((this.type === 'weapon' || this.type === 'shield') && this.plus !== 0) {
       name += (this.plus > 0 ? '+' : '') + this.plus;
+    }
+    // Show seals
+    if ((this.type === 'weapon' || this.type === 'shield') && this.seals && this.seals.length > 0) {
+      name += ' [' + getSealsDisplay(this.seals) + ']';
     }
     if (this.type === 'weapon' && this.attack !== undefined) {
       name += ' (攻撃+' + (this.attack + this.plus) + ')';

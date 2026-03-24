@@ -181,7 +181,10 @@ var Player = (function() {
   };
 
   Player.prototype.tickSatiety = function(ui) {
-    var hungerRate = (this.bracelet && this.bracelet.effect === 'hunger') ? 0.2 : 0.1;
+    // Check for hunger seal (腹) on shield — halves hunger rate
+    var hasHungerSeal = this.shield && this.shield.seals && this.shield.seals.indexOf('hunger') !== -1;
+    var baseHungerRate = hasHungerSeal ? 0.05 : 0.1;
+    var hungerRate = (this.bracelet && this.bracelet.effect === 'hunger') ? baseHungerRate * 2 : baseHungerRate;
     this._satietyAccum += hungerRate;
     if (this._satietyAccum >= 1) {
       this._satietyAccum -= 1;

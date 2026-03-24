@@ -740,9 +740,11 @@ var Game = (function() {
     switch (trap.effect) {
       case 'explosion':
         var blastDmg = 20;
-        if (player.shield && player.shield.special === 'blast_resist') {
+        var hasBlastResist = (player.shield && player.shield.seals && player.shield.seals.indexOf('blast_resist') !== -1) ||
+                             (player.shield && player.shield.special === 'blast_resist');
+        if (hasBlastResist) {
           blastDmg = Math.floor(blastDmg * 0.5);
-          ui.addMessage('地雷が爆発した！ 盾が爆風を防いだ！ ' + blastDmg + 'ダメージ', 'damage');
+          ui.addMessage('地雷が爆発した！ [爆]印が爆風を防いだ！ ' + blastDmg + 'ダメージ', 'damage');
         } else {
           ui.addMessage('地雷が爆発した！ ' + blastDmg + 'ダメージ', 'damage');
         }
@@ -840,13 +842,18 @@ var Game = (function() {
       case 'rust':
         if (player.shield) {
           var shield = player.shield;
-          if (shield.plus > 0) {
-            shield.plus--;
+          var hasRustProof = shield.seals && shield.seals.indexOf('rust_proof') !== -1;
+          if (hasRustProof) {
+            ui.addMessage('サビの罠を踏んだ！ しかし[金]印が盾を守った！', 'system');
           } else {
-            shield.defense = Math.max(0, shield.defense - 1);
+            if (shield.plus > 0) {
+              shield.plus--;
+            } else {
+              shield.defense = Math.max(0, shield.defense - 1);
+            }
+            player._recalcStats();
+            ui.addMessage('盾が錆びた！ 防御力が1下がった', 'damage');
           }
-          player._recalcStats();
-          ui.addMessage('盾が錆びた！ 防御力が1下がった', 'damage');
         } else {
           ui.addMessage('サビの罠を踏んだ！ しかし盾を装備していない', 'system');
         }
@@ -936,25 +943,62 @@ var Game = (function() {
     var rawDmg = player.attack - enemy.defense + Math.floor(Math.random() * 3) - 1;
     var damage = Math.max(1, rawDmg);
 
-    if (player.weapon && player.weapon.special) {
-      var special = player.weapon.special;
-      var multiplier = 1;
+    // Apply seal effects from equipped weapon
+    if (player.weapon) {
+      var seals = player.weapon.seals || [];
+      var sealMultiplier = 1;
+      var sealMessages = [];
 
-      switch (special) {
-        case 'drain':
-          if (enemy.special) multiplier = 1.5;
-          break;
-        case 'ghost':
-          if (enemy.enemyId === 'midnighthat' || enemy.enemyId === 'phantom') multiplier = 1.5;
-          break;
-        case 'dragon':
-          if (enemy.enemyId === 'dragon' || enemy.enemyId === 'skull_mage' || enemy.enemyId === 'mega_dragon' || enemy.enemyId === 'hell_dragon') multiplier = 1.5;
-          break;
+      for (var si = 0; si < seals.length; si++) {
+        switch (seals[si]) {
+          case 'dragon':
+            if (DRAGON_TYPE_ENEMIES[enemy.enemyId]) {
+              sealMultiplier *= 1.5;
+              sealMessages.push('竜特効！');
+            }
+            break;
+          case 'ghost':
+            if (GHOST_TYPE_ENEMIES[enemy.enemyId]) {
+              sealMultiplier *= 1.5;
+              sealMessages.push('仏特効！');
+            }
+            break;
+          case 'drain':
+            if (enemy.special) {
+              sealMultiplier *= 1.5;
+              sealMessages.push('吸特効！');
+            }
+            break;
+          case 'crit':
+            if (Math.random() < 0.25) {
+              sealMultiplier *= 1.5;
+              sealMessages.push('会心の一撃！');
+            }
+            break;
+        }
       }
 
-      if (multiplier > 1) {
-        damage = Math.floor(damage * multiplier);
-        this.ui.addMessage('特効！ ', 'attack');
+      // Legacy special property support (for items without seals)
+      if (seals.length === 0 && player.weapon.special) {
+        switch (player.weapon.special) {
+          case 'drain':
+            if (enemy.special) sealMultiplier = 1.5;
+            break;
+          case 'ghost':
+            if (GHOST_TYPE_ENEMIES[enemy.enemyId]) sealMultiplier = 1.5;
+            break;
+          case 'dragon':
+            if (DRAGON_TYPE_ENEMIES[enemy.enemyId]) sealMultiplier = 1.5;
+            break;
+        }
+        if (sealMultiplier > 1) sealMessages.push('特効！');
+      }
+
+      if (sealMultiplier > 1) {
+        damage = Math.floor(damage * sealMultiplier);
+        for (var mi = 0; mi < sealMessages.length; mi++) {
+          this.ui.addMessage(sealMessages[mi], 'attack');
+        }
       }
     }
 
@@ -1072,6 +1116,23 @@ var Game = (function() {
       this.ui.addMessage(enemy.name + 'の攻撃！ ' + damage + 'ダメージを受けた', 'damage');
     }
 
+    // Apply shield seal effects
+    if (player.shield && player.shield.seals) {
+      var shieldSeals = player.shield.seals;
+      for (var ssi = 0; ssi < shieldSeals.length; ssi++) {
+        if (shieldSeals[ssi] === 'counter' && !enemy.dead) {
+          var counterDmg = Math.max(1, Math.floor(damage * 0.3));
+          var counterDied = enemy.takeDamage(counterDmg);
+          this.ui.addMessage('[返]印の反撃！ ' + enemy.name + 'に' + counterDmg + 'ダメージ', 'attack');
+          if (counterDied) {
+            player.enemiesKilled++;
+            this.ui.addMessage(enemy.name + 'を倒した！ 経験値' + enemy.exp + '獲得', 'attack');
+            player.gainExp(enemy.exp, this.ui);
+          }
+        }
+      }
+    }
+
     if (player.godMode) damage = 0;
     if (damage > 0) Sound.play('damage');
     player.hp -= damage;
@@ -1153,17 +1214,22 @@ var Game = (function() {
 
     // Midoro: rust equipment
     if (enemy.special === 'rust_equipment' && !player.godMode && player.shield) {
-      var shield = player.shield;
-      if (shield.plus > 0) {
-        shield.plus--;
+      var rustShield2 = player.shield;
+      var hasRustProofMidoro = rustShield2.seals && rustShield2.seals.indexOf('rust_proof') !== -1;
+      if (hasRustProofMidoro) {
+        this.ui.addMessage('ミドロの攻撃！ しかし[金]印が盾を守った！', 'system');
       } else {
-        shield.defense = Math.max(0, shield.defense - 1);
+        if (rustShield2.plus > 0) {
+          rustShield2.plus--;
+        } else {
+          rustShield2.defense = Math.max(0, rustShield2.defense - 1);
+        }
+        player._recalcStats();
+        this.ui.addMessage('ミドロの攻撃で盾が錆びた！ 防御力が下がった', 'enemy_special');
       }
-      player._recalcStats();
-      this.ui.addMessage('ミドロの攻撃で盾が錆びた！ 防御力が下がった', 'enemy_special');
     }
 
-    // Counter shield
+    // Counter shield (legacy special property check)
     if (player.shield && player.shield.special === 'counter' && !enemy.dead) {
       var counterDmg = Math.max(1, Math.floor(damage * 0.3));
       var died = enemy.takeDamage(counterDmg);
@@ -1726,41 +1792,74 @@ var Game = (function() {
   Game.prototype._trySynthesis = function(pot, ui) {
     if (!pot.contents || pot.contents.length < 2) return;
 
-    // Try weapon synthesis
-    var weapons = [];
-    var shields = [];
+    // Find first weapon and first shield as bases
+    var baseWeapon = null;
+    var baseShield = null;
     for (var i = 0; i < pot.contents.length; i++) {
-      if (pot.contents[i].type === 'weapon') weapons.push(pot.contents[i]);
-      if (pot.contents[i].type === 'shield') shields.push(pot.contents[i]);
+      if (pot.contents[i].type === 'weapon' && !baseWeapon) baseWeapon = pot.contents[i];
+      if (pot.contents[i].type === 'shield' && !baseShield) baseShield = pot.contents[i];
     }
 
-    if (weapons.length >= 2) {
-      var base = weapons[0];
-      for (var w = 1; w < weapons.length; w++) {
-        base.plus = (base.plus || 0) + (weapons[w].plus || 0);
-        if (weapons[w].special && !base.special) {
-          base.special = weapons[w].special;
+    // Synthesize weapons
+    if (baseWeapon) {
+      var merged = false;
+      for (var w = pot.contents.length - 1; w >= 0; w--) {
+        var item = pot.contents[w];
+        if (item === baseWeapon) continue;
+        if (item.type !== 'weapon') continue;
+
+        // Absorb plus value
+        baseWeapon.plus = (baseWeapon.plus || 0) + (item.plus || 0);
+
+        // Transfer seals if base has room
+        if (!baseWeapon.seals) baseWeapon.seals = [];
+        var maxSeals = baseWeapon.slots || 3;
+        if (item.seals) {
+          for (var si = 0; si < item.seals.length; si++) {
+            if (baseWeapon.seals.length >= maxSeals) break;
+            // Don't add duplicate seals
+            if (baseWeapon.seals.indexOf(item.seals[si]) === -1) {
+              baseWeapon.seals.push(item.seals[si]);
+            }
+          }
         }
-        // Remove merged weapon from pot
-        var idx = pot.contents.indexOf(weapons[w]);
-        if (idx !== -1) pot.contents.splice(idx, 1);
+
+        // Remove merged item from pot
+        pot.contents.splice(w, 1);
+        merged = true;
       }
-      base.plus += 1; // bonus for synthesis
-      ui.addMessage('合成成功！ ' + base.getDisplayName(), 'heal');
+      if (merged) {
+        ui.addMessage('合成成功！ ' + baseWeapon.getDisplayName(), 'heal');
+      }
     }
 
-    if (shields.length >= 2) {
-      var baseS = shields[0];
-      for (var s = 1; s < shields.length; s++) {
-        baseS.plus = (baseS.plus || 0) + (shields[s].plus || 0);
-        if (shields[s].special && !baseS.special) {
-          baseS.special = shields[s].special;
+    // Synthesize shields
+    if (baseShield) {
+      var mergedS = false;
+      for (var s = pot.contents.length - 1; s >= 0; s--) {
+        var sItem = pot.contents[s];
+        if (sItem === baseShield) continue;
+        if (sItem.type !== 'shield') continue;
+
+        baseShield.plus = (baseShield.plus || 0) + (sItem.plus || 0);
+
+        if (!baseShield.seals) baseShield.seals = [];
+        var maxSSeals = baseShield.slots || 3;
+        if (sItem.seals) {
+          for (var ssi = 0; ssi < sItem.seals.length; ssi++) {
+            if (baseShield.seals.length >= maxSSeals) break;
+            if (baseShield.seals.indexOf(sItem.seals[ssi]) === -1) {
+              baseShield.seals.push(sItem.seals[ssi]);
+            }
+          }
         }
-        var idx2 = pot.contents.indexOf(shields[s]);
-        if (idx2 !== -1) pot.contents.splice(idx2, 1);
+
+        pot.contents.splice(s, 1);
+        mergedS = true;
       }
-      baseS.plus += 1;
-      ui.addMessage('合成成功！ ' + baseS.getDisplayName(), 'heal');
+      if (mergedS) {
+        ui.addMessage('合成成功！ ' + baseShield.getDisplayName(), 'heal');
+      }
     }
   };
 
@@ -1768,7 +1867,7 @@ var Game = (function() {
     var ui = this.ui;
     var player = this.player;
 
-    if (pot.effect !== 'storage') {
+    if (pot.effect !== 'storage' && pot.effect !== 'synthesis') {
       ui.addMessage('この壺からは取り出せない！', 'system');
       return false;
     }

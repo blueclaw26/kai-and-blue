@@ -113,9 +113,11 @@ var Renderer = (function() {
   }
 
   // Draw a sprite at a position, with optional dimming for explored-but-not-visible tiles
-  function drawSprite(ctx, spriteName, drawX, drawY, dimmed) {
-    var sprite = Sprites.getSprite(spriteName);
+  // animated: if true, use 2-frame animation variant
+  function drawSprite(ctx, spriteName, drawX, drawY, dimmed, animated) {
+    var sprite = Sprites.getSprite(spriteName, animated);
     if (sprite) {
+      // Draw 32x32 sprite scaled down to 24x24 tile for crisper pixel art
       ctx.drawImage(sprite, drawX, drawY, TILE_SIZE, TILE_SIZE);
       if (dimmed) {
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
@@ -301,9 +303,9 @@ var Renderer = (function() {
       var eScreenX = (enemy.x - camX) * TILE_SIZE;
       var eScreenY = (enemy.y - camY) * TILE_SIZE;
 
-      // Try sprite first
+      // Try sprite first (with animation)
       var enemySpriteName = enemy.enemyId ? ENEMY_SPRITE_MAP[enemy.enemyId] : null;
-      if (enemySpriteName && drawSprite(ctx, enemySpriteName, eScreenX, eScreenY, false)) {
+      if (enemySpriteName && drawSprite(ctx, enemySpriteName, eScreenX, eScreenY, false, true)) {
         // Sprite drawn successfully
       } else {
         // Fallback to text
@@ -336,7 +338,7 @@ var Renderer = (function() {
     var playerScreenX = (player.x - camX) * TILE_SIZE;
     var playerScreenY = (player.y - camY) * TILE_SIZE;
 
-    if (!drawSprite(ctx, 'player', playerScreenX, playerScreenY, false)) {
+    if (!drawSprite(ctx, 'player', playerScreenX, playerScreenY, false, true)) {
       // Fallback to text
       ctx.fillStyle = COLORS.player;
       ctx.font = 'bold 18px monospace';
