@@ -1,4 +1,4 @@
-// Canvas Renderer with FOV and Minimap
+// Canvas Renderer with FOV, Minimap, and Pixel Art Sprites
 var Renderer = (function() {
   'use strict';
 
@@ -18,6 +18,29 @@ var Renderer = (function() {
   var WALL_CHAR = '#';
   var STAIRS_CHAR = '>';
 
+  // Map enemy IDs to sprite names
+  var ENEMY_SPRITE_MAP = {
+    mamel: 'mamel',
+    chintala: 'chintala',
+    nigiri: 'nigiri',
+    midnighthat: 'ghost',
+    polygon: 'polygon',
+    dragon: 'dragon',
+    skull_mage: 'skull_mage',
+    minotaur: 'minotaur',
+    shopkeeper: 'shopkeeper'
+  };
+
+  // Map item types to sprite names
+  var ITEM_SPRITE_MAP = {
+    weapon: 'weapon',
+    shield: 'shield',
+    grass: 'grass',
+    scroll: 'scroll',
+    staff: 'staff',
+    food: 'food'
+  };
+
   function Renderer(canvas, minimapCanvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
@@ -27,6 +50,9 @@ var Renderer = (function() {
     this.viewH = 18;
     canvas.width = this.viewW * TILE_SIZE;
     canvas.height = this.viewH * TILE_SIZE;
+
+    // Crisp pixel art rendering
+    this.ctx.imageSmoothingEnabled = false;
 
     this.miniTile = 4;
   }
@@ -79,6 +105,20 @@ var Renderer = (function() {
     return tx >= r.x && tx < r.x + r.w && ty >= r.y && ty < r.y + r.h;
   }
 
+  // Draw a sprite at a position, with optional dimming for explored-but-not-visible tiles
+  function drawSprite(ctx, spriteName, drawX, drawY, dimmed) {
+    var sprite = Sprites.getSprite(spriteName);
+    if (sprite) {
+      ctx.drawImage(sprite, drawX, drawY, TILE_SIZE, TILE_SIZE);
+      if (dimmed) {
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+      }
+      return true;
+    }
+    return false;
+  }
+
   Renderer.prototype.render = function(game) {
     var ctx = this.ctx;
     var dungeon = game.dungeon;
@@ -86,6 +126,9 @@ var Renderer = (function() {
     var explored = game.explored;
     var enemies = game.enemies;
     var items = game.items;
+
+    // Ensure crisp pixel art each frame
+    ctx.imageSmoothingEnabled = false;
 
     var visible = computeFOV(player.x, player.y, dungeon);
 
@@ -120,34 +163,56 @@ var Renderer = (function() {
         var tile = dungeon.grid[ty][tx];
         var drawX = vx * TILE_SIZE;
         var drawY = vy * TILE_SIZE;
+        var dimmed = !isVisible;
 
-        var bgColor;
+        // Render tiles with sprites
         switch (tile) {
-          case Dungeon.TILE.WALL: bgColor = COLORS.wall; break;
-          case Dungeon.TILE.FLOOR:
-            bgColor = isShopTile(game, tx, ty) ? COLORS.shopFloor : COLORS.floor;
+          case Dungeon.TILE.WALL:
+            if (!drawSprite(ctx, 'wall', drawX, drawY, dimmed)) {
+              // Fallback
+              ctx.fillStyle = COLORS.wall;
+              ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+              if (dimmed) { ctx.globalAlpha = 0.35; }
+              ctx.fillStyle = '#555';
+              ctx.fillText(WALL_CHAR, drawX + TILE_SIZE / 2, drawY + TILE_SIZE / 2);
+              ctx.globalAlpha = 1.0;
+            }
             break;
-          case Dungeon.TILE.CORRIDOR: bgColor = COLORS.corridor; break;
-          case Dungeon.TILE.STAIRS_DOWN: bgColor = COLORS.stairs; break;
-          default: bgColor = COLORS.unexplored;
+          case Dungeon.TILE.STAIRS_DOWN:
+            // Draw floor background first, then stairs sprite on top
+            ctx.fillStyle = COLORS.floor;
+            ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            if (!drawSprite(ctx, 'stairs', drawX, drawY, dimmed)) {
+              // Fallback
+              if (dimmed) { ctx.globalAlpha = 0.35; }
+              ctx.fillStyle = COLORS.stairs;
+              ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+              ctx.fillStyle = '#fff';
+              ctx.fillText(STAIRS_CHAR, drawX + TILE_SIZE / 2, drawY + TILE_SIZE / 2);
+              ctx.globalAlpha = 1.0;
+            }
+            break;
+          case Dungeon.TILE.FLOOR:
+            ctx.fillStyle = isShopTile(game, tx, ty) ? COLORS.shopFloor : COLORS.floor;
+            ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            if (dimmed) {
+              ctx.fillStyle = 'rgba(0,0,0,0.5)';
+              ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            }
+            break;
+          case Dungeon.TILE.CORRIDOR:
+            ctx.fillStyle = COLORS.corridor;
+            ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            if (dimmed) {
+              ctx.fillStyle = 'rgba(0,0,0,0.5)';
+              ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            }
+            break;
+          default:
+            ctx.fillStyle = COLORS.unexplored;
+            ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            break;
         }
-
-        if (!isVisible) {
-          ctx.globalAlpha = 0.35;
-        }
-
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
-
-        if (tile === Dungeon.TILE.WALL) {
-          ctx.fillStyle = '#555';
-          ctx.fillText(WALL_CHAR, drawX + TILE_SIZE / 2, drawY + TILE_SIZE / 2);
-        } else if (tile === Dungeon.TILE.STAIRS_DOWN) {
-          ctx.fillStyle = '#fff';
-          ctx.fillText(STAIRS_CHAR, drawX + TILE_SIZE / 2, drawY + TILE_SIZE / 2);
-        }
-
-        ctx.globalAlpha = 1.0;
       }
     }
 
@@ -162,12 +227,15 @@ var Renderer = (function() {
 
       var tScreenX = (trap.x - camX) * TILE_SIZE;
       var tScreenY = (trap.y - camY) * TILE_SIZE;
-      if (!visible[tKey]) {
-        ctx.globalAlpha = 0.35;
+      var trapDimmed = !visible[tKey];
+
+      if (!drawSprite(ctx, 'trap', tScreenX, tScreenY, trapDimmed)) {
+        // Fallback to text
+        if (trapDimmed) { ctx.globalAlpha = 0.35; }
+        ctx.fillStyle = trap.color;
+        ctx.fillText(trap.char, tScreenX + TILE_SIZE / 2, tScreenY + TILE_SIZE / 2);
+        ctx.globalAlpha = 1.0;
       }
-      ctx.fillStyle = trap.color;
-      ctx.fillText(trap.char, tScreenX + TILE_SIZE / 2, tScreenY + TILE_SIZE / 2);
-      ctx.globalAlpha = 1.0;
     }
 
     // Draw items
@@ -179,8 +247,16 @@ var Renderer = (function() {
 
       var iScreenX = (item.x - camX) * TILE_SIZE;
       var iScreenY = (item.y - camY) * TILE_SIZE;
-      ctx.fillStyle = item.color;
-      ctx.fillText(item.char, iScreenX + TILE_SIZE / 2, iScreenY + TILE_SIZE / 2);
+
+      // Try sprite first
+      var itemSpriteName = ITEM_SPRITE_MAP[item.type];
+      if (itemSpriteName && drawSprite(ctx, itemSpriteName, iScreenX, iScreenY, false)) {
+        // Sprite drawn successfully
+      } else {
+        // Fallback to text
+        ctx.fillStyle = item.color;
+        ctx.fillText(item.char, iScreenX + TILE_SIZE / 2, iScreenY + TILE_SIZE / 2);
+      }
 
       // Draw price tag for shop items
       if (item.shopItem && !game.shopkeeperHostile) {
@@ -202,16 +278,28 @@ var Renderer = (function() {
 
       var eScreenX = (enemy.x - camX) * TILE_SIZE;
       var eScreenY = (enemy.y - camY) * TILE_SIZE;
-      ctx.fillStyle = enemy.color;
-      ctx.fillText(enemy.char, eScreenX + TILE_SIZE / 2, eScreenY + TILE_SIZE / 2);
+
+      // Try sprite first
+      var enemySpriteName = enemy.enemyId ? ENEMY_SPRITE_MAP[enemy.enemyId] : null;
+      if (enemySpriteName && drawSprite(ctx, enemySpriteName, eScreenX, eScreenY, false)) {
+        // Sprite drawn successfully
+      } else {
+        // Fallback to text
+        ctx.fillStyle = enemy.color;
+        ctx.fillText(enemy.char, eScreenX + TILE_SIZE / 2, eScreenY + TILE_SIZE / 2);
+      }
     }
 
     // Draw player ON TOP
     var playerScreenX = (player.x - camX) * TILE_SIZE;
     var playerScreenY = (player.y - camY) * TILE_SIZE;
-    ctx.fillStyle = COLORS.player;
-    ctx.font = 'bold 18px monospace';
-    ctx.fillText(player.char, playerScreenX + TILE_SIZE / 2, playerScreenY + TILE_SIZE / 2);
+
+    if (!drawSprite(ctx, 'player', playerScreenX, playerScreenY, false)) {
+      // Fallback to text
+      ctx.fillStyle = COLORS.player;
+      ctx.font = 'bold 18px monospace';
+      ctx.fillText(player.char, playerScreenX + TILE_SIZE / 2, playerScreenY + TILE_SIZE / 2);
+    }
 
     // Minimap
     this.renderMinimap(game, dungeon, player, enemies, items, explored, visible);
