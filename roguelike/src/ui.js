@@ -123,9 +123,11 @@ var UI = (function() {
     if (equipEl) {
       var weaponText = player.weapon ? player.weapon.getDisplayName() : 'なし';
       var shieldText = player.shield ? player.shield.getDisplayName() : 'なし';
+      var braceletText = player.bracelet ? player.bracelet.getDisplayName() : 'なし';
       equipEl.innerHTML =
         '<div class="key-group"><span class="key-label">武器</span><span class="key-value" style="color:' + (player.weapon ? player.weapon.color : '#666') + ';">' + weaponText + '</span></div>' +
-        '<div class="key-group"><span class="key-label">盾</span><span class="key-value" style="color:' + (player.shield ? player.shield.color : '#666') + ';">' + shieldText + '</span></div>';
+        '<div class="key-group"><span class="key-label">盾</span><span class="key-value" style="color:' + (player.shield ? player.shield.color : '#666') + ';">' + shieldText + '</span></div>' +
+        '<div class="key-group"><span class="key-label">腕輪</span><span class="key-value" style="color:' + (player.bracelet ? player.bracelet.color : '#666') + ';">' + braceletText + '</span></div>';
     }
 
     var turnEl = document.getElementById('side-turns');
@@ -152,6 +154,7 @@ var UI = (function() {
         var equipped = '';
         if (player.weapon === item) equipped = ' <span style="color:#e8a44a;">[装備中]</span>';
         if (player.shield === item) equipped = ' <span style="color:#e8a44a;">[装備中]</span>';
+        if (player.bracelet === item) equipped = ' <span style="color:#e8a44a;">[装備中]</span>';
 
         // Show unidentified indicator
         var idIndicator = '';

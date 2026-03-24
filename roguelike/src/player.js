@@ -33,6 +33,7 @@ var Player = (function() {
     this.inventory = [];
     this.weapon = null;
     this.shield = null;
+    this.bracelet = null;
 
     // Buffs
     this.powerupTurns = 0;
@@ -57,6 +58,10 @@ var Player = (function() {
     this.attack = this.baseAttack + weaponAtk + (this.level - 1);
     this.defense = this.baseDefense + shieldDef + Math.floor((this.level - 1) / 2);
     if (this.powerupTurns > 0) {
+      this.attack += 5;
+    }
+    // Bracelet: strength boost
+    if (this.bracelet && this.bracelet.effect === 'strength_boost') {
       this.attack += 5;
     }
     // Strengthened status effect
@@ -131,6 +136,7 @@ var Player = (function() {
       }
     }
     if (this.sleepTurns > 0) parts.push('[睡眠]');
+    if (this.bracelet) parts.push('[' + this.bracelet.name + ']');
     return parts.join(' ');
   };
 
@@ -168,13 +174,15 @@ var Player = (function() {
       this.baseDefense += (this.level % 2 === 0) ? 1 : 0;
       this._recalcStats();
       if (ui) {
+        Sound.play('levelup');
         ui.addMessage('レベルが上がった！ Lv.' + this.level + ' (HP+3, 攻撃+1)', 'levelup');
       }
     }
   };
 
   Player.prototype.tickSatiety = function(ui) {
-    this._satietyAccum += 0.1;
+    var hungerRate = (this.bracelet && this.bracelet.effect === 'hunger') ? 0.2 : 0.1;
+    this._satietyAccum += hungerRate;
     if (this._satietyAccum >= 1) {
       this._satietyAccum -= 1;
       this.satiety = Math.max(0, this.satiety - 1);
@@ -206,6 +214,16 @@ var Player = (function() {
   };
 
   Player.prototype.pickUp = function(item) {
+    // Arrow stacking: merge with existing stack of same type
+    if (item.type === 'arrow') {
+      for (var i = 0; i < this.inventory.length; i++) {
+        if (this.inventory[i].type === 'arrow' && this.inventory[i].dataKey === item.dataKey) {
+          this.inventory[i].count = (this.inventory[i].count || 1) + (item.count || 1);
+          this.itemsCollected++;
+          return true;
+        }
+      }
+    }
     if (!this.canPickUp()) return false;
     this.inventory.push(item);
     this.itemsCollected++;
@@ -228,6 +246,7 @@ var Player = (function() {
       } else {
         this.weapon = item;
         this._recalcStats();
+        Sound.play('equip');
         ui.addMessage(item.name + 'を装備した', 'pickup');
       }
       return true;
@@ -239,6 +258,20 @@ var Player = (function() {
       } else {
         this.shield = item;
         this._recalcStats();
+        Sound.play('equip');
+        ui.addMessage(item.name + 'を装備した', 'pickup');
+      }
+      return true;
+    }
+    if (item.type === 'bracelet') {
+      if (this.bracelet === item) {
+        this.bracelet = null;
+        this._recalcStats();
+        ui.addMessage(item.name + 'を外した', 'system');
+      } else {
+        this.bracelet = item;
+        this._recalcStats();
+        Sound.play('equip');
         ui.addMessage(item.name + 'を装備した', 'pickup');
       }
       return true;
@@ -252,11 +285,13 @@ var Player = (function() {
     var typeOrder = {
       'weapon': 0,
       'shield': 1,
-      'staff': 2,
-      'grass': 3,
-      'scroll': 4,
-      'food': 5,
-      'pot': 6
+      'bracelet': 2,
+      'arrow': 3,
+      'staff': 4,
+      'grass': 5,
+      'scroll': 6,
+      'food': 7,
+      'pot': 8
     };
 
     this.inventory.sort(function(a, b) {
@@ -266,6 +301,9 @@ var Player = (function() {
       // Equipped shield second
       if (self.shield === a) return -1;
       if (self.shield === b) return 1;
+      // Equipped bracelet third
+      if (self.bracelet === a) return -1;
+      if (self.bracelet === b) return 1;
 
       var typeA = typeOrder[a.type] !== undefined ? typeOrder[a.type] : 6;
       var typeB = typeOrder[b.type] !== undefined ? typeOrder[b.type] : 6;

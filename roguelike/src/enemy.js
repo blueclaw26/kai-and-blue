@@ -130,6 +130,34 @@ var Enemy = (function() {
       }
     }
 
+    // Boy Cart: shoots arrow if player in straight line within 5 tiles
+    if (this.special === 'arrow_shot' && dist <= 5) {
+      if ((dx === 0 || dy === 0) && this._hasLineOfSight(game, this.x, this.y, player.x, player.y)) {
+        var arrowDmg = 3;
+        game.ui.addMessage('ボーイが矢を放った！ ' + arrowDmg + 'ダメージ', 'enemy_special');
+        if (!player.godMode) player.hp -= arrowDmg;
+        Sound.play('arrow');
+        if (player.hp <= 0) {
+          player.hp = 0;
+          game.gameOver = true;
+          Sound.play('gameover');
+          game.ui.addMessage('倒れてしまった... ' + game.floorNum + 'Fで力尽きた', 'damage');
+          game.ui.showGameOver(game.floorNum, player.level);
+        }
+        return;
+      }
+    }
+
+    // Obake Daikon: throws poison from 3 tiles
+    if (this.special === 'poison_throw' && dist <= 3) {
+      if (this._inSameRoom(game)) {
+        game.ui.addMessage('おばけ大根が毒草を投げてきた！ ちからが下がった', 'enemy_special');
+        player.baseAttack = Math.max(1, player.baseAttack - 1);
+        player._recalcStats();
+        return;
+      }
+    }
+
     // Pa-ou (polygon): ranged magic attack
     if (this.special === 'magic' && dist <= 5) {
       var inSameRoom = this._inSameRoom(game);
@@ -148,7 +176,18 @@ var Enemy = (function() {
 
     // Adjacent: attack (with special modifiers)
     if (dist === 1) {
+      // Gamara fleeing: try to run away instead of attacking
+      if (this._fleeing) {
+        this._moveAwayFromPlayer(game);
+        return;
+      }
       game.enemyAttack(this);
+      return;
+    }
+
+    // Fleeing enemies move away
+    if (this._fleeing) {
+      this._moveAwayFromPlayer(game);
       return;
     }
 
@@ -353,6 +392,30 @@ var Enemy = (function() {
           return;
         }
       }
+    }
+  };
+
+  // Move away from player (flee AI)
+  Enemy.prototype._moveAwayFromPlayer = function(game) {
+    var player = game.player;
+    var bestDist = -1;
+    var bestMove = null;
+    var dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+    for (var d = 0; d < dirs.length; d++) {
+      var nx = this.x + dirs[d][0];
+      var ny = this.y + dirs[d][1];
+      if (!this._canMoveToTile(nx, ny, game)) continue;
+      if (nx === player.x && ny === player.y) continue;
+      var dist = Math.abs(nx - player.x) + Math.abs(ny - player.y);
+      if (dist > bestDist) {
+        bestDist = dist;
+        bestMove = { x: nx, y: ny };
+      }
+    }
+    if (bestMove) {
+      this.moveTo(bestMove.x, bestMove.y);
+    } else {
+      this._moveRandom(game);
     }
   };
 

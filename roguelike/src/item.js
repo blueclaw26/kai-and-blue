@@ -19,8 +19,14 @@ var Item = (function() {
       this.contents = [];
     }
 
-    // Identification: weapons, shields, food are always identified
-    if (this.type === 'weapon' || this.type === 'shield' || this.type === 'food') {
+    // Arrow count
+    if (this.type === 'arrow') {
+      this.count = 3 + Math.floor(Math.random() * 5); // 3-7 arrows per pickup
+      if (data.damage !== undefined) this.damage = data.damage;
+    }
+
+    // Identification: weapons, shields, food, bracelets, arrows are always identified
+    if (this.type === 'weapon' || this.type === 'shield' || this.type === 'food' || this.type === 'bracelet' || this.type === 'arrow') {
       this.identified = true;
     } else {
       // Check global identification table
@@ -69,6 +75,16 @@ var Item = (function() {
         }
         name += '{' + contentNames.join(', ') + '}';
       }
+      return name;
+    }
+
+    // Arrow display with count
+    if (this.type === 'arrow') {
+      return name + ' x' + (this.count || 1);
+    }
+
+    // Bracelet display
+    if (this.type === 'bracelet') {
       return name;
     }
 
@@ -148,9 +164,12 @@ var Item = (function() {
         return this._useFood(game, player);
       case 'staff':
         return this._useStaff(game, player);
+      case 'arrow':
+        return this._useArrow(game, player);
       case 'pot':
         ui.addMessage('壺に入れるには持ち物画面で[p]、取り出すには[o]を使おう', 'system');
         return false;
+      case 'bracelet':
       case 'weapon':
       case 'shield':
         ui.addMessage('装備するには[E]キーを使おう', 'system');
@@ -173,6 +192,7 @@ var Item = (function() {
       case 'heal':
         var healed = Math.min(this.value, player.maxHp - player.hp);
         player.hp = Math.min(player.hp + this.value, player.maxHp);
+        Sound.play('heal');
         ui.addMessage(this.name + 'を飲んだ。HPが' + healed + '回復した', 'heal');
         return true;
       case 'strength':
@@ -195,6 +215,7 @@ var Item = (function() {
     var wasIdentified = this.identified;
     var scrollName = this.name; // real name for messages after identification
 
+    Sound.play('scroll');
     // Show generic "read a scroll" message if unidentified
     if (!wasIdentified) {
       ui.addMessage('巻物を読んだ...', 'system');
@@ -348,6 +369,25 @@ var Item = (function() {
       }
     };
     return false; // Don't consume turn yet - direction mode handles it
+  };
+
+  Item.prototype._useArrow = function(game, player) {
+    var ui = game.ui;
+    var self = this;
+
+    if (!this.count || this.count <= 0) {
+      ui.addMessage('矢がない', 'system');
+      return false;
+    }
+
+    ui.addMessage('どの方向に撃つ？（方向キーで選択、Escでキャンセル）', 'system');
+    game.directionMode = {
+      item: self,
+      callback: function(dx, dy) {
+        game.shootArrow(self, dx, dy);
+      }
+    };
+    return false; // direction mode handles turn consumption
   };
 
   // Pick an item from FLOOR_TABLE weighted for given floor

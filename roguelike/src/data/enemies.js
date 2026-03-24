@@ -120,5 +120,77 @@ var ENEMY_DATA = {
     minFloor: 99,
     maxFloor: 99,
     special: null
+  },
+  toad: {
+    name: 'ガマラ',
+    char: 'F',
+    color: '#4caf50',
+    hp: 6,
+    attack: 2,
+    defense: 0,
+    exp: 4,
+    minFloor: 1,
+    maxFloor: 6,
+    special: 'steal_gold'
+  },
+  boy_cart: {
+    name: 'ボーイ',
+    char: 'B',
+    color: '#ff7043',
+    hp: 7,
+    attack: 2,
+    defense: 0,
+    exp: 5,
+    minFloor: 2,
+    maxFloor: 8,
+    special: 'arrow_shot'
+  },
+  slug: {
+    name: 'おばけ大根',
+    char: 'R',
+    color: '#8bc34a',
+    hp: 10,
+    attack: 3,
+    defense: 1,
+    exp: 8,
+    minFloor: 3,
+    maxFloor: 9,
+    special: 'poison_throw'
+  },
+  thief_pelican: {
+    name: 'ぬすっトド',
+    char: 'Z',
+    color: '#29b6f6',
+    hp: 15,
+    attack: 3,
+    defense: 2,
+    exp: 12,
+    minFloor: 4,
+    maxFloor: 10,
+    special: 'steal_item'
+  },
+  kengo: {
+    name: 'ケンゴウ',
+    char: 'K',
+    color: '#78909c',
+    hp: 18,
+    attack: 7,
+    defense: 3,
+    exp: 18,
+    minFloor: 6,
+    maxFloor: 14,
+    special: 'disarm'
+  },
+  curse_girl: {
+    name: 'ミドロ',
+    char: 'J',
+    color: '#7e57c2',
+    hp: 20,
+    attack: 5,
+    defense: 2,
+    exp: 15,
+    minFloor: 7,
+    maxFloor: 15,
+    special: 'rust_equipment'
   }
 };

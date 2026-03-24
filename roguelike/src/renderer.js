@@ -29,7 +29,13 @@ var Renderer = (function() {
     skull_mage: 'skull_mage',
     minotaur: 'minotaur',
     shopkeeper: 'shopkeeper',
-    guard_dog: 'guard_dog'
+    guard_dog: 'guard_dog',
+    toad: 'toad',
+    boy_cart: 'boy_cart',
+    slug: 'slug',
+    thief_pelican: 'thief_pelican',
+    kengo: 'kengo',
+    curse_girl: 'curse_girl'
   };
 
   // Map item types to sprite names
@@ -40,7 +46,9 @@ var Renderer = (function() {
     scroll: 'scroll',
     staff: 'staff',
     food: 'food',
-    pot: 'pot'
+    pot: 'pot',
+    bracelet: 'bracelet',
+    arrow: 'arrow'
   };
 
   function Renderer(canvas, minimapCanvas) {
@@ -199,12 +207,14 @@ var Renderer = (function() {
       }
     }
 
-    // Draw visible traps
+    // Draw visible traps (see_traps bracelet reveals all)
+    var seeTraps = player.bracelet && player.bracelet.effect === 'see_traps';
     var traps = game.traps || [];
     ctx.font = 'bold 14px monospace';
     for (var i = 0; i < traps.length; i++) {
       var trap = traps[i];
-      if (!trap.visible || trap.consumed) continue;
+      if (trap.consumed) continue;
+      if (!trap.visible && !seeTraps) continue;
       if (!visibleArr[trap.y][trap.x] && !exploredArr[trap.y][trap.x]) continue;
 
       var tScreenX = (trap.x - camX) * TILE_SIZE;
@@ -251,12 +261,14 @@ var Renderer = (function() {
     }
 
     // Draw enemies (only visible in same room or adjacent in corridors)
+    // Bracelet see_all: show all enemies on minimap and main view
+    var seeAllEnemies = player.bracelet && player.bracelet.effect === 'see_all';
     ctx.font = 'bold 18px monospace';
     for (var i = 0; i < enemies.length; i++) {
       var enemy = enemies[i];
       if (enemy.dead) continue;
 
-      if (!visibleArr[enemy.y][enemy.x] && !mapRevealed) continue;
+      if (!visibleArr[enemy.y][enemy.x] && !mapRevealed && !seeAllEnemies) continue;
 
       var eScreenX = (enemy.x - camX) * TILE_SIZE;
       var eScreenY = (enemy.y - camY) * TILE_SIZE;
@@ -358,10 +370,11 @@ var Renderer = (function() {
     }
 
     // Enemies on minimap
+    var seeAllMini = player.bracelet && player.bracelet.effect === 'see_all';
     for (var i = 0; i < enemies.length; i++) {
       var enemy = enemies[i];
       if (enemy.dead) continue;
-      if (!visibleArr[enemy.y][enemy.x] && !mapRevealed) continue;
+      if (!visibleArr[enemy.y][enemy.x] && !mapRevealed && !seeAllMini) continue;
       // Shopkeeper is gold on minimap
       ctx.fillStyle = enemy.isShopkeeper ? '#ffd700' : '#ff4444';
       ctx.fillRect(enemy.x * t, enemy.y * t, t, t);

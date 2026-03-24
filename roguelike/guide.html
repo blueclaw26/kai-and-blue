@@ -27,6 +27,8 @@
         <li><a href="#traps">罠一覧</a></li>
         <li><a href="#status">状態異常</a></li>
         <li><a href="#shop">店</a></li>
+        <li><a href="#bracelets">腕輪</a></li>
+        <li><a href="#arrows">矢</a></li>
       </ol>
     </nav>
 
@@ -207,6 +209,12 @@
           <tr><td>ドラゴン</td><td class="symbol">D</td><td class="num">30</td><td class="num">10</td><td class="num">4</td><td class="num">50</td><td class="floor">10-20F</td><td class="special">直線火炎(15-20)</td></tr>
           <tr><td>スカルドラゴン</td><td class="symbol">S</td><td class="num">25</td><td class="num">8</td><td class="num">3</td><td class="num">35</td><td class="floor">12-20F</td><td class="special">フロア全域火炎(20)</td></tr>
           <tr><td>タウロス</td><td class="symbol">T</td><td class="num">35</td><td class="num">12</td><td class="num">5</td><td class="num">60</td><td class="floor">15-20F</td><td class="special">痛恨の一撃(25%で2倍)</td></tr>
+          <tr><td>ガマラ</td><td class="symbol">F</td><td class="num">6</td><td class="num">2</td><td class="num">0</td><td class="num">4</td><td class="floor">1-6F</td><td class="special">ゴールドを盗んで逃走</td></tr>
+          <tr><td>ボーイ</td><td class="symbol">B</td><td class="num">7</td><td class="num">2</td><td class="num">0</td><td class="num">5</td><td class="floor">2-8F</td><td class="special">直線上に矢(3ダメージ)</td></tr>
+          <tr><td>おばけ大根</td><td class="symbol">R</td><td class="num">10</td><td class="num">3</td><td class="num">1</td><td class="num">8</td><td class="floor">3-9F</td><td class="special">毒草投げ(攻撃-1)</td></tr>
+          <tr><td>ぬすっトド</td><td class="symbol">Z</td><td class="num">15</td><td class="num">3</td><td class="num">2</td><td class="num">12</td><td class="floor">4-10F</td><td class="special">アイテムを盗んでワープ</td></tr>
+          <tr><td>ケンゴウ</td><td class="symbol">K</td><td class="num">18</td><td class="num">7</td><td class="num">3</td><td class="num">18</td><td class="floor">6-14F</td><td class="special">装備を弾き飛ばす(20%)</td></tr>
+          <tr><td>ミドロ</td><td class="symbol">J</td><td class="num">20</td><td class="num">5</td><td class="num">2</td><td class="num">15</td><td class="floor">7-15F</td><td class="special">盾を錆びさせる(防御-1)</td></tr>
           <tr><td>店主</td><td class="symbol">$</td><td class="num">200</td><td class="num">50</td><td class="num">30</td><td class="num">—</td><td class="floor">店のみ</td><td class="special">泥棒時に敵対</td></tr>
         </tbody>
       </table>
@@ -259,6 +267,42 @@
         <li>自分のアイテムを床に置くと売却を提案される（<kbd>y</kbd>/<kbd>n</kbd>）</li>
         <li><span class="warning">泥棒</span> — 代金を払わずに店の外へ出ると、店主が敵対化＋階段に番犬が出現する</li>
       </ul>
+    </section>
+
+    <!-- 9. 腕輪 -->
+    <section class="section" id="bracelets">
+      <h2>9. 腕輪</h2>
+      <p>装備スロット：1つのみ。[E]キーで装備/解除。</p>
+      <table class="data-table">
+        <thead>
+          <tr><th>名前</th><th>効果</th><th>出現階</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>透視の腕輪</td><td class="special">フロア全体の敵が見える</td><td class="floor">8F~</td></tr>
+          <tr><td>よくみえの腕輪</td><td class="special">フロア全体の罠が見える</td><td class="floor">5F~</td></tr>
+          <tr><td>浮遊の腕輪</td><td class="special">罠を踏んでも発動しない</td><td class="floor">7F~</td></tr>
+          <tr><td>力の腕輪</td><td class="special">攻撃力+5</td><td class="floor">5F~</td></tr>
+          <tr><td>ハラヘリの腕輪</td><td class="special">満腹度減少が2倍速（呪いアイテム）</td><td class="floor">1F~</td></tr>
+          <tr><td>回復の腕輪</td><td class="special">自然HP回復が2倍速</td><td class="floor">6F~</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 10. 矢 -->
+    <section class="section" id="arrows">
+      <h2>10. 矢</h2>
+      <p>同じ種類の矢はスタックされる。持ち物画面で[e]で使用→方向選択→発射。</p>
+      <table class="data-table">
+        <thead>
+          <tr><th>名前</th><th>ダメージ</th><th>出現階</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>木の矢</td><td class="num">3</td><td class="floor">1F~</td></tr>
+          <tr><td>鉄の矢</td><td class="num">7</td><td class="floor">4F~</td></tr>
+          <tr><td>銀の矢</td><td class="num">12</td><td class="floor">8F~</td></tr>
+        </tbody>
+      </table>
+      <p>ダメージ計算: max(1, 矢ダメージ - 敵防御/2)。外れた矢は50%の確率で地面に残る。</p>
     </section>
 
     <footer class="guide-footer">

@@ -4,9 +4,15 @@ var FLOOR_TABLE = {
     // [minFloor, maxFloor, enemyId, spawnWeight]
     [1, 5, 'mamel', 10],
     [1, 7, 'chintala', 8],
+    [1, 6, 'toad', 6],
+    [2, 8, 'boy_cart', 5],
     [3, 10, 'nigiri', 6],
+    [3, 9, 'slug', 5],
+    [4, 10, 'thief_pelican', 4],
     [5, 12, 'midnighthat', 7],
+    [6, 14, 'kengo', 4],
     [7, 15, 'polygon', 6],
+    [7, 15, 'curse_girl', 4],
     [10, 20, 'dragon', 4],
     [12, 20, 'skull_mage', 5],
     [15, 20, 'minotaur', 3]
@@ -52,6 +58,17 @@ var FLOOR_TABLE = {
     [5, 20, 'pot_synthesis', 1],
     [3, 20, 'pot_identify', 2],
     [5, 20, 'pot_heal', 2],
-    [1, 20, 'pot_useless', 2]
+    [1, 20, 'pot_useless', 2],
+    // Bracelets
+    [8, 20, 'bracelet_see', 1],
+    [5, 20, 'bracelet_scout', 2],
+    [7, 20, 'bracelet_float', 1],
+    [5, 20, 'bracelet_strength', 2],
+    [1, 20, 'bracelet_hunger', 2],
+    [6, 20, 'bracelet_regen', 1],
+    // Arrows
+    [1, 20, 'arrow_wood', 5],
+    [4, 20, 'arrow_iron', 3],
+    [8, 20, 'arrow_silver', 2]
   ]
 };

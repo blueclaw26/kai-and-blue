@@ -251,6 +251,7 @@ var Game = (function() {
     if (this.shopkeeperHostile) return;
     this.shopkeeperHostile = true;
 
+    Sound.play('thief');
     this.ui.addMessage('泥棒！！！', 'damage');
 
     var sk = this.getShopkeeper();
@@ -350,6 +351,7 @@ var Game = (function() {
     }
     this.player.pickUp(item);
     this.removeItem(item);
+    Sound.play('pickup');
     this.ui.addMessage(item.getDisplayName() + 'を拾った', 'pickup');
     return true;
   };
@@ -374,6 +376,7 @@ var Game = (function() {
     if (this.shopDebt <= 0) return false;
     if (this.player.gold >= this.shopDebt) {
       this.player.gold -= this.shopDebt;
+      Sound.play('shop');
       this.ui.addMessage(this.shopDebt + 'ギタン支払った', 'pickup');
       this.shopDebt = 0;
       // Clear shopItem flag from all inventory items
@@ -399,6 +402,10 @@ var Game = (function() {
     }
     if (this.player.shield === item) {
       this.player.shield = null;
+      this.player._recalcStats();
+    }
+    if (this.player.bracelet === item) {
+      this.player.bracelet = null;
       this.player._recalcStats();
     }
     this.player.removeFromInventory(item);
@@ -534,6 +541,14 @@ var Game = (function() {
     if (!trap) return;
 
     trap.visible = true;
+
+    // Float bracelet: don't trigger traps
+    if (this.player.bracelet && this.player.bracelet.effect === 'float') {
+      this.ui.addMessage('浮遊の腕輪の効果で罠を回避した！', 'system');
+      return;
+    }
+
+    Sound.play('trap');
     this.triggerTrap(trap, this.player);
   };
 
@@ -704,6 +719,7 @@ var Game = (function() {
     if (this.player.hp <= 0) {
       this.player.hp = 0;
       this.gameOver = true;
+      Sound.play('gameover');
       this.ui.addMessage('倒れてしまった... ' + this.floorNum + 'Fで力尽きた', 'damage');
       this.ui.showGameOver(this.floorNum, this.player.level);
       return true;
@@ -742,10 +758,12 @@ var Game = (function() {
 
     var died = enemy.takeDamage(damage);
 
+    Sound.play('attack');
     this.ui.addMessage(enemy.name + 'に ' + damage + ' ダメージを与えた！', 'attack');
 
     if (died) {
       this.player.enemiesKilled++;
+      Sound.play('kill');
       this.ui.addMessage(enemy.name + 'を倒した！ 経験値' + enemy.exp + '獲得', 'attack');
       this.player.gainExp(enemy.exp, this.ui);
 
@@ -853,7 +871,95 @@ var Game = (function() {
     }
 
     if (player.godMode) damage = 0;
+    if (damage > 0) Sound.play('damage');
     player.hp -= damage;
+
+    // --- New enemy specials on attack ---
+
+    // Gamara: steal gold
+    if (enemy.special === 'steal_gold' && !player.godMode && damage > 0) {
+      var stealAmount = Math.min(player.gold, 10 + Math.floor(Math.random() * 41));
+      if (stealAmount > 0) {
+        player.gold -= stealAmount;
+        this.ui.addMessage('ガマラに' + stealAmount + 'ギタンを盗まれた！', 'enemy_special');
+        enemy._fleeing = true; // flag for flee AI
+      }
+    }
+
+    // Nusutto-todo: steal item
+    if (enemy.special === 'steal_item' && !player.godMode) {
+      var nonEquipped = [];
+      for (var si = 0; si < player.inventory.length; si++) {
+        var sItem = player.inventory[si];
+        if (sItem !== player.weapon && sItem !== player.shield && sItem !== player.bracelet) {
+          nonEquipped.push(si);
+        }
+      }
+      if (nonEquipped.length > 0 && Math.random() < 0.5) {
+        var stolenIdx = nonEquipped[Math.floor(Math.random() * nonEquipped.length)];
+        var stolenItem = player.inventory[stolenIdx];
+        player.inventory.splice(stolenIdx, 1);
+        this.ui.addMessage('ぬすっトドに' + stolenItem.getDisplayName() + 'を盗まれた！', 'enemy_special');
+        // Warp away
+        var warpRoom = this.dungeon.rooms[Math.floor(Math.random() * this.dungeon.rooms.length)];
+        var wx = warpRoom.x + 1 + Math.floor(Math.random() * (warpRoom.w - 2));
+        var wy = warpRoom.y + 1 + Math.floor(Math.random() * (warpRoom.h - 2));
+        enemy.moveTo(wx, wy);
+        this.ui.addMessage('ぬすっトドはどこかへ消えた！', 'enemy_special');
+      }
+    }
+
+    // Kengo: disarm
+    if (enemy.special === 'disarm' && !player.godMode && Math.random() < 0.2) {
+      if (player.weapon && Math.random() < 0.5) {
+        var disarmedItem = player.weapon;
+        player.weapon = null;
+        player._recalcStats();
+        player.removeFromInventory(disarmedItem);
+        // Place behind player
+        var behindX = player.x - (enemy.x - player.x);
+        var behindY = player.y - (enemy.y - player.y);
+        if (behindX >= 0 && behindX < this.dungeon.width && behindY >= 0 && behindY < this.dungeon.height &&
+            this.dungeon.grid[behindY][behindX] !== Dungeon.TILE.WALL) {
+          disarmedItem.x = behindX;
+          disarmedItem.y = behindY;
+        } else {
+          disarmedItem.x = player.x;
+          disarmedItem.y = player.y;
+        }
+        this.items.push(disarmedItem);
+        this.ui.addMessage('ケンゴウに武器を弾き飛ばされた！', 'enemy_special');
+      } else if (player.shield) {
+        var disarmedShield = player.shield;
+        player.shield = null;
+        player._recalcStats();
+        player.removeFromInventory(disarmedShield);
+        var behindX2 = player.x - (enemy.x - player.x);
+        var behindY2 = player.y - (enemy.y - player.y);
+        if (behindX2 >= 0 && behindX2 < this.dungeon.width && behindY2 >= 0 && behindY2 < this.dungeon.height &&
+            this.dungeon.grid[behindY2][behindX2] !== Dungeon.TILE.WALL) {
+          disarmedShield.x = behindX2;
+          disarmedShield.y = behindY2;
+        } else {
+          disarmedShield.x = player.x;
+          disarmedShield.y = player.y;
+        }
+        this.items.push(disarmedShield);
+        this.ui.addMessage('ケンゴウに盾を弾き飛ばされた！', 'enemy_special');
+      }
+    }
+
+    // Midoro: rust equipment
+    if (enemy.special === 'rust_equipment' && !player.godMode && player.shield) {
+      var shield = player.shield;
+      if (shield.plus > 0) {
+        shield.plus--;
+      } else {
+        shield.defense = Math.max(0, shield.defense - 1);
+      }
+      player._recalcStats();
+      this.ui.addMessage('ミドロの攻撃で盾が錆びた！ 防御力が下がった', 'enemy_special');
+    }
 
     // Counter shield
     if (player.shield && player.shield.special === 'counter' && !enemy.dead) {
@@ -870,6 +976,7 @@ var Game = (function() {
     if (player.hp <= 0) {
       player.hp = 0;
       this.gameOver = true;
+      Sound.play('gameover');
       this.ui.addMessage('倒れてしまった... ' + this.floorNum + 'Fで力尽きた', 'damage');
       this.ui.showGameOver(this.floorNum, player.level);
     }
@@ -932,12 +1039,14 @@ var Game = (function() {
       }
       if (this.floorNum >= MAX_FLOOR) {
         this.victory = true;
+        Sound.play('victory');
         this.ui.addMessage('ダンジョンをクリアした！', 'levelup');
         this.ui.showVictory(this.player);
         return true;
       }
       this.floorNum++;
       this.newFloor();
+      Sound.play('stairs');
       this.ui.addMessage(this.floorNum + 'Fに降りた', 'system');
       return true;
     }
@@ -956,6 +1065,69 @@ var Game = (function() {
     return count;
   };
 
+  // --- Arrow shooting ---
+  Game.prototype.shootArrow = function(item, dx, dy) {
+    var player = this.player;
+    var ui = this.ui;
+    var self = this;
+
+    // Decrement arrow count
+    item.count = (item.count || 1) - 1;
+    if (item.count <= 0) {
+      player.removeFromInventory(item);
+    }
+
+    Sound.play('arrow');
+
+    // Trace arrow path
+    var arrowPath = [];
+    var x = player.x + dx;
+    var y = player.y + dy;
+    var hitEnemy = null;
+
+    while (x >= 0 && x < this.dungeon.width && y >= 0 && y < this.dungeon.height) {
+      if (this.dungeon.grid[y][x] === Dungeon.TILE.WALL) break;
+      var enemy = this.getEnemyAt(x, y);
+      if (enemy) {
+        hitEnemy = enemy;
+        arrowPath.push({ x: x, y: y });
+        break;
+      }
+      arrowPath.push({ x: x, y: y });
+      x += dx;
+      y += dy;
+    }
+
+    // Animate then apply
+    var arrowItem = { char: ')', color: item.color || '#a1887f' };
+    this._animateThrow(arrowItem, arrowPath, function() {
+      if (hitEnemy) {
+        var arrowDmg = Math.max(1, (item.damage || 3) - Math.floor(hitEnemy.defense / 2));
+        var died = hitEnemy.takeDamage(arrowDmg);
+        ui.addMessage(item.name + 'が' + hitEnemy.name + 'に命中！ ' + arrowDmg + 'ダメージ', 'attack');
+        if (died) {
+          Sound.play('kill');
+          player.enemiesKilled++;
+          ui.addMessage(hitEnemy.name + 'を倒した！ 経験値' + hitEnemy.exp + '獲得', 'attack');
+          player.gainExp(hitEnemy.exp, ui);
+        }
+      } else {
+        // Miss: 50% chance arrow lands on the ground
+        var lastPos = arrowPath.length > 0 ? arrowPath[arrowPath.length - 1] : null;
+        if (lastPos && Math.random() < 0.5) {
+          var droppedArrow = new Item(lastPos.x, lastPos.y, item.dataKey);
+          droppedArrow.count = 1;
+          self.items.push(droppedArrow);
+          ui.addMessage(item.name + 'は外れて地面に落ちた', 'system');
+        } else {
+          ui.addMessage(item.name + 'は外れた', 'system');
+        }
+      }
+    });
+
+    return true;
+  };
+
   // --- Throw mechanic (improved) ---
   Game.prototype.throwItem = function(item, dx, dy) {
     var player = this.player;
@@ -968,6 +1140,10 @@ var Game = (function() {
     }
     if (player.shield === item) {
       player.shield = null;
+      player._recalcStats();
+    }
+    if (player.bracelet === item) {
+      player.bracelet = null;
       player._recalcStats();
     }
     player.removeFromInventory(item);

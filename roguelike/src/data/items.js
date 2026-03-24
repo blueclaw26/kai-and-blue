@@ -50,7 +50,20 @@ var ITEM_DATA = {
   pot_synthesis: { type: 'pot', name: '合成の壺', char: '{', color: '#e8a44a', capacity: 3, effect: 'synthesis', minFloor: 5, weight: 2, price: 3000 },
   pot_identify: { type: 'pot', name: '識別の壺', char: '{', color: '#42a5f5', capacity: 3, effect: 'identify', minFloor: 3, weight: 3, price: 1500 },
   pot_heal: { type: 'pot', name: '回復の壺', char: '{', color: '#66bb6a', capacity: 3, effect: 'heal', minFloor: 5, weight: 2, price: 2000 },
-  pot_useless: { type: 'pot', name: 'ただの壺', char: '{', color: '#bdbdbd', capacity: 4, effect: 'none', minFloor: 1, weight: 3, price: 200 }
+  pot_useless: { type: 'pot', name: 'ただの壺', char: '{', color: '#bdbdbd', capacity: 4, effect: 'none', minFloor: 1, weight: 3, price: 200 },
+
+  // Bracelets (腕輪)
+  bracelet_see: { type: 'bracelet', name: '透視の腕輪', char: '=', color: '#42a5f5', effect: 'see_all', minFloor: 8, weight: 1, price: 5000 },
+  bracelet_scout: { type: 'bracelet', name: 'よくみえの腕輪', char: '=', color: '#66bb6a', effect: 'see_traps', minFloor: 5, weight: 2, price: 3000 },
+  bracelet_float: { type: 'bracelet', name: '浮遊の腕輪', char: '=', color: '#ce93d8', effect: 'float', minFloor: 7, weight: 1, price: 4000 },
+  bracelet_strength: { type: 'bracelet', name: '力の腕輪', char: '=', color: '#ef5350', effect: 'strength_boost', minFloor: 5, weight: 2, price: 3500 },
+  bracelet_hunger: { type: 'bracelet', name: 'ハラヘリの腕輪', char: '=', color: '#ffa726', effect: 'hunger', minFloor: 1, weight: 3, price: 500 },
+  bracelet_regen: { type: 'bracelet', name: '回復の腕輪', char: '=', color: '#4caf50', effect: 'regen', minFloor: 6, weight: 1, price: 4000 },
+
+  // Arrows (矢)
+  arrow_wood: { type: 'arrow', name: '木の矢', char: ')', color: '#a1887f', damage: 3, minFloor: 1, weight: 6, price: 50 },
+  arrow_iron: { type: 'arrow', name: '鉄の矢', char: ')', color: '#78909c', damage: 7, minFloor: 4, weight: 4, price: 100 },
+  arrow_silver: { type: 'arrow', name: '銀の矢', char: ')', color: '#e0e0e0', damage: 12, minFloor: 8, weight: 2, price: 200 }
 };
 
 // Unidentified name pools - shuffled per run

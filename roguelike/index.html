@@ -36,6 +36,7 @@
         <div class="panel-content" id="side-equip">
           <div class="key-group"><span class="key-label">武器</span><span class="key-value" style="color:#666;">なし</span></div>
           <div class="key-group"><span class="key-label">盾</span><span class="key-value" style="color:#666;">なし</span></div>
+          <div class="key-group"><span class="key-label">腕輪</span><span class="key-value" style="color:#666;">なし</span></div>
         </div>
       </div>
       <div class="panel-section">
@@ -55,6 +56,12 @@
           <div class="key-group"><span class="key-label">Lv+10</span><span class="key-value">F6</span></div>
           <div class="key-group"><span class="key-label">アイテム</span><span class="key-value">F7</span></div>
           <div class="key-group"><span class="key-label">階段へ</span><span class="key-value">F8</span></div>
+        </div>
+      </div>
+      <div class="panel-section">
+        <div class="panel-title">サウンド</div>
+        <div class="panel-content">
+          <button id="mute-btn" onclick="var m=Sound.toggleMute();this.textContent=m?'🔇 OFF':'🔊 ON';" style="background:#1a1e2e;border:1px solid #444;color:#ccc;padding:4px 12px;cursor:pointer;border-radius:4px;font-size:14px;">🔊 ON</button>
         </div>
       </div>
       <div class="panel-section">
@@ -95,6 +102,7 @@
     </div>
   </div>
 
+  <script src="src/sound.js"></script>
   <script src="src/dungeon.js"></script>
   <script src="src/entity.js"></script>
   <script src="src/data/enemies.js"></script>

@@ -66,7 +66,8 @@ var TurnManager = (function() {
       // Natural HP regen only when satiety > 0
       if (!this.game.gameOver && p.satiety > 0 && p.hp < p.maxHp && p.hp > 0) {
         if (!p._regenCounter) p._regenCounter = 0;
-        p._regenCounter++;
+        var regenIncrement = (p.bracelet && p.bracelet.effect === 'regen') ? 2 : 1;
+        p._regenCounter += regenIncrement;
         var regenRate = Math.max(2, Math.floor(p.maxHp / 5));
         if (p._regenCounter >= regenRate) {
           p.hp = Math.min(p.maxHp, p.hp + 1);
