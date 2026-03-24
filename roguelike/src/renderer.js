@@ -128,7 +128,123 @@ var Renderer = (function() {
     return false;
   }
 
+  // Village tile colors
+  var VILLAGE_COLORS = {
+    0: '#333',        // wall
+    1: '#2d5a27',     // grass
+    2: '#8b7355',     // path
+    3: '#2a4a8a',     // water
+    4: '#5a4a3a',     // building
+    5: '#1a1a2e'      // dungeon entrance
+  };
+
+  Renderer.prototype.renderVillage = function(game) {
+    var ctx = this.ctx;
+    var map = game.villageMap;
+    var player = game.player;
+
+    ctx.imageSmoothingEnabled = false;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    // Camera centered on player
+    var camX = player.x - Math.floor(this.viewW / 2);
+    var camY = player.y - Math.floor(this.viewH / 2);
+    camX = Math.max(0, Math.min(camX, map.width - this.viewW));
+    camY = Math.max(0, Math.min(camY, map.height - this.viewH));
+
+    ctx.font = 'bold 16px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    for (var vy = 0; vy < this.viewH; vy++) {
+      for (var vx = 0; vx < this.viewW; vx++) {
+        var tx = camX + vx;
+        var ty = camY + vy;
+        if (tx < 0 || tx >= map.width || ty < 0 || ty >= map.height) continue;
+        var tile = map.grid[ty][tx];
+        var drawX = vx * TILE_SIZE;
+        var drawY = vy * TILE_SIZE;
+
+        ctx.fillStyle = VILLAGE_COLORS[tile] || '#000';
+        ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+
+        // Draw icons
+        if (tile === 4) {
+          ctx.fillStyle = '#7a6a5a';
+          ctx.fillText('█', drawX + TILE_SIZE / 2, drawY + TILE_SIZE / 2);
+        } else if (tile === 5) {
+          ctx.fillStyle = '#666';
+          ctx.fillText('▼', drawX + TILE_SIZE / 2, drawY + TILE_SIZE / 2);
+        } else if (tile === 3) {
+          ctx.fillStyle = '#4a7aba';
+          ctx.fillText('~', drawX + TILE_SIZE / 2, drawY + TILE_SIZE / 2);
+        }
+      }
+    }
+
+    // Draw NPCs
+    ctx.font = 'bold 18px monospace';
+    for (var i = 0; i < game.villageNpcs.length; i++) {
+      var npc = game.villageNpcs[i];
+      var nScreenX = (npc.x - camX) * TILE_SIZE;
+      var nScreenY = (npc.y - camY) * TILE_SIZE;
+      if (nScreenX >= 0 && nScreenX < this.canvas.width && nScreenY >= 0 && nScreenY < this.canvas.height) {
+        ctx.fillStyle = npc.color;
+        ctx.fillText(npc.char, nScreenX + TILE_SIZE / 2, nScreenY + TILE_SIZE / 2);
+        // Name tag
+        ctx.font = 'bold 9px monospace';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(npc.name, nScreenX + TILE_SIZE / 2, nScreenY - 4);
+        ctx.font = 'bold 18px monospace';
+      }
+    }
+
+    // Draw player
+    var pScreenX = (player.x - camX) * TILE_SIZE;
+    var pScreenY = (player.y - camY) * TILE_SIZE;
+    if (!drawSprite(ctx, 'player', pScreenX, pScreenY, false, true)) {
+      ctx.fillStyle = COLORS.player;
+      ctx.fillText(player.char, pScreenX + TILE_SIZE / 2, pScreenY + TILE_SIZE / 2);
+    }
+
+    // Village minimap
+    this._renderVillageMinimap(game, map, player);
+  };
+
+  Renderer.prototype._renderVillageMinimap = function(game, map, player) {
+    var ctx = this.miniCtx;
+    var t = this.miniTile;
+    this.miniCanvas.width = map.width * t;
+    this.miniCanvas.height = map.height * t;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, this.miniCanvas.width, this.miniCanvas.height);
+
+    for (var y = 0; y < map.height; y++) {
+      for (var x = 0; x < map.width; x++) {
+        var tile = map.grid[y][x];
+        ctx.fillStyle = VILLAGE_COLORS[tile] || '#000';
+        ctx.fillRect(x * t, y * t, t, t);
+      }
+    }
+    // NPCs
+    for (var i = 0; i < game.villageNpcs.length; i++) {
+      var npc = game.villageNpcs[i];
+      ctx.fillStyle = npc.color;
+      ctx.fillRect(npc.x * t, npc.y * t, t, t);
+    }
+    // Player
+    ctx.fillStyle = '#00e5ff';
+    ctx.fillRect(player.x * t - 1, player.y * t - 1, 6, 6);
+  };
+
   Renderer.prototype.render = function(game) {
+    // Delegate to village renderer if in village scene
+    if (game.scene === 'village') {
+      this.renderVillage(game);
+      return;
+    }
+
     var ctx = this.ctx;
     var dungeon = game.dungeon;
     var player = game.player;
@@ -150,8 +266,19 @@ var Renderer = (function() {
     camX = Math.max(0, Math.min(camX, dungeon.width - this.viewW));
     camY = Math.max(0, Math.min(camY, dungeon.height - this.viewH));
 
+    // Screen shake offset
+    var shakeX = 0, shakeY = 0;
+    if (game.shakeFrames > 0) {
+      shakeX = Math.floor(Math.random() * 5) - 2;
+      shakeY = Math.floor(Math.random() * 5) - 2;
+      game.shakeFrames--;
+    }
+
+    ctx.save();
+    ctx.translate(shakeX, shakeY);
+
     ctx.fillStyle = COLORS.unexplored;
-    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    ctx.fillRect(-2, -2, this.canvas.width + 4, this.canvas.height + 4);
 
     ctx.font = 'bold 16px monospace';
     ctx.textAlign = 'center';
@@ -344,6 +471,49 @@ var Renderer = (function() {
       ctx.font = 'bold 18px monospace';
       ctx.fillText(player.char, playerScreenX + TILE_SIZE / 2, playerScreenY + TILE_SIZE / 2);
     }
+
+    // Flash tiles (white flash on attacked tiles)
+    if (game.flashTiles && game.flashTiles.length > 0) {
+      for (var fi = 0; fi < game.flashTiles.length; fi++) {
+        var ft = game.flashTiles[fi];
+        var ftx = (ft.x - camX) * TILE_SIZE;
+        var fty = (ft.y - camY) * TILE_SIZE;
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        ctx.fillRect(ftx, fty, TILE_SIZE, TILE_SIZE);
+      }
+      game.flashTiles = [];
+    }
+
+    // Screen flash (monster house etc)
+    if (game.screenFlashFrames > 0) {
+      ctx.fillStyle = game.screenFlashColor;
+      ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      game.screenFlashFrames--;
+    }
+
+    // Floating text effects
+    if (game.floatingTexts && game.floatingTexts.length > 0) {
+      ctx.font = 'bold 14px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (var fti = 0; fti < game.floatingTexts.length; fti++) {
+        var ft2 = game.floatingTexts[fti];
+        var ftDrawX = (ft2.x - camX) * TILE_SIZE + TILE_SIZE / 2;
+        var ftDrawY = (ft2.y - camY) * TILE_SIZE + TILE_SIZE / 2 - ft2.frame * 1.2;
+        var alpha = Math.max(0, 1 - ft2.frame / 20);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = ft2.color;
+        // Shadow for readability
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = 3;
+        ctx.fillText(ft2.text, ftDrawX, ftDrawY);
+        ctx.shadowBlur = 0;
+      }
+      ctx.globalAlpha = 1.0;
+      game.tickFloatingTexts();
+    }
+
+    ctx.restore(); // restore from shake translate
 
     // Minimap
     this.renderMinimap(game, dungeon, player, enemies, items, exploredArr, visibleArr, mapRevealed);

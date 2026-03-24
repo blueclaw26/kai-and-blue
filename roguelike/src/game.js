@@ -53,7 +53,94 @@ var Game = (function() {
     this.extinctionMode = false;
     this.extinctionCandidates = [];
     this.extinctionSelection = 0;
+    // UI effects
+    this.floatingTexts = [];
+    this.shakeFrames = 0;
+    this.flashTiles = [];
+    this.screenFlashFrames = 0;
+    this.screenFlashColor = 'rgba(255,0,0,0.3)';
+    // Scene management
+    this.scene = 'village'; // 'village' or 'dungeon'
+    // Village storage (persists across deaths via localStorage)
+    this.storage = [];
+    this._loadStorage();
+    // Village state
+    this.villageMap = null;
+    this.villageNpcs = [];
+    this.villageDialogMode = null; // { npc: npcObj } when talking
+    this.storageMode = false;
+    this.storageSelection = 0;
+    this.storageAction = null; // 'put' or 'take'
+    this.dungeonConfirm = false; // confirming dungeon entry
   }
+
+  // Load storage from localStorage
+  Game.prototype._loadStorage = function() {
+    try {
+      var data = localStorage.getItem('roguelike_storage');
+      if (data) {
+        var parsed = JSON.parse(data);
+        // Reconstruct Item objects from saved data
+        this.storage = [];
+        for (var i = 0; i < parsed.length; i++) {
+          var saved = parsed[i];
+          var item = new Item(0, 0, saved.dataKey);
+          if (saved.plus !== undefined) item.plus = saved.plus;
+          if (saved.seals) item.seals = saved.seals;
+          if (saved.identified) item.identified = true;
+          if (saved.count) item.count = saved.count;
+          if (saved.uses !== undefined) item.uses = saved.uses;
+          this.storage.push(item);
+        }
+      }
+      // Load identified types
+      var idData = localStorage.getItem('roguelike_identified');
+      if (idData) {
+        var idArr = JSON.parse(idData);
+        for (var j = 0; j < idArr.length; j++) {
+          window.IDENTIFIED_TYPES.add(idArr[j]);
+        }
+      }
+    } catch(e) { /* ignore */ }
+  };
+
+  // Save storage to localStorage
+  Game.prototype._saveStorage = function() {
+    try {
+      var data = [];
+      for (var i = 0; i < this.storage.length; i++) {
+        var item = this.storage[i];
+        data.push({
+          dataKey: item.dataKey,
+          plus: item.plus || 0,
+          seals: item.seals || [],
+          identified: item.identified || false,
+          count: item.count || 0,
+          uses: item.uses !== undefined ? item.uses : undefined
+        });
+      }
+      localStorage.setItem('roguelike_storage', JSON.stringify(data));
+      // Save identified types
+      var idArr = [];
+      window.IDENTIFIED_TYPES.forEach(function(v) { idArr.push(v); });
+      localStorage.setItem('roguelike_identified', JSON.stringify(idArr));
+    } catch(e) { /* ignore */ }
+  };
+
+  // Add a floating text effect
+  Game.prototype.addFloatingText = function(x, y, text, color) {
+    this.floatingTexts.push({ x: x, y: y, text: text, color: color, frame: 0 });
+  };
+
+  // Tick floating texts (call each render frame)
+  Game.prototype.tickFloatingTexts = function() {
+    for (var i = this.floatingTexts.length - 1; i >= 0; i--) {
+      this.floatingTexts[i].frame++;
+      if (this.floatingTexts[i].frame > 20) {
+        this.floatingTexts.splice(i, 1);
+      }
+    }
+  };
 
   Game.prototype.init = function(ui) {
     this.ui = ui;
@@ -63,6 +150,119 @@ var Game = (function() {
     this.extinctEnemies = new Set();
     this.newFloor();
     ui.addMessage('最果ての間へ... 冒険が始まる', 'system');
+  };
+
+  // Initialize village
+  Game.prototype.initVillage = function(ui) {
+    this.ui = ui;
+    initIdentification();
+    this.scene = 'village';
+    this._buildVillageMap();
+    // Create player if needed
+    if (!this.player) {
+      this.player = new Player(10, 10);
+    } else {
+      this.player.moveTo(10, 10);
+    }
+    ui.addMessage('拠点の村に戻った', 'system');
+  };
+
+  // Build the village map (hardcoded)
+  Game.prototype._buildVillageMap = function() {
+    var W = 20, H = 15;
+    // 0=wall, 1=grass, 2=path, 3=water, 4=building, 5=dungeon_entrance
+    var layout = [
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+      [0,1,4,4,4,2,1,1,1,1,1,4,4,4,1,1,1,1,1,0],
+      [0,1,4,4,4,2,1,1,1,1,1,4,4,4,1,1,3,3,1,0],
+      [0,1,4,4,4,2,1,1,1,1,1,4,4,4,1,1,3,3,1,0],
+      [0,1,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,1,0],
+      [0,1,1,1,1,2,1,1,1,1,1,1,2,1,1,1,1,1,1,0],
+      [0,1,1,1,1,2,1,1,1,1,1,1,2,1,4,4,4,1,1,0],
+      [0,1,1,1,1,2,1,1,1,1,1,1,2,1,4,4,4,1,1,0],
+      [0,1,1,1,1,2,2,2,2,2,2,2,2,1,4,4,4,1,1,0],
+      [0,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,0],
+      [0,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,0],
+      [0,1,1,1,1,1,1,1,5,1,1,1,1,1,1,1,1,1,1,0],
+      [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    ];
+    this.villageMap = { width: W, height: H, grid: layout };
+    // NPCs
+    this.villageNpcs = [
+      { x: 3, y: 3, name: '倉庫番', char: '倉', color: '#e8a44a', type: 'storage',
+        dialogue: '倉庫を使うかい？ アイテムを預けたり引き出したりできるよ。' },
+      { x: 12, y: 3, name: '老人', char: '老', color: '#90caf9', type: 'talk',
+        dialogue: '強い武器を見つけたら倉庫に預けておくといいぞ。' },
+      { x: 15, y: 8, name: '村人', char: '人', color: '#a5d6a7', type: 'talk',
+        dialogue: '気をつけてな！ 無理せず戻ってこいよ。' }
+    ];
+  };
+
+  // Move player in village
+  Game.prototype.villageMove = function(dx, dy) {
+    var p = this.player;
+    var nx = p.x + dx;
+    var ny = p.y + dy;
+    var map = this.villageMap;
+    if (nx < 0 || nx >= map.width || ny < 0 || ny >= map.height) return false;
+    var tile = map.grid[ny][nx];
+    if (tile === 0 || tile === 4 || tile === 3) return false; // wall/building/water blocked
+
+    // Check for NPC collision
+    for (var i = 0; i < this.villageNpcs.length; i++) {
+      var npc = this.villageNpcs[i];
+      if (npc.x === nx && npc.y === ny) return false;
+    }
+
+    p.moveTo(nx, ny);
+
+    // Check dungeon entrance
+    if (tile === 5) {
+      this.dungeonConfirm = true;
+      this.ui.addMessage('最果ての間に挑みますか？ (y/n)', 'system');
+    }
+    return true;
+  };
+
+  // Get adjacent NPC (for talking)
+  Game.prototype.getAdjacentNpc = function() {
+    var p = this.player;
+    for (var i = 0; i < this.villageNpcs.length; i++) {
+      var npc = this.villageNpcs[i];
+      if (Math.abs(npc.x - p.x) <= 1 && Math.abs(npc.y - p.y) <= 1 && !(npc.x === p.x && npc.y === p.y)) {
+        return npc;
+      }
+    }
+    return null;
+  };
+
+  // Start dungeon from village
+  Game.prototype.enterDungeon = function() {
+    this.scene = 'dungeon';
+    this.floorNum = 1;
+    this.extinctEnemies = new Set();
+    // Reset player
+    var oldPlayer = this.player;
+    this.player = new Player(0, 0); // will be repositioned in newFloor
+    // Keep storage items if taken out
+    this.newFloor();
+    this.ui.addMessage('最果ての間へ... 冒険が始まる', 'system');
+  };
+
+  // Return to village after death
+  Game.prototype.returnToVillage = function() {
+    this.gameOver = false;
+    this.victory = false;
+    this.scene = 'village';
+    this._buildVillageMap();
+    this.player = new Player(10, 10);
+    this.floatingTexts = [];
+    this.shakeFrames = 0;
+    this.flashTiles = [];
+    this._saveStorage();
+    this.ui.addMessage('村に戻った... 次こそは...', 'system');
   };
 
   // Get room at position (for room-based FOV)
@@ -359,6 +559,9 @@ var Game = (function() {
 
     Sound.play('thief');
     this.ui.addMessage('モンスターハウスだ！ 敵が一斉に目を覚ました！', 'damage');
+    // Red flash effect
+    this.screenFlashFrames = 3;
+    this.screenFlashColor = 'rgba(255,0,0,0.3)';
     // Switch to danger BGM
     if (typeof Sound !== 'undefined' && Sound.bgm) Sound.bgm.switchTrack('danger');
 
@@ -1006,6 +1209,9 @@ var Game = (function() {
 
     Sound.play('attack');
     this.ui.addMessage(enemy.name + 'に ' + damage + ' ダメージを与えた！', 'attack');
+    // UI effects: damage popup and flash
+    this.addFloatingText(enemy.x, enemy.y, '-' + damage, '#ef5350');
+    this.flashTiles.push({ x: enemy.x, y: enemy.y });
 
     if (died) {
       this.player.enemiesKilled++;
@@ -1134,7 +1340,14 @@ var Game = (function() {
     }
 
     if (player.godMode) damage = 0;
-    if (damage > 0) Sound.play('damage');
+    if (damage > 0) {
+      Sound.play('damage');
+      this.addFloatingText(player.x, player.y, '-' + damage, '#ef5350');
+      // Screen shake on heavy damage
+      if (damage > 10) {
+        this.shakeFrames = 5;
+      }
+    }
     player.hp -= damage;
 
     // --- New enemy specials on attack ---
@@ -1315,6 +1528,16 @@ var Game = (function() {
       this.newFloor();
       Sound.play('stairs');
       this.ui.addMessage('地下' + this.floorNum + 'の間に降り立った...', 'system');
+      // Floor transition fade effect
+      var canvas = document.getElementById('game-canvas');
+      if (canvas) {
+        canvas.style.transition = 'opacity 0.15s';
+        canvas.style.opacity = '0';
+        setTimeout(function() {
+          canvas.style.opacity = '1';
+          setTimeout(function() { canvas.style.transition = ''; }, 150);
+        }, 150);
+      }
       // Start danger BGM on deep floors
       if (typeof Sound !== 'undefined' && Sound.bgm) {
         if (this.floorNum >= 50) {

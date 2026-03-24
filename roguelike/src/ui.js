@@ -65,6 +65,14 @@ var UI = (function() {
   };
 
   UI.prototype.updateStatus = function(game) {
+    if (game.scene === 'village') {
+      this.statusEl.innerHTML = '<span style="color:#66bb6a;">拠点の村</span> | ' +
+        '持ち物: ' + game.player.inventory.length + '/20 | ' +
+        '<span style="color:#ffd700;">所持金: ' + game.player.gold + 'ギタン</span> | ' +
+        '倉庫: ' + game.storage.length + '/20';
+      this._updateSidePanel(game);
+      return;
+    }
     var player = game.player;
     var satiety = Math.floor(player.satiety);
     var satietyColor;

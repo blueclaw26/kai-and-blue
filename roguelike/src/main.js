@@ -25,15 +25,16 @@
       var ui = new UI(statusEl, logEl);
       var turnManager = new TurnManager(game, renderer, ui);
 
-      game.init(ui);
+      // Start in village
+      game.initVillage(ui);
 
       // Initial render
       renderer.render(game);
       ui.updateStatus(game);
 
-      // Start BGM
+      // Start BGM (village calm tune)
       if (Sound.bgm) {
-        Sound.bgm.play('dungeon');
+        Sound.bgm.play('village');
       }
 
       // Expose globals for debug/autoplay
@@ -46,18 +47,28 @@
       // Bind input
       new Input(turnManager, game);
 
-      // Restart buttons
+      // Restart button → return to village
       var restartBtn = document.getElementById('restart-btn');
       if (restartBtn) {
         restartBtn.addEventListener('click', function() {
-          window.location.reload();
+          var goEl = document.getElementById('game-over-overlay');
+          if (goEl) goEl.style.display = 'none';
+          game.returnToVillage();
+          renderer.render(game);
+          ui.updateStatus(game);
+          if (Sound.bgm) Sound.bgm.switchTrack('village');
         });
       }
 
       var victoryRestartBtn = document.getElementById('victory-restart-btn');
       if (victoryRestartBtn) {
         victoryRestartBtn.addEventListener('click', function() {
-          window.location.reload();
+          var voEl = document.getElementById('victory-overlay');
+          if (voEl) voEl.style.display = 'none';
+          game.returnToVillage();
+          renderer.render(game);
+          ui.updateStatus(game);
+          if (Sound.bgm) Sound.bgm.switchTrack('village');
         });
       }
     }

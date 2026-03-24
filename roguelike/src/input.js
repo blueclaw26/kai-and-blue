@@ -47,6 +47,12 @@ var Input = (function() {
   }
 
   Input.prototype.handleKey = function(e) {
+    // Village scene handling
+    if (this.game.scene === 'village') {
+      this._handleVillageKey(e);
+      return;
+    }
+
     if (this.game.gameOver || this.game.victory) return;
 
     // Sell confirmation mode (y/n)
@@ -760,6 +766,294 @@ var Input = (function() {
     html += '[Enter/e]取り出す [↑↓]選択 [ESC]キャンセル';
     html += '</div>';
 
+    box.innerHTML = html;
+    ui.inventoryEl.style.display = 'flex';
+  };
+
+  // === Village input handling ===
+  Input.prototype._handleVillageKey = function(e) {
+    var game = this.game;
+    var ui = game.ui;
+    var key = e.key;
+    var code = e.code;
+
+    if (PREVENT_DEFAULT.indexOf(code) !== -1) {
+      e.preventDefault();
+    }
+
+    // Storage mode
+    if (game.storageMode) {
+      this._handleStorageKey(e);
+      return;
+    }
+
+    // Dungeon entrance confirmation
+    if (game.dungeonConfirm) {
+      e.preventDefault();
+      if (key === 'y' || key === 'Y') {
+        game.dungeonConfirm = false;
+        game.enterDungeon();
+        if (window._renderer) window._renderer.render(game);
+        if (Sound.bgm) Sound.bgm.switchTrack('dungeon');
+        ui.updateStatus(game);
+      } else if (key === 'n' || key === 'N' || key === 'Escape') {
+        game.dungeonConfirm = false;
+        ui.addMessage('やめておこう', 'system');
+      }
+      return;
+    }
+
+    // Village dialog mode
+    if (game.villageDialogMode) {
+      e.preventDefault();
+      var npc = game.villageDialogMode;
+      game.villageDialogMode = null;
+      if (npc.type === 'storage' && (key === 'y' || key === 'Y' || key === 'Enter')) {
+        game.storageMode = true;
+        game.storageSelection = 0;
+        game.storageAction = null;
+        this._renderStorageUI();
+        return;
+      }
+      // Just dismiss
+      return;
+    }
+
+    // Movement
+    var dir = KEY_MAP[code] || KEY_MAP[key];
+    if (dir) {
+      e.preventDefault();
+      game.villageMove(dir[0], dir[1]);
+      if (window._renderer) window._renderer.render(game);
+      ui.updateStatus(game);
+      return;
+    }
+
+    // Talk to NPC (Enter key)
+    if (key === 'Enter') {
+      e.preventDefault();
+      var npc = game.getAdjacentNpc();
+      if (npc) {
+        ui.addMessage(npc.name + '「' + npc.dialogue + '」', 'system');
+        if (npc.type === 'storage') {
+          ui.addMessage('倉庫を使いますか？ (y/n)', 'system');
+          game.villageDialogMode = npc;
+        }
+      }
+      return;
+    }
+
+    // Open inventory in village
+    if (key === 'i' || key === 'I') {
+      e.preventDefault();
+      game.inventoryOpen = true;
+      game.inventorySelection = 0;
+      ui.renderInventory(game);
+      return;
+    }
+  };
+
+  // Storage UI
+  Input.prototype._handleStorageKey = function(e) {
+    e.preventDefault();
+    var game = this.game;
+    var ui = game.ui;
+    var key = e.key;
+
+    if (key === 'Escape') {
+      game.storageMode = false;
+      game.storageAction = null;
+      ui.hideInventory();
+      game._saveStorage();
+      return;
+    }
+
+    if (!game.storageAction) {
+      // Main storage menu: choose put or take
+      if (key === 'p' || key === 'P' || key === '1') {
+        if (game.player.inventory.length === 0) {
+          ui.addMessage('預けるアイテムがない', 'system');
+          return;
+        }
+        if (game.storage.length >= 20) {
+          ui.addMessage('倉庫がいっぱいだ（最大20個）', 'system');
+          return;
+        }
+        game.storageAction = 'put';
+        game.storageSelection = 0;
+        this._renderStoragePutUI();
+        return;
+      }
+      if (key === 't' || key === 'T' || key === '2') {
+        if (game.storage.length === 0) {
+          ui.addMessage('倉庫は空だ', 'system');
+          return;
+        }
+        if (game.player.inventory.length >= 20) {
+          ui.addMessage('持ち物がいっぱいだ', 'system');
+          return;
+        }
+        game.storageAction = 'take';
+        game.storageSelection = 0;
+        this._renderStorageTakeUI();
+        return;
+      }
+      return;
+    }
+
+    // Put/Take selection
+    if (key === 'ArrowUp' || key === 'k') {
+      game.storageSelection = Math.max(0, game.storageSelection - 1);
+      if (game.storageAction === 'put') this._renderStoragePutUI();
+      else this._renderStorageTakeUI();
+      return;
+    }
+    if (key === 'ArrowDown' || key === 'j') {
+      var maxSel = game.storageAction === 'put' ? game.player.inventory.length - 1 : game.storage.length - 1;
+      game.storageSelection = Math.min(maxSel, game.storageSelection + 1);
+      if (game.storageAction === 'put') this._renderStoragePutUI();
+      else this._renderStorageTakeUI();
+      return;
+    }
+
+    // Letter selection
+    var letterIdx = SLOT_LETTERS.indexOf(key);
+    if (letterIdx !== -1) {
+      var maxItems = game.storageAction === 'put' ? game.player.inventory.length : game.storage.length;
+      if (letterIdx < maxItems) {
+        game.storageSelection = letterIdx;
+        if (game.storageAction === 'put') this._renderStoragePutUI();
+        else this._renderStorageTakeUI();
+      }
+      return;
+    }
+
+    if (key === 'Enter' || key === 'e') {
+      if (game.storageAction === 'put') {
+        if (game.player.inventory.length === 0) return;
+        if (game.storage.length >= 20) {
+          ui.addMessage('倉庫がいっぱいだ', 'system');
+          return;
+        }
+        var item = game.player.inventory[game.storageSelection];
+        if (!item) return;
+        // Unequip if equipped
+        if (game.player.weapon === item) { game.player.weapon = null; game.player._recalcStats(); }
+        if (game.player.shield === item) { game.player.shield = null; game.player._recalcStats(); }
+        if (game.player.bracelet === item) { game.player.bracelet = null; game.player._recalcStats(); }
+        game.player.removeFromInventory(item);
+        game.storage.push(item);
+        game._saveStorage();
+        ui.addMessage(item.getDisplayName() + 'を倉庫に預けた', 'pickup');
+        game.storageSelection = Math.min(game.storageSelection, game.player.inventory.length - 1);
+        if (game.storageSelection < 0) game.storageSelection = 0;
+        this._renderStoragePutUI();
+      } else if (game.storageAction === 'take') {
+        if (game.storage.length === 0) return;
+        if (game.player.inventory.length >= 20) {
+          ui.addMessage('持ち物がいっぱいだ', 'system');
+          return;
+        }
+        var item = game.storage[game.storageSelection];
+        if (!item) return;
+        game.storage.splice(game.storageSelection, 1);
+        item.identified = true; // storage items are identified
+        game.player.inventory.push(item);
+        game._saveStorage();
+        ui.addMessage(item.getDisplayName() + 'を引き出した', 'pickup');
+        game.storageSelection = Math.min(game.storageSelection, game.storage.length - 1);
+        if (game.storageSelection < 0) game.storageSelection = 0;
+        this._renderStorageTakeUI();
+      }
+      return;
+    }
+
+    // Back to main storage menu
+    if (key === 'Backspace' || key === 'q') {
+      game.storageAction = null;
+      this._renderStorageUI();
+      return;
+    }
+  };
+
+  Input.prototype._renderStorageUI = function() {
+    var game = this.game;
+    var ui = game.ui;
+    var box = ui.inventoryBox;
+
+    var html = '<div style="color:#e8a44a;font-size:18px;margin-bottom:12px;border-bottom:1px solid #333;padding-bottom:8px;">倉庫 (' + game.storage.length + '/20)</div>';
+    html += '<div style="padding:8px 0;">';
+    html += '<div style="padding:4px 8px;cursor:pointer;">[p/1] アイテムを預ける</div>';
+    html += '<div style="padding:4px 8px;cursor:pointer;">[t/2] アイテムを引き出す</div>';
+    html += '</div>';
+
+    if (game.storage.length > 0) {
+      html += '<div style="color:#888;font-size:12px;margin-top:8px;border-top:1px solid #333;padding-top:8px;">倉庫の中身:</div>';
+      for (var i = 0; i < game.storage.length; i++) {
+        var item = game.storage[i];
+        html += '<div style="padding:2px 8px;color:#aaa;font-size:12px;">';
+        html += '<span style="color:' + item.color + ';">' + item.char + '</span> ';
+        html += item.getDisplayName();
+        html += '</div>';
+      }
+    }
+
+    html += '<div style="color:#888;font-size:12px;margin-top:16px;border-top:1px solid #333;padding-top:8px;">[ESC]閉じる</div>';
+    box.innerHTML = html;
+    ui.inventoryEl.style.display = 'flex';
+  };
+
+  Input.prototype._renderStoragePutUI = function() {
+    var game = this.game;
+    var ui = game.ui;
+    var box = ui.inventoryBox;
+    var sel = game.storageSelection;
+    var player = game.player;
+
+    var html = '<div style="color:#e8a44a;font-size:18px;margin-bottom:12px;border-bottom:1px solid #333;padding-bottom:8px;">預けるアイテムを選べ</div>';
+
+    for (var i = 0; i < player.inventory.length; i++) {
+      var item = player.inventory[i];
+      var isSelected = (i === sel);
+      var equipped = '';
+      if (player.weapon === item) equipped = ' <span style="color:#e8a44a;">[装備中]</span>';
+      if (player.shield === item) equipped = ' <span style="color:#e8a44a;">[装備中]</span>';
+      if (player.bracelet === item) equipped = ' <span style="color:#e8a44a;">[装備中]</span>';
+      var bgColor = isSelected ? '#1a2a3a' : 'transparent';
+      var borderLeft = isSelected ? '3px solid #4fc3f7' : '3px solid transparent';
+      html += '<div style="padding:4px 8px;margin:2px 0;background:' + bgColor + ';border-left:' + borderLeft + ';">';
+      html += '<span style="color:#888;">' + SLOT_LETTERS[i] + ')</span> ';
+      html += '<span style="color:' + item.color + ';">' + item.char + '</span> ';
+      html += item.getDisplayName() + equipped;
+      html += '</div>';
+    }
+
+    html += '<div style="color:#888;font-size:12px;margin-top:16px;border-top:1px solid #333;padding-top:8px;">[Enter/e]預ける [↑↓]選択 [q]戻る [ESC]閉じる</div>';
+    box.innerHTML = html;
+    ui.inventoryEl.style.display = 'flex';
+  };
+
+  Input.prototype._renderStorageTakeUI = function() {
+    var game = this.game;
+    var ui = game.ui;
+    var box = ui.inventoryBox;
+    var sel = game.storageSelection;
+
+    var html = '<div style="color:#e8a44a;font-size:18px;margin-bottom:12px;border-bottom:1px solid #333;padding-bottom:8px;">引き出すアイテムを選べ</div>';
+
+    for (var i = 0; i < game.storage.length; i++) {
+      var item = game.storage[i];
+      var isSelected = (i === sel);
+      var bgColor = isSelected ? '#1a2a3a' : 'transparent';
+      var borderLeft = isSelected ? '3px solid #4fc3f7' : '3px solid transparent';
+      html += '<div style="padding:4px 8px;margin:2px 0;background:' + bgColor + ';border-left:' + borderLeft + ';">';
+      html += '<span style="color:#888;">' + SLOT_LETTERS[i] + ')</span> ';
+      html += '<span style="color:' + item.color + ';">' + item.char + '</span> ';
+      html += item.getDisplayName();
+      html += '</div>';
+    }
+
+    html += '<div style="color:#888;font-size:12px;margin-top:16px;border-top:1px solid #333;padding-top:8px;">[Enter/e]引き出す [↑↓]選択 [q]戻る [ESC]閉じる</div>';
     box.innerHTML = html;
     ui.inventoryEl.style.display = 'flex';
   };

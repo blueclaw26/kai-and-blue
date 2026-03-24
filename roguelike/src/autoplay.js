@@ -123,29 +123,37 @@ var AutoPlayer = (function() {
       if (this._useHealItem()) return;
     }
 
-    // Priority 7: Eat if satiety < 30
-    if (player.satiety < 30) {
+    // Priority 7: Eat if satiety < 40 (more aggressive than before)
+    if (player.satiety < 40) {
       if (this._useFood()) return;
     }
 
-    // Priority 8: Equip best weapon/shield (doesn't consume turn by itself, just sets up)
+    // Priority 8: If in shop, leave immediately (don't wander in shop)
+    if (this._isInShop()) {
+      if (this._leaveShop()) return;
+    }
+
+    // Priority 9: Equip best weapon/shield (no turn cost - direct equip)
     this._equipBest();
 
-    // Priority 9: If adjacent enemy, attack it
+    // Priority 10: Try synthesis if we have 合成の壺
+    if (this._trySynthesis()) return;
+
+    // Priority 11: If adjacent enemy, attack it
     var adjEnemy = this._getAdjacentEnemy();
     if (adjEnemy) {
       this._moveToward(adjEnemy.x, adjEnemy.y);
       return;
     }
 
-    // Priority 10: If nearby visible enemy, move toward it
+    // Priority 12: If nearby visible enemy, move toward it
     var nearEnemy = this._getNearestVisibleEnemy();
     if (nearEnemy) {
       this._moveToward(nearEnemy.x, nearEnemy.y);
       return;
     }
 
-    // Priority 11: Pick up items on current tile
+    // Priority 13: Pick up items on current tile
     var itemHere = game.getItemAt(player.x, player.y);
     if (itemHere && !itemHere.shopItem && player.inventory.length < 20) {
       var g = game;
@@ -155,13 +163,13 @@ var AutoPlayer = (function() {
       return;
     }
 
-    // Priority 12: If on stairs, descend
+    // Priority 14: If on stairs, descend
     if (game.dungeon.grid[player.y][player.x] === 3) { // STAIRS_DOWN
       this._doDescend();
       return;
     }
 
-    // Priority 13: Navigate to stairs (if known)
+    // Priority 15: Navigate to stairs (if known)
     var stairsPath = this._findPathToStairs();
     if (stairsPath && stairsPath.length > 0) {
       var step = stairsPath[0];
@@ -169,7 +177,7 @@ var AutoPlayer = (function() {
       return;
     }
 
-    // Priority 14: Explore (move toward unexplored area)
+    // Priority 16: Explore (BFS to nearest unexplored area)
     if (this._explore()) return;
 
     // Fallback: random move
@@ -265,6 +273,144 @@ var AutoPlayer = (function() {
 
   // ===== AI Helpers =====
 
+  // Check if player is currently in the shop room
+  AutoPlayer.prototype._isInShop = function() {
+    var game = this.game;
+    var player = game.player;
+    return game.isInShop(player.x, player.y);
+  };
+
+  // Leave the shop: pathfind to nearest non-shop tile
+  AutoPlayer.prototype._leaveShop = function() {
+    var game = this.game;
+    var player = game.player;
+    var dungeon = game.dungeon;
+    var grid = dungeon.grid;
+
+    // BFS to find nearest non-shop walkable tile
+    var visited = {};
+    var queue = [[player.x, player.y, []]];
+    visited[player.x + ',' + player.y] = true;
+    var dirs = [[0, -1], [0, 1], [-1, 0], [1, 0], [-1, -1], [1, -1], [-1, 1], [1, 1]];
+
+    while (queue.length > 0) {
+      var cur = queue.shift();
+      var cx = cur[0], cy = cur[1], path = cur[2];
+
+      // Found a non-shop tile
+      if (!game.isInShop(cx, cy) && path.length > 0) {
+        this._moveTo(path[0][0], path[0][1]);
+        return true;
+      }
+
+      for (var d = 0; d < dirs.length; d++) {
+        var nx = cx + dirs[d][0];
+        var ny = cy + dirs[d][1];
+        var key = nx + ',' + ny;
+
+        if (nx < 0 || nx >= dungeon.width || ny < 0 || ny >= dungeon.height) continue;
+        if (visited[key]) continue;
+        if (grid[ny][nx] === 0) continue; // WALL
+
+        visited[key] = true;
+        var newPath = path.concat([[nx, ny]]);
+        queue.push([nx, ny, newPath]);
+      }
+    }
+    return false;
+  };
+
+  // Try to use synthesis pot if we have one and suitable items
+  AutoPlayer.prototype._trySynthesis = function() {
+    var player = this.game.player;
+    var game = this.game;
+
+    // Find a synthesis pot
+    var synthPot = null;
+    for (var i = 0; i < player.inventory.length; i++) {
+      var item = player.inventory[i];
+      if (item.type === 'pot' && item.effect === 'synthesis') {
+        var remaining = item.capacity - (item.contents ? item.contents.length : 0);
+        if (remaining >= 2) {
+          synthPot = item;
+          break;
+        }
+      }
+    }
+    if (!synthPot) return false;
+
+    // Find spare weapons (not equipped) to synthesize
+    var spareWeapons = [];
+    var spareShields = [];
+    for (var j = 0; j < player.inventory.length; j++) {
+      var it = player.inventory[j];
+      if (it.type === 'weapon' && it !== player.weapon) spareWeapons.push(it);
+      if (it.type === 'shield' && it !== player.shield) spareShields.push(it);
+    }
+
+    // Need at least equipped + 1 spare, or 2+ spares
+    var canSynthWeapons = player.weapon && spareWeapons.length >= 1;
+    var canSynthShields = player.shield && spareShields.length >= 1;
+
+    if (canSynthWeapons) {
+      // Put equipped weapon first, then spare
+      var pot = synthPot;
+      var w = player.weapon;
+      // Unequip first
+      player.weapon = null;
+      player._recalcStats();
+      game.putItemInPot(pot, w);
+      if (spareWeapons[0]) {
+        game.putItemInPot(pot, spareWeapons[0]);
+      }
+      // Take the synthesized weapon back out
+      if (pot.contents && pot.contents.length > 0) {
+        for (var k = 0; k < pot.contents.length; k++) {
+          if (pot.contents[k].type === 'weapon') {
+            game.takeItemFromPot(pot, k);
+            // Re-equip
+            var newWeapon = player.inventory[player.inventory.length - 1];
+            if (newWeapon && newWeapon.type === 'weapon') {
+              player.weapon = newWeapon;
+              player._recalcStats();
+            }
+            break;
+          }
+        }
+      }
+      this._doWait(); // consume a turn
+      return true;
+    }
+
+    if (canSynthShields) {
+      var pot = synthPot;
+      var s = player.shield;
+      player.shield = null;
+      player._recalcStats();
+      game.putItemInPot(pot, s);
+      if (spareShields[0]) {
+        game.putItemInPot(pot, spareShields[0]);
+      }
+      if (pot.contents && pot.contents.length > 0) {
+        for (var k = 0; k < pot.contents.length; k++) {
+          if (pot.contents[k].type === 'shield') {
+            game.takeItemFromPot(pot, k);
+            var newShield = player.inventory[player.inventory.length - 1];
+            if (newShield && newShield.type === 'shield') {
+              player.shield = newShield;
+              player._recalcStats();
+            }
+            break;
+          }
+        }
+      }
+      this._doWait();
+      return true;
+    }
+
+    return false;
+  };
+
   AutoPlayer.prototype._getAdjacentEnemy = function() {
     var p = this.game.player;
     var closest = null;
@@ -306,12 +452,10 @@ var AutoPlayer = (function() {
   AutoPlayer.prototype._findPathToStairs = function() {
     var game = this.game;
     var dungeon = game.dungeon;
-    var grid = dungeon.grid;
     var stairs = dungeon.stairs;
     var p = game.player;
 
     // Check if stairs position is explored (known)
-    var stairsKey = stairs.x + ',' + stairs.y;
     if (!game.explored[stairs.y][stairs.x]) return null;
 
     // BFS from player to stairs
@@ -373,41 +517,45 @@ var AutoPlayer = (function() {
     var grid = dungeon.grid;
     var explored = game.explored;
 
-    // Find nearest unexplored walkable tile adjacent to an explored tile
-    var bestTarget = null;
-    var bestDist = Infinity;
+    // BFS from player to find nearest unexplored walkable tile
+    var visited = {};
+    var queue = [[p.x, p.y, []]];
+    visited[p.x + ',' + p.y] = true;
+    var dirs = [[0, -1], [0, 1], [-1, 0], [1, 0], [-1, -1], [1, -1], [-1, 1], [1, 1]];
 
-    for (var y = 0; y < dungeon.height; y++) {
-      for (var x = 0; x < dungeon.width; x++) {
-        if (grid[y][x] === 0) continue; // WALL
-        if (explored[y][x]) continue;
+    while (queue.length > 0) {
+      var cur = queue.shift();
+      var cx = cur[0], cy = cur[1], path = cur[2];
 
-        // Check if adjacent to explored
-        var adjacentExplored = false;
-        var adjDirs = [[0, -1], [0, 1], [-1, 0], [1, 0]];
-        for (var d = 0; d < adjDirs.length; d++) {
-          var ax = x + adjDirs[d][0];
-          var ay = y + adjDirs[d][1];
-          if (ay >= 0 && ay < dungeon.height && ax >= 0 && ax < dungeon.width && explored[ay][ax]) {
-            adjacentExplored = true;
+      // Found an unexplored non-wall tile
+      if (!explored[cy][cx] && grid[cy][cx] !== 0 && path.length > 0) {
+        this._moveTo(path[0][0], path[0][1]);
+        return true;
+      }
+
+      for (var d = 0; d < dirs.length; d++) {
+        var nx = cx + dirs[d][0];
+        var ny = cy + dirs[d][1];
+        var key = nx + ',' + ny;
+
+        if (nx < 0 || nx >= dungeon.width || ny < 0 || ny >= dungeon.height) continue;
+        if (visited[key]) continue;
+        if (grid[ny][nx] === 0) continue; // WALL
+
+        // Don't path through enemies
+        var hasEnemy = false;
+        for (var i = 0; i < game.enemies.length; i++) {
+          var e = game.enemies[i];
+          if (!e.dead && e.x === nx && e.y === ny) {
+            hasEnemy = true;
             break;
           }
         }
-        if (!adjacentExplored) continue;
+        if (hasEnemy) continue;
 
-        var dist = Math.abs(x - p.x) + Math.abs(y - p.y);
-        if (dist < bestDist) {
-          bestDist = dist;
-          bestTarget = [x, y];
-        }
-      }
-    }
-
-    if (bestTarget) {
-      var path = this._bfs(p.x, p.y, bestTarget[0], bestTarget[1]);
-      if (path && path.length > 0) {
-        this._moveTo(path[0][0], path[0][1]);
-        return true;
+        visited[key] = true;
+        var newPath = path.concat([[nx, ny]]);
+        queue.push([nx, ny, newPath]);
       }
     }
     return false;
@@ -440,12 +588,12 @@ var AutoPlayer = (function() {
 
   AutoPlayer.prototype._useHealItem = function() {
     var player = this.game.player;
-    // Look for healing grass
+    // Look for healing grass or otogiriso
     var bestHeal = null;
     var bestVal = 0;
     for (var i = 0; i < player.inventory.length; i++) {
       var item = player.inventory[i];
-      if (item.type === 'grass' && item.effect === 'heal') {
+      if (item.type === 'grass' && (item.effect === 'heal' || item.dataKey === 'herb' || item.dataKey === 'otogiriso')) {
         var val = item.value || 25;
         if (val > bestVal) {
           bestHeal = item;
@@ -462,12 +610,22 @@ var AutoPlayer = (function() {
 
   AutoPlayer.prototype._useFood = function() {
     var player = this.game.player;
+    // Prefer big onigiri first, then regular food
+    var bestFood = null;
+    var bestSatiety = 0;
     for (var i = 0; i < player.inventory.length; i++) {
       var item = player.inventory[i];
       if (item.type === 'food' && !item.cursed) {
-        this._useItem(item);
-        return true;
+        var sat = item.satiety || 50;
+        if (sat > bestSatiety) {
+          bestFood = item;
+          bestSatiety = sat;
+        }
       }
+    }
+    if (bestFood) {
+      this._useItem(bestFood);
+      return true;
     }
     return false;
   };
@@ -490,12 +648,10 @@ var AutoPlayer = (function() {
       }
     }
     if (bestWeapon) {
-      // Equip uses a turn in the real game
-      var w = bestWeapon;
-      this.turnManager.processTurn(function() {
-        return player.equip(w, ui);
-      });
-      return; // Don't also equip shield in same decide() call
+      // Direct equip without consuming a turn
+      player.weapon = bestWeapon;
+      player._recalcStats();
+      ui.addMessage(bestWeapon.name + 'を装備した', 'pickup');
     }
 
     // Find best shield
@@ -512,10 +668,10 @@ var AutoPlayer = (function() {
       }
     }
     if (bestShield) {
-      var s = bestShield;
-      this.turnManager.processTurn(function() {
-        return player.equip(s, ui);
-      });
+      // Direct equip without consuming a turn
+      player.shield = bestShield;
+      player._recalcStats();
+      ui.addMessage(bestShield.name + 'を装備した', 'pickup');
     }
   };
 

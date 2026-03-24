@@ -176,6 +176,10 @@ var Player = (function() {
       if (ui) {
         Sound.play('levelup');
         ui.addMessage('レベルが上がった！ Lv.' + this.level + ' シレンは強くなった気がする', 'levelup');
+        // Floating text effect
+        if (window._game) {
+          window._game.addFloatingText(this.x, this.y, 'Lv UP!', '#e8a44a');
+        }
       }
     }
   };
@@ -202,10 +206,12 @@ var Player = (function() {
 
     if (this.satiety <= 0) {
       if (ui) ui.addMessage('お腹が空いて足元がふらつく...', 'damage');
-      this.hp -= 1;
-      if (this.hp <= 0) {
-        this.hp = 0;
-        return 'dead';
+      if (!this.godMode) {
+        this.hp -= 1;
+        if (this.hp <= 0) {
+          this.hp = 0;
+          return 'dead';
+        }
       }
     }
 

@@ -212,6 +212,7 @@ var Item = (function() {
         player.hp = Math.min(player.hp + this.value, player.maxHp);
         Sound.play('heal');
         ui.addMessage(this.name + 'を飲んだ。HPが' + healed + '回復した', 'heal');
+        if (window._game) window._game.addFloatingText(player.x, player.y, '+' + healed, '#66bb6a');
         return true;
       case 'strength':
         player.baseAttack = (player.baseAttack || player.attack) + this.value;
