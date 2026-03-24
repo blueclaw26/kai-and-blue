@@ -13,6 +13,16 @@ var Input = (function() {
     'a': [-1, 0], 'A': [-1, 0],
     's': [0, 1],  'S': [0, 1],
     'd': [1, 0],  'D': [1, 0],
+    // Vi-keys (4-dir)
+    'h': [-1, 0], 'H': [-1, 0],
+    'j': [0, 1],  'J': [0, 1],
+    'k': [0, -1], 'K': [0, -1],
+    'l': [1, 0],  'L': [1, 0],
+    // Vi-keys (diagonal)
+    'y': [-1, -1], 'Y': [-1, -1],
+    'u': [1, -1],  'U': [1, -1],
+    'b': [-1, 1],  'B': [-1, 1],
+    'n': [1, 1],   'N': [1, 1],
     // Numpad 8-direction
     'Numpad8': [0, -1],
     'Numpad2': [0, 1],
@@ -41,6 +51,8 @@ var Input = (function() {
   }
 
   Input.prototype.handleKey = function(e) {
+    if (this.game.gameOver) return;
+
     var code = e.code;
     var key = e.key;
 

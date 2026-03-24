@@ -8,7 +8,7 @@
 </head>
 <body>
   <div id="game-container">
-    <div id="status-bar">Floor: 1F | HP: 15/15 | Lv.1</div>
+    <div id="status-bar">1F | HP: 15/15 | Lv.1 | Exp: 0 | 敵: 0</div>
     <canvas id="game-canvas"></canvas>
     <div id="minimap-container">
       <canvas id="minimap-canvas"></canvas>
@@ -16,9 +16,21 @@
     <div id="message-log"></div>
   </div>
 
+  <div id="game-over-overlay" style="display:none;">
+    <div class="game-over-box">
+      <div class="game-over-title">倒れてしまった...</div>
+      <div class="game-over-info">
+        <span class="go-floor">1F</span> で力尽きた（<span class="go-level">Lv.1</span>）
+      </div>
+      <button id="restart-btn" class="restart-button">もう一度挑戦する</button>
+    </div>
+  </div>
+
   <script src="src/dungeon.js"></script>
   <script src="src/entity.js"></script>
+  <script src="src/data/enemies.js"></script>
   <script src="src/player.js"></script>
+  <script src="src/enemy.js"></script>
   <script src="src/renderer.js"></script>
   <script src="src/ui.js"></script>
   <script src="src/turn.js"></script>

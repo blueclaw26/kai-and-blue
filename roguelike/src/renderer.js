@@ -40,7 +40,6 @@ var Renderer = (function() {
           var tx = px + dx;
           var ty = py + dy;
           if (tx >= 0 && tx < dungeon.width && ty >= 0 && ty < dungeon.height) {
-            // Simple line-of-sight check
             if (hasLineOfSight(px, py, tx, ty, dungeon)) {
               visible[tx + ',' + ty] = true;
             }
@@ -61,7 +60,6 @@ var Renderer = (function() {
 
     while (true) {
       if (x === x1 && y === y1) return true;
-      // Wall blocks sight (but we can see the wall itself)
       if (dungeon.grid[y][x] === Dungeon.TILE.WALL && !(x === x0 && y === y0)) {
         return false;
       }
@@ -71,11 +69,15 @@ var Renderer = (function() {
     }
   }
 
+  // Export computeFOV for external use
+  Renderer.computeFOV = computeFOV;
+
   Renderer.prototype.render = function(game) {
     var ctx = this.ctx;
     var dungeon = game.dungeon;
     var player = game.player;
     var explored = game.explored;
+    var enemies = game.enemies;
 
     // Compute FOV
     var visible = computeFOV(player.x, player.y, dungeon);
@@ -88,7 +90,6 @@ var Renderer = (function() {
     // Camera: center on player
     var camX = player.x - Math.floor(this.viewW / 2);
     var camY = player.y - Math.floor(this.viewH / 2);
-    // Clamp
     camX = Math.max(0, Math.min(camX, dungeon.width - this.viewW));
     camY = Math.max(0, Math.min(camY, dungeon.height - this.viewH));
 
@@ -111,7 +112,7 @@ var Renderer = (function() {
         var isVisible = visible[tileKey];
         var isExplored = explored.has(tileKey);
 
-        if (!isVisible && !isExplored) continue; // Black
+        if (!isVisible && !isExplored) continue;
 
         var tile = dungeon.grid[ty][tx];
         var drawX = vx * TILE_SIZE;
@@ -128,7 +129,6 @@ var Renderer = (function() {
         }
 
         if (!isVisible) {
-          // Dimmed - darken the color
           ctx.globalAlpha = 0.35;
         }
 
@@ -148,7 +148,22 @@ var Renderer = (function() {
       }
     }
 
-    // Draw player
+    // Draw enemies (only visible ones)
+    ctx.font = 'bold 18px monospace';
+    for (var i = 0; i < enemies.length; i++) {
+      var enemy = enemies[i];
+      if (enemy.dead) continue;
+
+      var eKey = enemy.x + ',' + enemy.y;
+      if (!visible[eKey]) continue;
+
+      var eScreenX = (enemy.x - camX) * TILE_SIZE;
+      var eScreenY = (enemy.y - camY) * TILE_SIZE;
+      ctx.fillStyle = enemy.color;
+      ctx.fillText(enemy.char, eScreenX + TILE_SIZE / 2, eScreenY + TILE_SIZE / 2);
+    }
+
+    // Draw player ON TOP
     var playerScreenX = (player.x - camX) * TILE_SIZE;
     var playerScreenY = (player.y - camY) * TILE_SIZE;
     ctx.fillStyle = COLORS.player;
@@ -156,10 +171,10 @@ var Renderer = (function() {
     ctx.fillText(player.char, playerScreenX + TILE_SIZE / 2, playerScreenY + TILE_SIZE / 2);
 
     // Minimap
-    this.renderMinimap(dungeon, player, explored, visible);
+    this.renderMinimap(dungeon, player, enemies, explored, visible);
   };
 
-  Renderer.prototype.renderMinimap = function(dungeon, player, explored, visible) {
+  Renderer.prototype.renderMinimap = function(dungeon, player, enemies, explored, visible) {
     var ctx = this.miniCtx;
     var t = this.miniTile;
     this.miniCanvas.width = dungeon.width * t;
@@ -186,6 +201,16 @@ var Renderer = (function() {
 
         ctx.fillRect(x * t, y * t, t, t);
       }
+    }
+
+    // Enemies on minimap (only visible)
+    for (var i = 0; i < enemies.length; i++) {
+      var enemy = enemies[i];
+      if (enemy.dead) continue;
+      var eKey = enemy.x + ',' + enemy.y;
+      if (!visible[eKey]) continue;
+      ctx.fillStyle = '#ff4444';
+      ctx.fillRect(enemy.x * t, enemy.y * t, t, t);
     }
 
     // Player on minimap

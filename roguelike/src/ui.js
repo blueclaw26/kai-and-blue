@@ -1,4 +1,4 @@
-// UI - Status bar and message log
+// UI - Status bar, message log, and overlays
 var UI = (function() {
   'use strict';
 
@@ -18,8 +18,22 @@ var UI = (function() {
     this.logEl.textContent = this.messages.join('\n');
   };
 
-  UI.prototype.updateStatus = function(player) {
-    this.statusEl.textContent = 'Floor: ' + player.floor + 'F | HP: ' + player.hp + '/' + player.maxHp + ' | Lv.' + player.level;
+  UI.prototype.updateStatus = function(game) {
+    var player = game.player;
+    var enemyCount = game.livingEnemyCount();
+    this.statusEl.textContent = player.floor + 'F | HP: ' + player.hp + '/' + player.maxHp +
+      ' | Lv.' + player.level + ' | Exp: ' + player.exp + ' | 敵: ' + enemyCount;
+  };
+
+  UI.prototype.showGameOver = function(floor, level) {
+    var overlay = document.getElementById('game-over-overlay');
+    if (overlay) {
+      var floorSpan = overlay.querySelector('.go-floor');
+      var levelSpan = overlay.querySelector('.go-level');
+      if (floorSpan) floorSpan.textContent = floor + 'F';
+      if (levelSpan) levelSpan.textContent = 'Lv.' + level;
+      overlay.style.display = 'flex';
+    }
   };
 
   return UI;

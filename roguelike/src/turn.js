@@ -12,12 +12,14 @@ var TurnManager = (function() {
     // Player action
     var result = action();
 
-    // Future: enemy turns here
-    // this.game.enemies.forEach(function(e) { e.act(); });
+    if (result) {
+      // Enemy turns
+      this.game.processEnemyTurns();
+    }
 
     // Render
     this.renderer.render(this.game);
-    this.ui.updateStatus(this.game.player);
+    this.ui.updateStatus(this.game);
 
     return result;
   };

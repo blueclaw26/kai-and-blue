@@ -17,10 +17,17 @@
 
     // Initial render
     renderer.render(game);
-    ui.updateStatus(game.player);
+    ui.updateStatus(game);
 
     // Bind input
     new Input(turnManager, game);
 
+    // Restart button
+    var restartBtn = document.getElementById('restart-btn');
+    if (restartBtn) {
+      restartBtn.addEventListener('click', function() {
+        window.location.reload();
+      });
+    }
   });
 })();
