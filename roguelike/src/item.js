@@ -13,6 +13,12 @@ var Item = (function() {
     this.color = data.color;
     this.cursed = false;
 
+    // Pot properties
+    if (data.capacity !== undefined) {
+      this.capacity = data.capacity;
+      this.contents = [];
+    }
+
     // Identification: weapons, shields, food are always identified
     if (this.type === 'weapon' || this.type === 'shield' || this.type === 'food') {
       this.identified = true;
@@ -52,6 +58,20 @@ var Item = (function() {
       name = this.name;
     }
 
+    // Pot display
+    if (this.type === 'pot') {
+      var remaining = this.capacity - (this.contents ? this.contents.length : 0);
+      name += '[' + remaining + ']';
+      if (this.contents && this.contents.length > 0 && this.identified) {
+        var contentNames = [];
+        for (var ci = 0; ci < this.contents.length; ci++) {
+          contentNames.push(this.contents[ci].getDisplayName());
+        }
+        name += '{' + contentNames.join(', ') + '}';
+      }
+      return name;
+    }
+
     // Show +N for weapons/shields
     if ((this.type === 'weapon' || this.type === 'shield') && this.plus !== 0) {
       name += (this.plus > 0 ? '+' : '') + this.plus;
@@ -71,6 +91,18 @@ var Item = (function() {
   // Get the real name (for identification reveal)
   Item.prototype.getRealDisplayName = function() {
     var name = this.name;
+    if (this.type === 'pot') {
+      var remaining = this.capacity - (this.contents ? this.contents.length : 0);
+      name += '[' + remaining + ']';
+      if (this.contents && this.contents.length > 0) {
+        var contentNames = [];
+        for (var ci = 0; ci < this.contents.length; ci++) {
+          contentNames.push(this.contents[ci].getDisplayName());
+        }
+        name += '{' + contentNames.join(', ') + '}';
+      }
+      return name;
+    }
     if ((this.type === 'weapon' || this.type === 'shield') && this.plus !== 0) {
       name += (this.plus > 0 ? '+' : '') + this.plus;
     }
@@ -116,6 +148,9 @@ var Item = (function() {
         return this._useFood(game, player);
       case 'staff':
         return this._useStaff(game, player);
+      case 'pot':
+        ui.addMessage('壺に入れるには持ち物画面で[p]、取り出すには[o]を使おう', 'system');
+        return false;
       case 'weapon':
       case 'shield':
         ui.addMessage('装備するには[E]キーを使おう', 'system');
@@ -171,7 +206,7 @@ var Item = (function() {
         for (var y = 0; y < dungeon.height; y++) {
           for (var x = 0; x < dungeon.width; x++) {
             if (dungeon.grid[y][x] !== Dungeon.TILE.WALL) {
-              game.explored.add(x + ',' + y);
+              game.explored[y][x] = true;
             }
           }
         }

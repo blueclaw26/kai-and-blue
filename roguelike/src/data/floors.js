@@ -46,6 +46,12 @@ var FLOOR_TABLE = {
     [2, 20, 'staff_paralyze', 3],
     [3, 20, 'staff_swap', 2],
     [3, 20, 'staff_tunnel', 2],
-    [5, 20, 'staff_lightning', 2]
+    [5, 20, 'staff_lightning', 2],
+    // Pots
+    [1, 20, 'pot_storage', 3],
+    [5, 20, 'pot_synthesis', 1],
+    [3, 20, 'pot_identify', 2],
+    [5, 20, 'pot_heal', 2],
+    [1, 20, 'pot_useless', 2]
   ]
 };

@@ -312,7 +312,7 @@ var AutoPlayer = (function() {
 
     // Check if stairs position is explored (known)
     var stairsKey = stairs.x + ',' + stairs.y;
-    if (!game.explored.has(stairsKey)) return null;
+    if (!game.explored[stairs.y][stairs.x]) return null;
 
     // BFS from player to stairs
     return this._bfs(p.x, p.y, stairs.x, stairs.y);
@@ -380,8 +380,7 @@ var AutoPlayer = (function() {
     for (var y = 0; y < dungeon.height; y++) {
       for (var x = 0; x < dungeon.width; x++) {
         if (grid[y][x] === 0) continue; // WALL
-        var key = x + ',' + y;
-        if (explored.has(key)) continue;
+        if (explored[y][x]) continue;
 
         // Check if adjacent to explored
         var adjacentExplored = false;
@@ -389,7 +388,7 @@ var AutoPlayer = (function() {
         for (var d = 0; d < adjDirs.length; d++) {
           var ax = x + adjDirs[d][0];
           var ay = y + adjDirs[d][1];
-          if (explored.has(ax + ',' + ay)) {
+          if (ay >= 0 && ay < dungeon.height && ax >= 0 && ax < dungeon.width && explored[ay][ax]) {
             adjacentExplored = true;
             break;
           }

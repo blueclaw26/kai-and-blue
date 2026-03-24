@@ -410,6 +410,25 @@ var Sprites = (function() {
     'NNNNNNNNNNNNNNNN',
   ];
   
+  SPRITES.pot = [
+    '________________',
+    '________________',
+    '______SSS_______',
+    '_____S___S______',
+    '____SSSSSSS_____',
+    '___SsssssssS____',
+    '___SsssssssS____',
+    '___SsssssssS____',
+    '___SsssssssS____',
+    '____SsssssS_____',
+    '_____SSSSS______',
+    '________________',
+    '________________',
+    '________________',
+    '________________',
+    '________________',
+  ];
+  
   SPRITES.floor = null; // just fill with color
   
   SPRITES.gold = [

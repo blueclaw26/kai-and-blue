@@ -168,6 +168,14 @@ var Dungeon = (function() {
     // Connect rooms
     connectRooms(grid, root);
 
+    // Add room bounds for FOV system
+    for (var r = 0; r < rooms.length; r++) {
+      rooms[r].x1 = rooms[r].x;
+      rooms[r].y1 = rooms[r].y;
+      rooms[r].x2 = rooms[r].x + rooms[r].w - 1;
+      rooms[r].y2 = rooms[r].y + rooms[r].h - 1;
+    }
+
     // Player start: center of first room
     var startRoom = rooms[0];
     var startPos = getRoomCenter(startRoom);

@@ -176,9 +176,16 @@ var UI = (function() {
       html += '<div style="color:#888;font-size:12px;margin-top:16px;border-top:1px solid #333;padding-top:8px;">';
       html += '[Enter/e]識別 [↑↓]選択 [ESC]キャンセル';
       html += '</div>';
-    } else {
+    } else if (game.potPutMode) {
       html += '<div style="color:#888;font-size:12px;margin-top:16px;border-top:1px solid #333;padding-top:8px;">';
-      html += '[e]使う [E]装備 [d]置く [t]投げる [s]整理 [↑↓]選択 [ESC]戻る';
+      html += '[Enter/e]壺に入れる [↑↓]選択 [ESC]キャンセル';
+      html += '</div>';
+    } else {
+      // Show pot commands hint if pot is selected
+      var selectedItem = player.inventory.length > 0 ? player.inventory[sel] : null;
+      var potHint = (selectedItem && selectedItem.type === 'pot') ? ' [p]入れる [o]出す' : '';
+      html += '<div style="color:#888;font-size:12px;margin-top:16px;border-top:1px solid #333;padding-top:8px;">';
+      html += '[e]使う [E]装備 [d]置く [t]投げる [s]整理' + potHint + ' [↑↓]選択 [ESC]戻る';
       html += '</div>';
     }
 

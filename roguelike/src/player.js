@@ -255,7 +255,8 @@ var Player = (function() {
       'staff': 2,
       'grass': 3,
       'scroll': 4,
-      'food': 5
+      'food': 5,
+      'pot': 6
     };
 
     this.inventory.sort(function(a, b) {

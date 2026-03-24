@@ -39,7 +39,8 @@ var Renderer = (function() {
     grass: 'grass',
     scroll: 'scroll',
     staff: 'staff',
-    food: 'food'
+    food: 'food',
+    pot: 'pot'
   };
 
   function Renderer(canvas, minimapCanvas) {
@@ -58,18 +59,19 @@ var Renderer = (function() {
     this.miniTile = 4;
   }
 
-  // Simple radius-based FOV
+  // computeFOV now returns the game.visible 2D array directly
+  // Game.updateVisibility() must be called before render
+  // Legacy computeFOV kept for scroll effect compatibility (returns object with string keys)
   function computeFOV(px, py, dungeon) {
     var visible = {};
-    for (var dy = -FOV_RADIUS; dy <= FOV_RADIUS; dy++) {
-      for (var dx = -FOV_RADIUS; dx <= FOV_RADIUS; dx++) {
-        if (dx * dx + dy * dy <= FOV_RADIUS * FOV_RADIUS) {
+    var FOV_R = 6;
+    for (var dy = -FOV_R; dy <= FOV_R; dy++) {
+      for (var dx = -FOV_R; dx <= FOV_R; dx++) {
+        if (dx * dx + dy * dy <= FOV_R * FOV_R) {
           var tx = px + dx;
           var ty = py + dy;
           if (tx >= 0 && tx < dungeon.width && ty >= 0 && ty < dungeon.height) {
-            if (hasLineOfSight(px, py, tx, ty, dungeon)) {
-              visible[tx + ',' + ty] = true;
-            }
+            visible[tx + ',' + ty] = true;
           }
         }
       }
@@ -77,26 +79,7 @@ var Renderer = (function() {
     return visible;
   }
 
-  function hasLineOfSight(x0, y0, x1, y1, dungeon) {
-    var dx = Math.abs(x1 - x0);
-    var dy = Math.abs(y1 - y0);
-    var sx = x0 < x1 ? 1 : -1;
-    var sy = y0 < y1 ? 1 : -1;
-    var err = dx - dy;
-    var x = x0, y = y0;
-
-    while (true) {
-      if (x === x1 && y === y1) return true;
-      if (dungeon.grid[y][x] === Dungeon.TILE.WALL && !(x === x0 && y === y0)) {
-        return false;
-      }
-      var e2 = 2 * err;
-      if (e2 > -dy) { err -= dy; x += sx; }
-      if (e2 < dx) { err += dx; y += sy; }
-    }
-  }
-
-  // Export computeFOV for external use
+  // Export computeFOV for external use (scroll effects)
   Renderer.computeFOV = computeFOV;
 
   // Check if a tile is in the shop room
@@ -124,19 +107,18 @@ var Renderer = (function() {
     var ctx = this.ctx;
     var dungeon = game.dungeon;
     var player = game.player;
-    var explored = game.explored;
+    var visibleArr = game.visible;
+    var exploredArr = game.explored;
     var enemies = game.enemies;
     var items = game.items;
 
     // Ensure crisp pixel art each frame
     ctx.imageSmoothingEnabled = false;
 
-    var visible = computeFOV(player.x, player.y, dungeon);
-    var mapRevealed = game.mapRevealed;
+    // Update room-based visibility
+    game.updateVisibility();
 
-    for (var key in visible) {
-      explored.add(key);
-    }
+    var mapRevealed = game.mapRevealed;
 
     var camX = player.x - Math.floor(this.viewW / 2);
     var camY = player.y - Math.floor(this.viewH / 2);
@@ -156,9 +138,8 @@ var Renderer = (function() {
         var ty = camY + vy;
         if (tx < 0 || tx >= dungeon.width || ty < 0 || ty >= dungeon.height) continue;
 
-        var tileKey = tx + ',' + ty;
-        var isVisible = visible[tileKey];
-        var isExplored = explored.has(tileKey);
+        var isVisible = visibleArr[ty][tx];
+        var isExplored = exploredArr[ty][tx];
 
         if (!isVisible && !isExplored) continue;
 
@@ -224,12 +205,11 @@ var Renderer = (function() {
     for (var i = 0; i < traps.length; i++) {
       var trap = traps[i];
       if (!trap.visible || trap.consumed) continue;
-      var tKey = trap.x + ',' + trap.y;
-      if (!visible[tKey] && !explored.has(tKey)) continue;
+      if (!visibleArr[trap.y][trap.x] && !exploredArr[trap.y][trap.x]) continue;
 
       var tScreenX = (trap.x - camX) * TILE_SIZE;
       var tScreenY = (trap.y - camY) * TILE_SIZE;
-      var trapDimmed = !visible[tKey] && !mapRevealed;
+      var trapDimmed = !visibleArr[trap.y][trap.x] && !mapRevealed;
 
       if (!drawSprite(ctx, 'trap', tScreenX, tScreenY, trapDimmed)) {
         // Fallback to text
@@ -244,8 +224,7 @@ var Renderer = (function() {
     ctx.font = 'bold 16px monospace';
     for (var i = 0; i < items.length; i++) {
       var item = items[i];
-      var iKey = item.x + ',' + item.y;
-      if (!visible[iKey] && !mapRevealed) continue;
+      if (!visibleArr[item.y][item.x] && !mapRevealed) continue;
 
       var iScreenX = (item.x - camX) * TILE_SIZE;
       var iScreenY = (item.y - camY) * TILE_SIZE;
@@ -271,14 +250,13 @@ var Renderer = (function() {
       }
     }
 
-    // Draw enemies
+    // Draw enemies (only visible in same room or adjacent in corridors)
     ctx.font = 'bold 18px monospace';
     for (var i = 0; i < enemies.length; i++) {
       var enemy = enemies[i];
       if (enemy.dead) continue;
 
-      var eKey = enemy.x + ',' + enemy.y;
-      if (!visible[eKey] && !mapRevealed) continue;
+      if (!visibleArr[enemy.y][enemy.x] && !mapRevealed) continue;
 
       var eScreenX = (enemy.x - camX) * TILE_SIZE;
       var eScreenY = (enemy.y - camY) * TILE_SIZE;
@@ -314,10 +292,10 @@ var Renderer = (function() {
     }
 
     // Minimap
-    this.renderMinimap(game, dungeon, player, enemies, items, explored, visible, mapRevealed);
+    this.renderMinimap(game, dungeon, player, enemies, items, exploredArr, visibleArr, mapRevealed);
   };
 
-  Renderer.prototype.renderMinimap = function(game, dungeon, player, enemies, items, explored, visible, mapRevealed) {
+  Renderer.prototype.renderMinimap = function(game, dungeon, player, enemies, items, exploredArr, visibleArr, mapRevealed) {
     var ctx = this.miniCtx;
     var t = this.miniTile;
     this.miniCanvas.width = dungeon.width * t;
@@ -328,11 +306,10 @@ var Renderer = (function() {
 
     for (var y = 0; y < dungeon.height; y++) {
       for (var x = 0; x < dungeon.width; x++) {
-        var key = x + ',' + y;
-        if (!explored.has(key)) continue;
+        if (!exploredArr[y][x]) continue;
 
         var tile = dungeon.grid[y][x];
-        var isVisible = visible[key];
+        var isVisible = visibleArr[y][x];
 
         var tileBright = isVisible || mapRevealed;
         if (tile === Dungeon.TILE.WALL) {
@@ -355,7 +332,7 @@ var Renderer = (function() {
     // Stairs
     for (var y = 0; y < dungeon.height; y++) {
       for (var x = 0; x < dungeon.width; x++) {
-        if (dungeon.grid[y][x] === Dungeon.TILE.STAIRS_DOWN && explored.has(x + ',' + y)) {
+        if (dungeon.grid[y][x] === Dungeon.TILE.STAIRS_DOWN && exploredArr[y][x]) {
           ctx.fillStyle = '#90a4ae';
           ctx.fillRect(x * t, y * t, t, t);
         }
@@ -367,7 +344,7 @@ var Renderer = (function() {
     for (var i = 0; i < traps.length; i++) {
       var trap = traps[i];
       if (!trap.visible || trap.consumed) continue;
-      if (!explored.has(trap.x + ',' + trap.y)) continue;
+      if (!exploredArr[trap.y][trap.x]) continue;
       ctx.fillStyle = trap.color;
       ctx.fillRect(trap.x * t, trap.y * t, t, t);
     }
@@ -376,8 +353,7 @@ var Renderer = (function() {
     ctx.fillStyle = '#ffeb3b';
     for (var i = 0; i < items.length; i++) {
       var item = items[i];
-      var iKey = item.x + ',' + item.y;
-      if (!visible[iKey] && !mapRevealed) continue;
+      if (!visibleArr[item.y][item.x] && !mapRevealed) continue;
       ctx.fillRect(item.x * t, item.y * t, t, t);
     }
 
@@ -385,8 +361,7 @@ var Renderer = (function() {
     for (var i = 0; i < enemies.length; i++) {
       var enemy = enemies[i];
       if (enemy.dead) continue;
-      var eKey = enemy.x + ',' + enemy.y;
-      if (!visible[eKey] && !mapRevealed) continue;
+      if (!visibleArr[enemy.y][enemy.x] && !mapRevealed) continue;
       // Shopkeeper is gold on minimap
       ctx.fillStyle = enemy.isShopkeeper ? '#ffd700' : '#ff4444';
       ctx.fillRect(enemy.x * t, enemy.y * t, t, t);

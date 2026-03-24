@@ -12,7 +12,7 @@ var Game = (function() {
     this.items = [];
     this.traps = [];
     this.floorNum = 1;
-    this.explored = new Set();
+    this.explored = [];
     this.ui = null;
     this.gameOver = false;
     this.victory = false;
@@ -32,6 +32,16 @@ var Game = (function() {
     this.sellConfirmMode = null; // { item: Item } when awaiting y/n
     // Map revealed by あかりの巻物
     this.mapRevealed = false;
+    // Room-based FOV arrays
+    this.visible = null;
+    // Dash movement state
+    this.dashDirection = null;
+    this.dashing = false;
+    // Pot interaction modes
+    this.potPutMode = null;  // { pot: Item } when selecting item to put in
+    this.potTakeMode = null; // { pot: Item } when selecting item to take out
+    // Throw animation state
+    this.throwAnimating = false;
   }
 
   Game.prototype.init = function(ui) {
@@ -42,9 +52,82 @@ var Game = (function() {
     ui.addMessage('ダンジョンに足を踏み入れた...', 'system');
   };
 
+  // Get room at position (for room-based FOV)
+  Game.prototype.getRoomAt = function(x, y) {
+    if (!this.dungeon || !this.dungeon.rooms) return null;
+    var rooms = this.dungeon.rooms;
+    for (var i = 0; i < rooms.length; i++) {
+      var r = rooms[i];
+      if (x >= r.x1 && x <= r.x2 && y >= r.y1 && y <= r.y2) return r;
+    }
+    return null;
+  };
+
+  // Get the room the player is currently in
+  Game.prototype.getPlayerRoom = function() {
+    return this.getRoomAt(this.player.x, this.player.y);
+  };
+
+  // Room-based visibility update (Shiren-style)
+  Game.prototype.updateVisibility = function() {
+    var player = this.player;
+    var dungeon = this.dungeon;
+
+    // Reset visible array
+    for (var vy = 0; vy < dungeon.height; vy++) {
+      for (var vx = 0; vx < dungeon.width; vx++) {
+        this.visible[vy][vx] = false;
+      }
+    }
+
+    var room = this.getPlayerRoom();
+
+    if (room) {
+      // Player is in a room: reveal entire room + 1 tile border
+      for (var y = room.y1 - 1; y <= room.y2 + 1; y++) {
+        for (var x = room.x1 - 1; x <= room.x2 + 1; x++) {
+          if (dungeon.grid[y] && dungeon.grid[y][x] !== undefined) {
+            this.visible[y][x] = true;
+            this.explored[y][x] = true;
+          }
+        }
+      }
+    }
+
+    // Always reveal adjacent tiles (radius 1) - covers corridors and also room doorways
+    for (var dy = -1; dy <= 1; dy++) {
+      for (var dx = -1; dx <= 1; dx++) {
+        var nx = player.x + dx, ny = player.y + dy;
+        if (ny >= 0 && ny < dungeon.height && nx >= 0 && nx < dungeon.width) {
+          this.visible[ny][nx] = true;
+          this.explored[ny][nx] = true;
+        }
+      }
+    }
+  };
+
+  // Get visible trap at position
+  Game.prototype.getVisibleTrapAt = function(x, y) {
+    for (var i = 0; i < this.traps.length; i++) {
+      var t = this.traps[i];
+      if (!t.consumed && t.visible && t.x === x && t.y === y) return t;
+    }
+    return null;
+  };
+
   Game.prototype.newFloor = function() {
     this.dungeon = Dungeon.generateFloor(40, 30);
-    this.explored = new Set();
+    this.explored = [];
+    // Initialize 2D arrays for visibility
+    this.visible = [];
+    for (var iy = 0; iy < this.dungeon.height; iy++) {
+      this.explored[iy] = [];
+      this.visible[iy] = [];
+      for (var ix = 0; ix < this.dungeon.width; ix++) {
+        this.explored[iy][ix] = false;
+        this.visible[iy][ix] = false;
+      }
+    }
     this.shopRoom = null;
     this.shopkeeperHostile = false;
     this.shopItems = new Set();
@@ -873,10 +956,11 @@ var Game = (function() {
     return count;
   };
 
-  // --- Throw mechanic ---
+  // --- Throw mechanic (improved) ---
   Game.prototype.throwItem = function(item, dx, dy) {
     var player = this.player;
     var ui = this.ui;
+    var self = this;
 
     if (player.weapon === item) {
       player.weapon = null;
@@ -888,6 +972,8 @@ var Game = (function() {
     }
     player.removeFromInventory(item);
 
+    // Collect throw path for animation
+    var throwPath = [];
     var x = player.x + dx;
     var y = player.y + dy;
     var hitEnemy = null;
@@ -898,31 +984,92 @@ var Game = (function() {
       var enemy = this.getEnemyAt(x, y);
       if (enemy) {
         hitEnemy = enemy;
+        throwPath.push({ x: x, y: y });
         break;
       }
+      throwPath.push({ x: x, y: y });
       x += dx;
       y += dy;
     }
 
+    // Animate throw then apply effect
+    this._animateThrow(item, throwPath, function() {
+      self._applyThrowEffect(item, hitEnemy, ui, player);
+    });
+
+    return true;
+  };
+
+  // Throw animation: item char moves tile by tile
+  Game.prototype._animateThrow = function(item, path, callback) {
+    if (path.length === 0) {
+      callback();
+      return;
+    }
+
+    var self = this;
+    var renderer = window._renderer;
+    var idx = 0;
+
+    // Create a temporary overlay element for the thrown item
+    var canvas = document.getElementById('game-canvas');
+    var overlay = document.createElement('canvas');
+    overlay.width = canvas.width;
+    overlay.height = canvas.height;
+    overlay.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;';
+    canvas.parentElement.style.position = 'relative';
+    canvas.parentElement.appendChild(overlay);
+    var octx = overlay.getContext('2d');
+    octx.font = 'bold 16px monospace';
+    octx.textAlign = 'center';
+    octx.textBaseline = 'middle';
+
+    var TILE_SIZE = 24;
+    var viewW = renderer.viewW;
+    var viewH = renderer.viewH;
+    var player = this.player;
+    var dungeon = this.dungeon;
+    var camX = player.x - Math.floor(viewW / 2);
+    var camY = player.y - Math.floor(viewH / 2);
+    camX = Math.max(0, Math.min(camX, dungeon.width - viewW));
+    camY = Math.max(0, Math.min(camY, dungeon.height - viewH));
+
+    function step() {
+      if (idx >= path.length) {
+        overlay.remove();
+        callback();
+        return;
+      }
+      octx.clearRect(0, 0, overlay.width, overlay.height);
+      var p = path[idx];
+      var sx = (p.x - camX) * TILE_SIZE + TILE_SIZE / 2;
+      var sy = (p.y - camY) * TILE_SIZE + TILE_SIZE / 2;
+      octx.fillStyle = item.color || '#fff';
+      octx.fillText(item.char, sx, sy);
+      idx++;
+      setTimeout(step, 50);
+    }
+    step();
+  };
+
+  // Apply throw effect after animation
+  Game.prototype._applyThrowEffect = function(item, hitEnemy, ui, player) {
     if (hitEnemy) {
+      // --- Grass thrown at enemy: apply effect ---
       if (item.type === 'grass') {
         switch (item.effect) {
           case 'heal':
             hitEnemy.hp = Math.min(hitEnemy.hp + (item.value || 25), hitEnemy.maxHp);
             ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'のHPが回復した', 'attack');
-            return true;
+            return;
           case 'strength':
-            var dmg = 2 + Math.floor(Math.random() * 4);
-            var died = hitEnemy.takeDamage(dmg);
-            ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'に' + dmg + 'ダメージ', 'attack');
-            if (died) {
-              player.enemiesKilled++;
-              ui.addMessage(hitEnemy.name + 'を倒した！ 経験値' + hitEnemy.exp + '獲得', 'attack');
-              player.gainExp(hitEnemy.exp, ui);
-            }
-            return true;
+            // Increases enemy attack (bad for player!)
+            hitEnemy.attack += (item.value || 1);
+            ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'の攻撃力が上がった！', 'enemy_special');
+            return;
           case 'cure_poison':
-            var dmg = 5 + Math.floor(Math.random() * 5);
+            // Extra damage to ghost-type enemies
+            var dmg = (hitEnemy.special === 'wallpass') ? 30 : 5;
             var died = hitEnemy.takeDamage(dmg);
             ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'に' + dmg + 'ダメージ', 'attack');
             if (died) {
@@ -930,11 +1077,54 @@ var Game = (function() {
               ui.addMessage(hitEnemy.name + 'を倒した！ 経験値' + hitEnemy.exp + '獲得', 'attack');
               player.gainExp(hitEnemy.exp, ui);
             }
-            return true;
+            return;
         }
       }
 
-      var damage = 2 + Math.floor(Math.random() * 4);
+      // --- Pot thrown: pot breaks ---
+      if (item.type === 'pot') {
+        ui.addMessage(item.getDisplayName() + 'を投げた。壺が割れた！', 'attack');
+        // 回復の壺: heals player
+        if (item.effect === 'heal') {
+          var healAmount = 100;
+          player.hp = Math.min(player.hp + healAmount, player.maxHp);
+          ui.addMessage('回復の壺の効果でHPが回復した！', 'heal');
+        }
+        // Scatter contents on floor near enemy
+        if (item.contents && item.contents.length > 0) {
+          for (var ci = 0; ci < item.contents.length; ci++) {
+            var content = item.contents[ci];
+            content.x = hitEnemy.x;
+            content.y = hitEnemy.y;
+            this.items.push(content);
+          }
+          ui.addMessage('壺の中身が散らばった', 'system');
+        }
+        // Also deal 2 damage
+        var potDied = hitEnemy.takeDamage(2);
+        if (potDied) {
+          player.enemiesKilled++;
+          ui.addMessage(hitEnemy.name + 'を倒した！ 経験値' + hitEnemy.exp + '獲得', 'attack');
+          player.gainExp(hitEnemy.exp, ui);
+        }
+        return;
+      }
+
+      // --- Gold thrown: damage = amount / 10 ---
+      if (item.isGold || item.type === 'gold') {
+        var goldDmg = Math.max(1, Math.floor((item.goldAmount || 0) / 10));
+        var goldDied = hitEnemy.takeDamage(goldDmg);
+        ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'に' + goldDmg + 'ダメージ', 'attack');
+        if (goldDied) {
+          player.enemiesKilled++;
+          ui.addMessage(hitEnemy.name + 'を倒した！ 経験値' + hitEnemy.exp + '獲得', 'attack');
+          player.gainExp(hitEnemy.exp, ui);
+        }
+        return;
+      }
+
+      // --- Default: 2 damage for food, scroll, staff, etc. ---
+      var damage = 2;
       var died = hitEnemy.takeDamage(damage);
       ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'に' + damage + 'ダメージ', 'attack');
       if (died) {
@@ -943,9 +1133,18 @@ var Game = (function() {
         player.gainExp(hitEnemy.exp, ui);
       }
     } else {
-      ui.addMessage(item.getDisplayName() + 'を投げた。何にも当たらなかった', 'system');
+      // Pot thrown at nothing: still breaks
+      if (item.type === 'pot') {
+        ui.addMessage(item.getDisplayName() + 'を投げた。壺が割れた！', 'system');
+        if (item.effect === 'heal') {
+          var healAmt = 100;
+          player.hp = Math.min(player.hp + healAmt, player.maxHp);
+          ui.addMessage('回復の壺の効果でHPが回復した！', 'heal');
+        }
+      } else {
+        ui.addMessage(item.getDisplayName() + 'を投げた。何にも当たらなかった', 'system');
+      }
     }
-    return true;
   };
 
   // --- Staff use ---
@@ -1083,6 +1282,125 @@ var Game = (function() {
       ui.addMessage(item.getDisplayName() + 'は使い切った', 'system');
     }
 
+    return true;
+  };
+
+  // --- Pot interaction ---
+  Game.prototype.putItemInPot = function(pot, item) {
+    var ui = this.ui;
+    var player = this.player;
+
+    if (!pot.contents) pot.contents = [];
+    if (pot.contents.length >= pot.capacity) {
+      ui.addMessage('壺がいっぱいだ', 'system');
+      return false;
+    }
+
+    // Can't put pot in pot
+    if (item.type === 'pot') {
+      ui.addMessage('壺に壺は入れられない', 'system');
+      return false;
+    }
+
+    // Can't put equipped items
+    if (player.weapon === item || player.shield === item) {
+      ui.addMessage('装備中のアイテムは入れられない', 'system');
+      return false;
+    }
+
+    player.removeFromInventory(item);
+    pot.contents.push(item);
+
+    // Apply pot effect
+    switch (pot.effect) {
+      case 'identify':
+        if (!item.identified) {
+          var fakeName = item.getDisplayName();
+          item.identify();
+          ui.addMessage(item.getRealDisplayName() + 'だと判明した！', 'pickup');
+        } else {
+          ui.addMessage(item.getDisplayName() + 'を入れた', 'system');
+        }
+        break;
+      case 'synthesis':
+        // Synthesis: if 2+ weapons or shields, merge
+        this._trySynthesis(pot, ui);
+        break;
+      case 'none':
+        // ただの壺: items go in but can't come out
+        ui.addMessage(item.getDisplayName() + 'を入れた', 'system');
+        break;
+      default:
+        ui.addMessage(item.getDisplayName() + 'を入れた', 'system');
+        break;
+    }
+
+    return true;
+  };
+
+  Game.prototype._trySynthesis = function(pot, ui) {
+    if (!pot.contents || pot.contents.length < 2) return;
+
+    // Try weapon synthesis
+    var weapons = [];
+    var shields = [];
+    for (var i = 0; i < pot.contents.length; i++) {
+      if (pot.contents[i].type === 'weapon') weapons.push(pot.contents[i]);
+      if (pot.contents[i].type === 'shield') shields.push(pot.contents[i]);
+    }
+
+    if (weapons.length >= 2) {
+      var base = weapons[0];
+      for (var w = 1; w < weapons.length; w++) {
+        base.plus = (base.plus || 0) + (weapons[w].plus || 0);
+        if (weapons[w].special && !base.special) {
+          base.special = weapons[w].special;
+        }
+        // Remove merged weapon from pot
+        var idx = pot.contents.indexOf(weapons[w]);
+        if (idx !== -1) pot.contents.splice(idx, 1);
+      }
+      base.plus += 1; // bonus for synthesis
+      ui.addMessage('合成成功！ ' + base.getDisplayName(), 'heal');
+    }
+
+    if (shields.length >= 2) {
+      var baseS = shields[0];
+      for (var s = 1; s < shields.length; s++) {
+        baseS.plus = (baseS.plus || 0) + (shields[s].plus || 0);
+        if (shields[s].special && !baseS.special) {
+          baseS.special = shields[s].special;
+        }
+        var idx2 = pot.contents.indexOf(shields[s]);
+        if (idx2 !== -1) pot.contents.splice(idx2, 1);
+      }
+      baseS.plus += 1;
+      ui.addMessage('合成成功！ ' + baseS.getDisplayName(), 'heal');
+    }
+  };
+
+  Game.prototype.takeItemFromPot = function(pot, contentIndex) {
+    var ui = this.ui;
+    var player = this.player;
+
+    if (pot.effect !== 'storage') {
+      ui.addMessage('この壺からは取り出せない！', 'system');
+      return false;
+    }
+
+    if (!pot.contents || pot.contents.length === 0) {
+      ui.addMessage('壺は空だ', 'system');
+      return false;
+    }
+
+    if (!player.canPickUp()) {
+      ui.addMessage('持ち物がいっぱいだ', 'system');
+      return false;
+    }
+
+    var item = pot.contents.splice(contentIndex, 1)[0];
+    player.inventory.push(item);
+    ui.addMessage(item.getDisplayName() + 'を取り出した', 'pickup');
     return true;
   };
 

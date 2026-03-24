@@ -115,7 +115,7 @@ var Input = (function() {
       var dungeon = this.game.dungeon;
       for (var ry = 0; ry < dungeon.height; ry++) {
         for (var rx = 0; rx < dungeon.width; rx++) {
-          this.game.explored.add(rx + ',' + ry);
+          this.game.explored[ry][rx] = true;
         }
       }
       this.game.ui.addMessage('DEBUG: フロア全体を表示', 'debug');
@@ -154,6 +154,18 @@ var Input = (function() {
       return;
     }
 
+    // Pot put mode (select item to put in pot)
+    if (this.game.potPutMode) {
+      this._handlePotPutKey(e);
+      return;
+    }
+
+    // Pot take mode (select item to take from pot)
+    if (this.game.potTakeMode) {
+      this._handlePotTakeKey(e);
+      return;
+    }
+
     // Open inventory
     if (key === 'i' || key === 'I') {
       e.preventDefault();
@@ -173,7 +185,7 @@ var Input = (function() {
       return;
     }
 
-    // Movement
+    // Movement (with Shift for dash)
     var dir = KEY_MAP[code] || KEY_MAP[key];
     if (dir) {
       e.preventDefault();
@@ -185,6 +197,13 @@ var Input = (function() {
       }
       var moveDx = actualDir[0];
       var moveDy = actualDir[1];
+
+      // Shift + direction = dash
+      if (e.shiftKey && !game.player.hasStatusEffect('confused')) {
+        this._startDash(moveDx, moveDy);
+        return;
+      }
+
       this.turnManager.processTurn(function() {
         return game.movePlayer(moveDx, moveDy);
       });
@@ -418,6 +437,50 @@ var Input = (function() {
       return;
     }
 
+    // Put item into pot
+    if (key === 'p') {
+      if (selectedItem && selectedItem.type === 'pot') {
+        if (!selectedItem.contents) selectedItem.contents = [];
+        if (selectedItem.contents.length >= selectedItem.capacity) {
+          ui.addMessage('壺がいっぱいだ', 'system');
+          return;
+        }
+        game.inventoryOpen = false;
+        ui.hideInventory();
+        // Enter pot put mode - show inventory minus the pot itself
+        game.potPutMode = { pot: selectedItem };
+        game.inventoryOpen = true;
+        game.inventorySelection = 0;
+        ui.addMessage('どのアイテムを入れる？', 'system');
+        ui.renderInventory(game);
+        return;
+      }
+      return;
+    }
+
+    // Take item out of pot
+    if (key === 'o') {
+      if (selectedItem && selectedItem.type === 'pot') {
+        if (selectedItem.effect !== 'storage') {
+          ui.addMessage('この壺からは取り出せない！', 'system');
+          return;
+        }
+        if (!selectedItem.contents || selectedItem.contents.length === 0) {
+          ui.addMessage('壺は空だ', 'system');
+          return;
+        }
+        game.inventoryOpen = false;
+        ui.hideInventory();
+        game.potTakeMode = { pot: selectedItem };
+        game.inventoryOpen = true;
+        game.inventorySelection = 0;
+        ui.addMessage('どのアイテムを取り出す？', 'system');
+        ui.renderInventory(game);
+        return;
+      }
+      return;
+    }
+
     // Throw item
     if (key === 't') {
       game.inventoryOpen = false;
@@ -433,6 +496,205 @@ var Input = (function() {
       this.turnManager.processTurn(function() { return false; });
       return;
     }
+  };
+
+  // --- Dash movement ---
+  Input.prototype._startDash = function(dx, dy) {
+    var game = this.game;
+    var self = this;
+
+    function shouldStopDash(g, p, ddx, ddy) {
+      var nx = p.x + ddx, ny = p.y + ddy;
+      // Can't move there
+      if (!p.canMoveTo(nx, ny, g.dungeon)) return true;
+      // Enemy at target
+      if (g.getEnemyAt(nx, ny)) return true;
+      // Enemy adjacent to current position
+      for (var edy = -1; edy <= 1; edy++) {
+        for (var edx = -1; edx <= 1; edx++) {
+          if (edx === 0 && edy === 0) continue;
+          if (g.getEnemyAt(p.x + edx, p.y + edy)) return true;
+        }
+      }
+      // Room transition
+      var currentRoom = g.getRoomAt(p.x, p.y);
+      var nextRoom = g.getRoomAt(nx, ny);
+      if (currentRoom !== nextRoom) return true;
+      // Item on next tile
+      if (g.getItemAt(nx, ny)) return true;
+      // Visible trap
+      if (g.getVisibleTrapAt(nx, ny)) return true;
+      // Stairs
+      if (g.dungeon.grid[ny][nx] === Dungeon.TILE.STAIRS_DOWN) return true;
+      return false;
+    }
+
+    function dashStep() {
+      if (game.gameOver || game.victory) return;
+      if (shouldStopDash(game, game.player, dx, dy)) return;
+
+      self.turnManager.processTurn(function() {
+        return game.movePlayer(dx, dy);
+      });
+
+      if (game.gameOver || game.victory) return;
+
+      // Continue dash with brief delay
+      setTimeout(dashStep, 30);
+    }
+
+    // First step always moves
+    self.turnManager.processTurn(function() {
+      return game.movePlayer(dx, dy);
+    });
+
+    if (!game.gameOver && !game.victory) {
+      setTimeout(dashStep, 30);
+    }
+  };
+
+  // --- Pot put mode ---
+  Input.prototype._handlePotPutKey = function(e) {
+    e.preventDefault();
+    var game = this.game;
+    var player = game.player;
+    var ui = game.ui;
+    var key = e.key;
+    var pot = game.potPutMode.pot;
+
+    if (key === 'Escape') {
+      game.potPutMode = null;
+      game.inventoryOpen = false;
+      ui.hideInventory();
+      return;
+    }
+
+    if (key === 'ArrowUp' || key === 'k') {
+      game.inventorySelection = Math.max(0, game.inventorySelection - 1);
+      ui.renderInventory(game);
+      return;
+    }
+    if (key === 'ArrowDown' || key === 'j') {
+      game.inventorySelection = Math.min(player.inventory.length - 1, game.inventorySelection + 1);
+      ui.renderInventory(game);
+      return;
+    }
+
+    var SLOT_LETTERS = 'abcdefghijklmnopqrst';
+    var letterIdx = SLOT_LETTERS.indexOf(key);
+    if (letterIdx !== -1 && letterIdx < player.inventory.length) {
+      game.inventorySelection = letterIdx;
+      ui.renderInventory(game);
+      return;
+    }
+
+    if (key === 'Enter' || key === 'e') {
+      if (player.inventory.length === 0) return;
+      var selectedItem = player.inventory[game.inventorySelection];
+      if (!selectedItem || selectedItem === pot) {
+        ui.addMessage('それは選べない', 'system');
+        return;
+      }
+
+      game.potPutMode = null;
+      game.inventoryOpen = false;
+      ui.hideInventory();
+
+      var thePot = pot;
+      var theItem = selectedItem;
+      this.turnManager.processTurn(function() {
+        return game.putItemInPot(thePot, theItem);
+      });
+    }
+  };
+
+  // --- Pot take mode ---
+  Input.prototype._handlePotTakeKey = function(e) {
+    e.preventDefault();
+    var game = this.game;
+    var ui = game.ui;
+    var key = e.key;
+    var pot = game.potTakeMode.pot;
+
+    if (key === 'Escape') {
+      game.potTakeMode = null;
+      game.inventoryOpen = false;
+      ui.hideInventory();
+      return;
+    }
+
+    if (!pot.contents || pot.contents.length === 0) {
+      game.potTakeMode = null;
+      game.inventoryOpen = false;
+      ui.hideInventory();
+      ui.addMessage('壺は空だ', 'system');
+      return;
+    }
+
+    if (key === 'ArrowUp' || key === 'k') {
+      game.inventorySelection = Math.max(0, game.inventorySelection - 1);
+      this._renderPotContents(pot);
+      return;
+    }
+    if (key === 'ArrowDown' || key === 'j') {
+      game.inventorySelection = Math.min(pot.contents.length - 1, game.inventorySelection + 1);
+      this._renderPotContents(pot);
+      return;
+    }
+
+    var SLOT_LETTERS = 'abcdefghijklmnopqrst';
+    var letterIdx = SLOT_LETTERS.indexOf(key);
+    if (letterIdx !== -1 && letterIdx < pot.contents.length) {
+      game.inventorySelection = letterIdx;
+      this._renderPotContents(pot);
+      return;
+    }
+
+    if (key === 'Enter' || key === 'e') {
+      var idx = game.inventorySelection;
+      game.potTakeMode = null;
+      game.inventoryOpen = false;
+      ui.hideInventory();
+
+      var thePot = pot;
+      var theIdx = idx;
+      this.turnManager.processTurn(function() {
+        return game.takeItemFromPot(thePot, theIdx);
+      });
+    }
+  };
+
+  Input.prototype._renderPotContents = function(pot) {
+    var game = this.game;
+    var ui = game.ui;
+    var box = ui.inventoryBox;
+    var sel = game.inventorySelection;
+    var SLOT_LETTERS = 'abcdefghijklmnopqrst';
+
+    var html = '<div style="color:#e8a44a;font-size:18px;margin-bottom:12px;border-bottom:1px solid #333;padding-bottom:8px;">壺の中身</div>';
+
+    if (!pot.contents || pot.contents.length === 0) {
+      html += '<div style="color:#666;padding:16px 0;">空っぽ</div>';
+    } else {
+      for (var i = 0; i < pot.contents.length; i++) {
+        var item = pot.contents[i];
+        var isSelected = (i === sel);
+        var bgColor = isSelected ? '#1a2a3a' : 'transparent';
+        var borderLeft = isSelected ? '3px solid #4fc3f7' : '3px solid transparent';
+        html += '<div style="padding:4px 8px;margin:2px 0;background:' + bgColor + ';border-left:' + borderLeft + ';">';
+        html += '<span style="color:#888;">' + SLOT_LETTERS[i] + ')</span> ';
+        html += '<span style="color:' + item.color + ';">' + item.char + '</span> ';
+        html += '<span style="color:#e0e0e0;">' + item.getDisplayName() + '</span>';
+        html += '</div>';
+      }
+    }
+
+    html += '<div style="color:#888;font-size:12px;margin-top:16px;border-top:1px solid #333;padding-top:8px;">';
+    html += '[Enter/e]取り出す [↑↓]選択 [ESC]キャンセル';
+    html += '</div>';
+
+    box.innerHTML = html;
+    ui.inventoryEl.style.display = 'flex';
   };
 
   return Input;
