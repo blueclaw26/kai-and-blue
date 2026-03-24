@@ -9,12 +9,34 @@ var TurnManager = (function() {
   }
 
   TurnManager.prototype.processTurn = function(action) {
+    var p = this.game.player;
+
+    // Check if player is slowed and should skip this turn
+    if (p.isSlowedSkip()) {
+      this.ui.addMessage('足が重くて動けない...');
+      // Still tick status effects and enemy turns
+      p.totalTurns++;
+      p.tickStatusEffects(this.ui);
+      p.tickSatiety(this.ui);
+      p.tickBuffs();
+
+      if (!this.game.gameOver) {
+        this.game.processEnemyTurns();
+      }
+
+      this.renderer.render(this.game);
+      this.ui.updateStatus(this.game);
+      return true;
+    }
+
     // Player action
     var result = action();
 
     if (result) {
-      var p = this.game.player;
       p.totalTurns++;
+
+      // Tick status effects
+      p.tickStatusEffects(this.ui);
 
       // Satiety decrease
       var satietyResult = p.tickSatiety(this.ui);

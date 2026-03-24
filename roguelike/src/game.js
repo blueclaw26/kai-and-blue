@@ -3,6 +3,7 @@ var Game = (function() {
   'use strict';
 
   var MAX_FLOOR = 20;
+  var MAX_ENEMIES_PER_FLOOR = 15;
 
   function Game() {
     this.dungeon = null;
@@ -146,17 +147,56 @@ var Game = (function() {
   };
 
   Game.prototype.enemyAttack = function(enemy) {
-    var rawDmg = enemy.attack - this.player.defense + Math.floor(Math.random() * 3) - 1;
+    var player = this.player;
+
+    // --- Nigiri special: 10% chance to turn an inventory item into onigiri ---
+    if (enemy.special === 'onigiri' && Math.random() < 0.1) {
+      // Find non-equipped items
+      var nonEquipped = [];
+      for (var i = 0; i < player.inventory.length; i++) {
+        var it = player.inventory[i];
+        if (it !== player.weapon && it !== player.shield) {
+          nonEquipped.push(i);
+        }
+      }
+      if (nonEquipped.length > 0) {
+        var targetIdx = nonEquipped[Math.floor(Math.random() * nonEquipped.length)];
+        var targetItem = player.inventory[targetIdx];
+        var oldName = targetItem.name;
+        // Replace with onigiri
+        var onigiri = new Item(0, 0, 'onigiri');
+        // Copy onigiri properties to the item slot
+        player.inventory[targetIdx] = onigiri;
+        this.ui.addMessage('にぎり見習いに' + oldName + 'をおにぎりにされた！');
+        // Still do normal attack too? No - the onigiri transformation IS the attack
+        return;
+      }
+      // If no items, fall through to normal attack
+    }
+
+    // --- Minotaur special: 25% chance critical hit (double damage) ---
+    var isCritical = false;
+    if (enemy.special === 'critical' && Math.random() < 0.25) {
+      isCritical = true;
+    }
+
+    var rawDmg = enemy.attack - player.defense + Math.floor(Math.random() * 3) - 1;
     var damage = Math.max(1, rawDmg);
-    this.player.hp -= damage;
 
-    this.ui.addMessage(enemy.name + 'の攻撃！ ' + damage + 'ダメージを受けた');
+    if (isCritical) {
+      damage *= 2;
+      this.ui.addMessage('タウロスの痛恨の一撃！ ' + damage + 'ダメージ！');
+    } else {
+      this.ui.addMessage(enemy.name + 'の攻撃！ ' + damage + 'ダメージを受けた');
+    }
 
-    if (this.player.hp <= 0) {
-      this.player.hp = 0;
+    player.hp -= damage;
+
+    if (player.hp <= 0) {
+      player.hp = 0;
       this.gameOver = true;
       this.ui.addMessage('倒れてしまった... ' + this.floorNum + 'Fで力尽きた');
-      this.ui.showGameOver(this.floorNum, this.player.level);
+      this.ui.showGameOver(this.floorNum, player.level);
     }
   };
 
@@ -173,13 +213,23 @@ var Game = (function() {
     }
 
     this.enemies = this.enemies.filter(function(e) { return !e.dead; });
+
+    // Enemy spawn chance: 5% per turn, max 15 enemies
+    if (!this.gameOver && !this.victory) {
+      var livingCount = this.livingEnemyCount();
+      if (livingCount < MAX_ENEMIES_PER_FLOOR && Math.random() < 0.05) {
+        var newEnemy = Enemy.spawnOneEnemy(this);
+        if (newEnemy) {
+          this.enemies.push(newEnemy);
+        }
+      }
+    }
   };
 
   Game.prototype.descend = function() {
     if (this.gameOver || this.victory) return false;
     var tile = this.dungeon.grid[this.player.y][this.player.x];
     if (tile === Dungeon.TILE.STAIRS_DOWN) {
-      // Victory condition: descend from floor 20
       if (this.floorNum >= MAX_FLOOR) {
         this.victory = true;
         this.ui.addMessage('ダンジョンをクリアした！');

@@ -57,6 +57,12 @@ var UI = (function() {
     var satietyText = '満腹度: ' + satiety + '/' + player.maxSatiety;
     var afterText = ' | 攻:' + player.attack + ' 防:' + player.defense;
 
+    // Status effects display
+    var effectText = player.getStatusEffectText ? player.getStatusEffectText() : '';
+    if (effectText) {
+      afterText += ' <span style="color:#ff8a65;">' + effectText + '</span>';
+    }
+
     this.statusEl.innerHTML = statusText +
       '<span style="color:' + satietyColor + ';">' + satietyText + '</span>' +
       afterText;

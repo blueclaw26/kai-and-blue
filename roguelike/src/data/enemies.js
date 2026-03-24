@@ -9,7 +9,8 @@ var ENEMY_DATA = {
     defense: 0,
     exp: 3,
     minFloor: 1,
-    maxFloor: 5
+    maxFloor: 5,
+    special: null
   },
   chintala: {
     name: 'チンタラ',
@@ -20,7 +21,8 @@ var ENEMY_DATA = {
     defense: 1,
     exp: 5,
     minFloor: 1,
-    maxFloor: 7
+    maxFloor: 7,
+    special: null
   },
   nigiri: {
     name: 'にぎり見習い',
@@ -31,7 +33,8 @@ var ENEMY_DATA = {
     defense: 2,
     exp: 10,
     minFloor: 3,
-    maxFloor: 10
+    maxFloor: 10,
+    special: 'onigiri'
   },
   midnighthat: {
     name: 'ぼうれい武者',
@@ -42,7 +45,8 @@ var ENEMY_DATA = {
     defense: 3,
     exp: 15,
     minFloor: 5,
-    maxFloor: 12
+    maxFloor: 12,
+    special: 'wallpass'
   },
   polygon: {
     name: 'パ王',
@@ -53,7 +57,8 @@ var ENEMY_DATA = {
     defense: 4,
     exp: 20,
     minFloor: 7,
-    maxFloor: 15
+    maxFloor: 15,
+    special: 'magic'
   },
   dragon: {
     name: 'ドラゴン',
@@ -64,7 +69,8 @@ var ENEMY_DATA = {
     defense: 8,
     exp: 50,
     minFloor: 10,
-    maxFloor: 20
+    maxFloor: 20,
+    special: 'firebreath'
   },
   skull_mage: {
     name: 'スカルドラゴン',
@@ -75,7 +81,8 @@ var ENEMY_DATA = {
     defense: 6,
     exp: 35,
     minFloor: 12,
-    maxFloor: 20
+    maxFloor: 20,
+    special: 'floorfire'
   },
   minotaur: {
     name: 'タウロス',
@@ -86,6 +93,7 @@ var ENEMY_DATA = {
     defense: 10,
     exp: 60,
     minFloor: 15,
-    maxFloor: 20
+    maxFloor: 20,
+    special: 'critical'
   }
 };

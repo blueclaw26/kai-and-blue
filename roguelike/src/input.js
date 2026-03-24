@@ -87,8 +87,16 @@ var Input = (function() {
     if (dir) {
       e.preventDefault();
       var game = this.game;
+      // Confused: randomize movement direction
+      var actualDir = dir;
+      if (game.player.hasStatusEffect('confused')) {
+        var allDirs = [[0, -1], [0, 1], [-1, 0], [1, 0], [-1, -1], [1, -1], [-1, 1], [1, 1]];
+        actualDir = allDirs[Math.floor(Math.random() * allDirs.length)];
+      }
+      var moveDx = actualDir[0];
+      var moveDy = actualDir[1];
       this.turnManager.processTurn(function() {
-        return game.movePlayer(dir[0], dir[1]);
+        return game.movePlayer(moveDx, moveDy);
       });
       if (this.game.isOnStairs()) {
         this.game.ui.addMessage('階段を見つけた！ (>キーで降りる)');
