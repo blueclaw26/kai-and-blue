@@ -20,6 +20,7 @@ var Item = (function() {
     if (data.effect !== undefined) this.effect = data.effect;
     if (data.value !== undefined) this.value = data.value;
     if (data.satiety !== undefined) this.satiety = data.satiety;
+    if (data.uses !== undefined) this.uses = data.uses;
   }
 
   Item.prototype.getDisplayName = function() {
@@ -28,6 +29,8 @@ var Item = (function() {
       name += ' (攻撃+' + this.attack + ')';
     } else if (this.type === 'shield' && this.defense !== undefined) {
       name += ' (防御+' + this.defense + ')';
+    } else if (this.type === 'staff') {
+      name += '[' + this.uses + ']';
     }
     return name;
   };
@@ -42,12 +45,14 @@ var Item = (function() {
         return this._useScroll(game, player);
       case 'food':
         return this._useFood(game, player);
+      case 'staff':
+        return this._useStaff(game, player);
       case 'weapon':
       case 'shield':
-        ui.addMessage('装備するには[E]キーを使おう');
+        ui.addMessage('装備するには[E]キーを使おう', 'system');
         return false;
       default:
-        ui.addMessage('このアイテムは使えない');
+        ui.addMessage('このアイテムは使えない', 'system');
         return false;
     }
   };
@@ -58,15 +63,15 @@ var Item = (function() {
       case 'heal':
         var healed = Math.min(this.value, player.maxHp - player.hp);
         player.hp = Math.min(player.hp + this.value, player.maxHp);
-        ui.addMessage(this.name + 'を飲んだ。HPが' + healed + '回復した');
+        ui.addMessage(this.name + 'を飲んだ。HPが' + healed + '回復した', 'heal');
         return true;
       case 'strength':
         player.baseAttack = (player.baseAttack || player.attack) + this.value;
-        ui.addMessage(this.name + 'を飲んだ。ちからが' + this.value + '上がった');
+        ui.addMessage(this.name + 'を飲んだ。ちからが' + this.value + '上がった', 'heal');
         player._recalcStats();
         return true;
       case 'cure_poison':
-        ui.addMessage(this.name + 'を飲んだ。体が軽くなった');
+        ui.addMessage(this.name + 'を飲んだ。体が軽くなった', 'heal');
         return true;
       default:
         ui.addMessage(this.name + 'を飲んだ');
@@ -86,7 +91,7 @@ var Item = (function() {
             }
           }
         }
-        ui.addMessage(this.name + 'を読んだ。フロアの全体が明るくなった');
+        ui.addMessage(this.name + 'を読んだ。フロアの全体が明るくなった', 'system');
         return true;
       case 'confuse_enemies':
         var confused = 0;
@@ -99,17 +104,17 @@ var Item = (function() {
           }
         }
         if (confused > 0) {
-          ui.addMessage(this.name + 'を読んだ。周囲のモンスターが混乱した');
+          ui.addMessage(this.name + 'を読んだ。周囲のモンスターが混乱した', 'attack');
         } else {
-          ui.addMessage(this.name + 'を読んだ。しかし何も起きなかった');
+          ui.addMessage(this.name + 'を読んだ。しかし何も起きなかった', 'system');
         }
         return true;
       case 'powerup':
         player.powerupTurns = (player.powerupTurns || 0) + 20;
-        ui.addMessage(this.name + 'を読んだ。攻撃力が上がった');
+        ui.addMessage(this.name + 'を読んだ。攻撃力が上がった', 'heal');
         return true;
       case 'identify':
-        ui.addMessage(this.name + 'を読んだ。持ち物を識別した');
+        ui.addMessage(this.name + 'を読んだ。持ち物を識別した', 'system');
         return true;
       default:
         ui.addMessage(this.name + 'を読んだ');
@@ -123,12 +128,33 @@ var Item = (function() {
     var oldSatiety = player.satiety;
     player.satiety = Math.min(player.satiety + this.satiety, maxSat);
     var restored = Math.floor(player.satiety - oldSatiety);
-    ui.addMessage(this.name + 'を食べた（満腹度+' + restored + '）');
+    ui.addMessage(this.name + 'を食べた（満腹度+' + restored + '）', 'heal');
     // Reset hungry warning
     if (player.satiety > 10) {
       player._hungryWarned = false;
     }
     return true;
+  };
+
+  Item.prototype._useStaff = function(game, player) {
+    var ui = game.ui;
+
+    if (this.uses <= 0) {
+      ui.addMessage('杖は使い切った', 'system');
+      return false;
+    }
+
+    // Enter direction selection mode - don't consume yet
+    // The actual use happens in the direction callback
+    var self = this;
+    ui.addMessage('どの方向に振る？（方向キーで選択、Escでキャンセル）', 'system');
+    game.directionMode = {
+      item: self,
+      callback: function(dx, dy) {
+        game.useStaff(self, dx, dy);
+      }
+    };
+    return false; // Don't consume turn yet - direction mode handles it
   };
 
   // Pick an item from FLOOR_TABLE weighted for given floor

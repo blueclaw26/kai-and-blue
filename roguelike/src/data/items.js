@@ -22,5 +22,13 @@ var ITEM_DATA = {
 
   // Food
   onigiri: { type: 'food', name: 'おにぎり', char: '%', color: '#fff176', satiety: 50, minFloor: 1, weight: 12 },
-  big_onigiri: { type: 'food', name: '大きいおにぎり', char: '%', color: '#ffd54f', satiety: 100, minFloor: 3, weight: 5 }
+  big_onigiri: { type: 'food', name: '大きいおにぎり', char: '%', color: '#ffd54f', satiety: 100, minFloor: 3, weight: 5 },
+
+  // Staves - directional magic, limited uses
+  staff_knockback: { type: 'staff', name: 'ふきとばしの杖', char: '/', color: '#26c6da', effect: 'knockback', uses: 5, minFloor: 1 },
+  staff_swap: { type: 'staff', name: '場所替えの杖', char: '/', color: '#ab47bc', effect: 'swap', uses: 3, minFloor: 3 },
+  staff_paralyze: { type: 'staff', name: 'かなしばりの杖', char: '/', color: '#ffa726', effect: 'paralyze', uses: 4, minFloor: 2 },
+  staff_slow: { type: 'staff', name: '鈍足の杖', char: '/', color: '#78909c', effect: 'slow', uses: 5, minFloor: 1 },
+  staff_lightning: { type: 'staff', name: 'いかずちの杖', char: '/', color: '#ffeb3b', effect: 'lightning', uses: 3, minFloor: 5 },
+  staff_tunnel: { type: 'staff', name: 'トンネルの杖', char: '/', color: '#795548', effect: 'tunnel', uses: 4, minFloor: 3 }
 };

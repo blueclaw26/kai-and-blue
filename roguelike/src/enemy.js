@@ -20,16 +20,6 @@ var Enemy = (function() {
   Enemy.prototype = Object.create(Entity.prototype);
   Enemy.prototype.constructor = Enemy;
 
-  Enemy.prototype.takeDamage = function(amount) {
-    this.hp -= amount;
-    if (this.hp <= 0) {
-      this.hp = 0;
-      this.dead = true;
-      return true;
-    }
-    return false;
-  };
-
   // Override canMoveTo for wallpass enemies
   Enemy.prototype._canMoveToTileRaw = function(x, y, game) {
     if (x < 0 || x >= game.dungeon.width || y < 0 || y >= game.dungeon.height) return false;
@@ -46,9 +36,35 @@ var Enemy = (function() {
     return this._canMoveToTile(x, y, game);
   };
 
+  Enemy.prototype.takeDamage = function(amount) {
+    this.hp -= amount;
+    // Break paralysis when hit
+    if (this.paralyzed && this.paralyzed > 0) {
+      this.paralyzed = 0;
+    }
+    if (this.hp <= 0) {
+      this.hp = 0;
+      this.dead = true;
+      return true;
+    }
+    return false;
+  };
+
   Enemy.prototype.act = function(game) {
     if (this.dead) return;
     this._turnCount++;
+
+    // Paralyzed: can't act
+    if (this.paralyzed && this.paralyzed > 0) {
+      this.paralyzed--;
+      return;
+    }
+
+    // Slowed: acts every other turn
+    if (this.slowed && this.slowed > 0) {
+      this.slowed--;
+      if (this._turnCount % 2 === 0) return; // skip every other turn
+    }
 
     if (this.confused > 0) {
       this.confused--;
@@ -68,11 +84,11 @@ var Enemy = (function() {
       if (this._turnCount % 3 === 0) {
         var fireDmg = 20;
         player.hp -= fireDmg;
-        game.ui.addMessage('どこからか炎が飛んできた！ ' + fireDmg + 'ダメージ！');
+        game.ui.addMessage('どこからか炎が飛んできた！ ' + fireDmg + 'ダメージ！', 'enemy_special');
         if (player.hp <= 0) {
           player.hp = 0;
           game.gameOver = true;
-          game.ui.addMessage('倒れてしまった... ' + game.floorNum + 'Fで力尽きた');
+          game.ui.addMessage('倒れてしまった... ' + game.floorNum + 'Fで力尽きた', 'damage');
           game.ui.showGameOver(game.floorNum, player.level);
         }
         return;
@@ -84,11 +100,11 @@ var Enemy = (function() {
       if ((dx === 0 || dy === 0) && this._hasLineOfSight(game, this.x, this.y, player.x, player.y)) {
         var fireDmg = 15 + Math.floor(Math.random() * 6); // 15-20
         player.hp -= fireDmg;
-        game.ui.addMessage('ドラゴンが火を吐いた！ ' + fireDmg + 'ダメージ！');
+        game.ui.addMessage('ドラゴンが火を吐いた！ ' + fireDmg + 'ダメージ！', 'enemy_special');
         if (player.hp <= 0) {
           player.hp = 0;
           game.gameOver = true;
-          game.ui.addMessage('倒れてしまった... ' + game.floorNum + 'Fで力尽きた');
+          game.ui.addMessage('倒れてしまった... ' + game.floorNum + 'Fで力尽きた', 'damage');
           game.ui.showGameOver(game.floorNum, player.level);
         }
         return;
@@ -102,10 +118,10 @@ var Enemy = (function() {
         // Cast spell instead of moving
         if (Math.random() < 0.5) {
           player.addStatusEffect('confused', 5, game.ui);
-          game.ui.addMessage('パ王が杖を振った！ 混乱になった');
+          game.ui.addMessage('パ王が杖を振った！ 混乱になった', 'enemy_special');
         } else {
           player.addStatusEffect('slowed', 5, game.ui);
-          game.ui.addMessage('パ王が杖を振った！ 鈍足になった');
+          game.ui.addMessage('パ王が杖を振った！ 鈍足になった', 'enemy_special');
         }
         return;
       }

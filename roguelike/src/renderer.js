@@ -205,9 +205,9 @@ var Renderer = (function() {
         var isVisible = visible[key];
 
         if (tile === Dungeon.TILE.WALL) {
-          ctx.fillStyle = isVisible ? '#555' : '#2a2a2a';
+          ctx.fillStyle = isVisible ? '#3a3a3a' : '#1a1a1a';
         } else if (tile === Dungeon.TILE.STAIRS_DOWN) {
-          ctx.fillStyle = isVisible ? COLORS.stairs : '#7a5520';
+          ctx.fillStyle = isVisible ? '#e8a44a' : '#7a5520';
         } else {
           ctx.fillStyle = isVisible ? '#2a3050' : '#151825';
         }
@@ -216,28 +216,40 @@ var Renderer = (function() {
       }
     }
 
+    // Stairs as amber dot (draw on top for visibility)
+    for (var y = 0; y < dungeon.height; y++) {
+      for (var x = 0; x < dungeon.width; x++) {
+        if (dungeon.grid[y][x] === Dungeon.TILE.STAIRS_DOWN && explored.has(x + ',' + y)) {
+          ctx.fillStyle = '#ffb300';
+          ctx.fillRect(x * t, y * t, t, t);
+        }
+      }
+    }
+
     // Items on minimap (yellow dots, only visible)
+    ctx.fillStyle = '#ffeb3b';
     for (var i = 0; i < items.length; i++) {
       var item = items[i];
       var iKey = item.x + ',' + item.y;
       if (!visible[iKey]) continue;
-      ctx.fillStyle = '#ffeb3b';
       ctx.fillRect(item.x * t, item.y * t, t, t);
     }
 
-    // Enemies on minimap (only visible)
+    // Enemies on minimap (red dots, only visible)
+    ctx.fillStyle = '#ff4444';
     for (var i = 0; i < enemies.length; i++) {
       var enemy = enemies[i];
       if (enemy.dead) continue;
       var eKey = enemy.x + ',' + enemy.y;
       if (!visible[eKey]) continue;
-      ctx.fillStyle = '#ff4444';
       ctx.fillRect(enemy.x * t, enemy.y * t, t, t);
     }
 
-    // Player on minimap
-    ctx.fillStyle = COLORS.player;
-    ctx.fillRect(player.x * t, player.y * t, t, t);
+    // Player on minimap (bright cyan, larger dot)
+    ctx.fillStyle = '#00e5ff';
+    var px = player.x * t - 1;
+    var py = player.y * t - 1;
+    ctx.fillRect(px, py, 6, 6);
   };
 
   return Renderer;

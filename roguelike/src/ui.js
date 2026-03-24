@@ -2,8 +2,20 @@
 var UI = (function() {
   'use strict';
 
-  var MAX_MESSAGES = 5;
+  var MAX_MESSAGES = 8;
   var SLOT_LETTERS = 'abcdefghijklmnopqrst';
+
+  // Message type colors
+  var MSG_COLORS = {
+    attack: '#ffffff',
+    damage: '#ef5350',
+    heal: '#66bb6a',
+    levelup: '#e8a44a',
+    pickup: '#4fc3f7',
+    enemy_special: '#ce93d8',
+    system: '#8892b0',
+    normal: '#b0b8c8'
+  };
 
   function UI(statusEl, logEl) {
     this.statusEl = statusEl;
@@ -31,12 +43,26 @@ var UI = (function() {
     this.inventoryBox = box;
   };
 
-  UI.prototype.addMessage = function(text) {
-    this.messages.push(text);
+  UI.prototype.addMessage = function(text, type) {
+    var color = MSG_COLORS[type] || MSG_COLORS.normal;
+    this.messages.push({ text: text, color: color });
     if (this.messages.length > MAX_MESSAGES) {
       this.messages.shift();
     }
-    this.logEl.textContent = this.messages.join('\n');
+    this._renderLog();
+  };
+
+  UI.prototype._renderLog = function() {
+    var html = '';
+    for (var i = 0; i < this.messages.length; i++) {
+      var msg = this.messages[i];
+      // Older messages are more transparent
+      var opacity = 0.4 + 0.6 * ((i + 1) / this.messages.length);
+      html += '<div style="color:' + msg.color + ';opacity:' + opacity.toFixed(2) + ';">' + msg.text + '</div>';
+    }
+    this.logEl.innerHTML = html;
+    // Auto-scroll to bottom
+    this.logEl.scrollTop = this.logEl.scrollHeight;
   };
 
   UI.prototype.updateStatus = function(game) {
@@ -51,21 +77,60 @@ var UI = (function() {
       satietyColor = '#ef5350';
     }
 
-    // Build status bar with HTML for colored satiety
-    var statusText = player.floor + 'F | HP: ' + player.hp + '/' + player.maxHp +
-      ' | Lv.' + player.level + ' | ';
-    var satietyText = '満腹度: ' + satiety + '/' + player.maxSatiety;
-    var afterText = ' | 攻:' + player.attack + ' 防:' + player.defense;
+    // HP color based on percentage
+    var hpPercent = player.hp / player.maxHp;
+    var hpColor;
+    if (hpPercent > 0.5) {
+      hpColor = '#66bb6a';
+    } else if (hpPercent > 0.25) {
+      hpColor = '#ffa726';
+    } else {
+      hpColor = '#ef5350';
+    }
+
+    // Weapon/shield names
+    var weaponName = player.weapon ? player.weapon.name : 'なし';
+    var shieldName = player.shield ? player.shield.name : 'なし';
+
+    var statusText = player.floor + 'F | ';
+    var hpText = 'HP: ' + player.hp + '/' + player.maxHp;
+    var levelText = ' | Lv.' + player.level + ' | ';
+    var satietyText = '満腹度:' + satiety;
+    var equipText = ' | 攻:' + player.attack + '(' + weaponName + ') 防:' + player.defense + '(' + shieldName + ')';
 
     // Status effects display
     var effectText = player.getStatusEffectText ? player.getStatusEffectText() : '';
-    if (effectText) {
-      afterText += ' <span style="color:#ff8a65;">' + effectText + '</span>';
-    }
+    var effectHtml = effectText ? ' <span style="color:#ff8a65;">' + effectText + '</span>' : '';
 
     this.statusEl.innerHTML = statusText +
+      '<span style="color:' + hpColor + ';">' + hpText + '</span>' +
+      levelText +
       '<span style="color:' + satietyColor + ';">' + satietyText + '</span>' +
-      afterText;
+      equipText +
+      effectHtml;
+
+    // Update side panel info
+    this._updateSidePanel(game);
+  };
+
+  UI.prototype._updateSidePanel = function(game) {
+    var player = game.player;
+
+    // Update equipped items section
+    var equipEl = document.getElementById('side-equip');
+    if (equipEl) {
+      var weaponText = player.weapon ? player.weapon.getDisplayName() : 'なし';
+      var shieldText = player.shield ? player.shield.getDisplayName() : 'なし';
+      equipEl.innerHTML =
+        '<div class="key-group"><span class="key-label">武器</span><span class="key-value" style="color:' + (player.weapon ? player.weapon.color : '#666') + ';">' + weaponText + '</span></div>' +
+        '<div class="key-group"><span class="key-label">盾</span><span class="key-value" style="color:' + (player.shield ? player.shield.color : '#666') + ';">' + shieldText + '</span></div>';
+    }
+
+    // Update turn count
+    var turnEl = document.getElementById('side-turns');
+    if (turnEl) {
+      turnEl.textContent = player.totalTurns;
+    }
   };
 
   UI.prototype.renderInventory = function(game) {
@@ -97,7 +162,7 @@ var UI = (function() {
     }
 
     html += '<div style="color:#888;font-size:12px;margin-top:16px;border-top:1px solid #333;padding-top:8px;">';
-    html += '[e]使う [E]装備 [d]置く [↑↓]選択 [ESC]戻る';
+    html += '[e]使う [E]装備 [d]置く [t]投げる [↑↓]選択 [ESC]戻る';
     html += '</div>';
 
     box.innerHTML = html;

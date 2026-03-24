@@ -50,6 +50,12 @@ var Input = (function() {
   Input.prototype.handleKey = function(e) {
     if (this.game.gameOver || this.game.victory) return;
 
+    // Direction selection mode (for staves/throw)
+    if (this.game.directionMode) {
+      this._handleDirectionKey(e);
+      return;
+    }
+
     // Inventory mode
     if (this.game.inventoryOpen) {
       this._handleInventoryKey(e);
@@ -99,7 +105,7 @@ var Input = (function() {
         return game.movePlayer(moveDx, moveDy);
       });
       if (this.game.isOnStairs()) {
-        this.game.ui.addMessage('階段を見つけた！ (>キーで降りる)');
+        this.game.ui.addMessage('階段を見つけた！ (>キーで降りる)', 'system');
       }
       return;
     }
@@ -117,6 +123,34 @@ var Input = (function() {
         return g.descend();
       });
       return;
+    }
+  };
+
+  Input.prototype._handleDirectionKey = function(e) {
+    e.preventDefault();
+    var game = this.game;
+    var key = e.key;
+    var code = e.code;
+
+    // Cancel
+    if (key === 'Escape') {
+      game.directionMode = null;
+      game.ui.addMessage('キャンセルした', 'system');
+      return;
+    }
+
+    // Check for direction key
+    var dir = KEY_MAP[code] || KEY_MAP[key];
+    if (dir) {
+      var callback = game.directionMode.callback;
+      game.directionMode = null;
+
+      // Fire the callback, then process turn
+      var dx = dir[0];
+      var dy = dir[1];
+      this.turnManager.processTurn(function() {
+        return callback(dx, dy);
+      });
     }
   };
 
@@ -208,6 +242,23 @@ var Input = (function() {
       this.turnManager.processTurn(function() {
         return game.dropItem(item);
       });
+      return;
+    }
+
+    // Throw item
+    if (key === 't') {
+      game.inventoryOpen = false;
+      ui.hideInventory();
+      var item = selectedItem;
+      ui.addMessage('どの方向に投げる？（方向キーで選択、Escでキャンセル）', 'system');
+      game.directionMode = {
+        item: item,
+        callback: function(dx, dy) {
+          return game.throwItem(item, dx, dy);
+        }
+      };
+      // Re-render to show the message
+      this.turnManager.processTurn(function() { return false; });
       return;
     }
   };

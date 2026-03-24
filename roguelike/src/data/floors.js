@@ -26,6 +26,13 @@ var FLOOR_TABLE = {
     [5, 20, 'scroll_identify', 4],
     [1, 20, 'power_grass', 3],
     [3, 20, 'big_onigiri', 4],
-    [1, 20, 'poison_grass', 3]
+    [1, 20, 'poison_grass', 3],
+    // Staves
+    [1, 20, 'staff_knockback', 3],
+    [1, 20, 'staff_slow', 3],
+    [2, 20, 'staff_paralyze', 3],
+    [3, 20, 'staff_swap', 2],
+    [3, 20, 'staff_tunnel', 2],
+    [5, 20, 'staff_lightning', 2]
   ]
 };

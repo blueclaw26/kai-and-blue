@@ -13,7 +13,7 @@ var TurnManager = (function() {
 
     // Check if player is slowed and should skip this turn
     if (p.isSlowedSkip()) {
-      this.ui.addMessage('足が重くて動けない...');
+      this.ui.addMessage('足が重くて動けない...', 'damage');
       // Still tick status effects and enemy turns
       p.totalTurns++;
       p.tickStatusEffects(this.ui);
@@ -42,7 +42,7 @@ var TurnManager = (function() {
       var satietyResult = p.tickSatiety(this.ui);
       if (satietyResult === 'dead') {
         this.game.gameOver = true;
-        this.ui.addMessage('空腹で倒れてしまった... ' + this.game.floorNum + 'Fで力尽きた');
+        this.ui.addMessage('空腹で倒れてしまった... ' + this.game.floorNum + 'Fで力尽きた', 'damage');
         this.ui.showGameOver(this.game.floorNum, p.level);
       }
 

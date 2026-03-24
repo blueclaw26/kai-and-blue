@@ -93,7 +93,7 @@ var Player = (function() {
         case 'slowed': msg = '鈍足が解けた'; break;
         case 'strengthened': msg = '力が元に戻った'; break;
       }
-      if (msg && ui) ui.addMessage(msg);
+      if (msg && ui) ui.addMessage(msg, 'system');
     }
     if (removed.length > 0) {
       this._recalcStats();
@@ -134,7 +134,7 @@ var Player = (function() {
       this.baseDefense += (this.level % 2 === 0) ? 1 : 0;
       this._recalcStats();
       if (ui) {
-        ui.addMessage('レベルが上がった！ Lv.' + this.level + ' (HP+3, 攻撃+1)');
+        ui.addMessage('レベルが上がった！ Lv.' + this.level + ' (HP+3, 攻撃+1)', 'levelup');
       }
     }
   };
@@ -148,7 +148,7 @@ var Player = (function() {
 
     if (this.satiety <= 10 && this.satiety > 0 && !this._hungryWarned) {
       this._hungryWarned = true;
-      if (ui) ui.addMessage('お腹が減ってきた...');
+      if (ui) ui.addMessage('お腹が減ってきた...', 'damage');
     }
 
     if (this.satiety > 10) {
@@ -156,7 +156,7 @@ var Player = (function() {
     }
 
     if (this.satiety <= 0) {
-      if (ui) ui.addMessage('お腹が空いて足元がふらつく...');
+      if (ui) ui.addMessage('お腹が空いて足元がふらつく...', 'damage');
       this.hp -= 1;
       if (this.hp <= 0) {
         this.hp = 0;
@@ -190,26 +190,26 @@ var Player = (function() {
       if (this.weapon === item) {
         this.weapon = null;
         this._recalcStats();
-        ui.addMessage(item.name + 'を外した');
+        ui.addMessage(item.name + 'を外した', 'system');
       } else {
         this.weapon = item;
         this._recalcStats();
-        ui.addMessage(item.name + 'を装備した');
+        ui.addMessage(item.name + 'を装備した', 'pickup');
       }
       return true;
     } else if (item.type === 'shield') {
       if (this.shield === item) {
         this.shield = null;
         this._recalcStats();
-        ui.addMessage(item.name + 'を外した');
+        ui.addMessage(item.name + 'を外した', 'system');
       } else {
         this.shield = item;
         this._recalcStats();
-        ui.addMessage(item.name + 'を装備した');
+        ui.addMessage(item.name + 'を装備した', 'pickup');
       }
       return true;
     }
-    ui.addMessage('それは装備できない');
+    ui.addMessage('それは装備できない', 'system');
     return false;
   };
 
