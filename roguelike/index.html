@@ -7,13 +7,38 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="game-container">
-    <div id="status-bar">1F | HP: 15/15 | Lv.1 | Exp: 0 | 敵: 0</div>
-    <canvas id="game-canvas"></canvas>
-    <div id="minimap-container">
-      <canvas id="minimap-canvas"></canvas>
+  <div id="game-wrapper">
+    <div id="side-panel">
+      <div class="panel-section">
+        <div class="panel-title">操作</div>
+        <div class="panel-content">
+          <div class="key-group"><span class="key-label">移動</span><span class="key-value">矢印 / hjkl</span></div>
+          <div class="key-group"><span class="key-label">ナナメ</span><span class="key-value">yubn / テンキー</span></div>
+          <div class="key-group"><span class="key-label">足踏み</span><span class="key-value">. / テンキー5</span></div>
+          <div class="key-group"><span class="key-label">階段</span><span class="key-value">&gt;</span></div>
+          <div class="key-group"><span class="key-label">拾う</span><span class="key-value">g / ,</span></div>
+          <div class="key-group"><span class="key-label">持ち物</span><span class="key-value">i</span></div>
+        </div>
+      </div>
+      <div class="panel-section">
+        <div class="panel-title">持ち物操作</div>
+        <div class="panel-content">
+          <div class="key-group"><span class="key-label">使う</span><span class="key-value">e</span></div>
+          <div class="key-group"><span class="key-label">装備</span><span class="key-value">E</span></div>
+          <div class="key-group"><span class="key-label">置く</span><span class="key-value">d</span></div>
+          <div class="key-group"><span class="key-label">閉じる</span><span class="key-value">Esc</span></div>
+        </div>
+      </div>
     </div>
-    <div id="message-log"></div>
+
+    <div id="game-container">
+      <div id="status-bar">1F | HP: 15/15 | Lv.1 | Exp: 0 | 敵: 0</div>
+      <canvas id="game-canvas"></canvas>
+      <div id="minimap-container">
+        <canvas id="minimap-canvas"></canvas>
+      </div>
+      <div id="message-log"></div>
+    </div>
   </div>
 
   <div id="game-over-overlay" style="display:none;">

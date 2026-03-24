@@ -41,12 +41,25 @@ var UI = (function() {
 
   UI.prototype.updateStatus = function(game) {
     var player = game.player;
-    var enemyCount = game.livingEnemyCount();
-    var weaponName = player.weapon ? player.weapon.name : 'なし';
-    var shieldName = player.shield ? player.shield.name : 'なし';
-    this.statusEl.textContent = player.floor + 'F | HP: ' + player.hp + '/' + player.maxHp +
-      ' | Lv.' + player.level + ' | 攻:' + player.attack + ' 防:' + player.defense +
-      ' | 武:' + weaponName + ' 盾:' + shieldName;
+    var satiety = Math.floor(player.satiety);
+    var satietyColor;
+    if (satiety > 30) {
+      satietyColor = '#66bb6a';
+    } else if (satiety > 10) {
+      satietyColor = '#ffa726';
+    } else {
+      satietyColor = '#ef5350';
+    }
+
+    // Build status bar with HTML for colored satiety
+    var statusText = player.floor + 'F | HP: ' + player.hp + '/' + player.maxHp +
+      ' | Lv.' + player.level + ' | ';
+    var satietyText = '満腹度: ' + satiety + '/' + player.maxSatiety;
+    var afterText = ' | 攻:' + player.attack + ' 防:' + player.defense;
+
+    this.statusEl.innerHTML = statusText +
+      '<span style="color:' + satietyColor + ';">' + satietyText + '</span>' +
+      afterText;
   };
 
   UI.prototype.renderInventory = function(game) {
@@ -96,6 +109,17 @@ var UI = (function() {
       var levelSpan = overlay.querySelector('.go-level');
       if (floorSpan) floorSpan.textContent = floor + 'F';
       if (levelSpan) levelSpan.textContent = 'Lv.' + level;
+      overlay.style.display = 'flex';
+    }
+  };
+
+  UI.prototype.showVictory = function(player) {
+    var overlay = document.getElementById('victory-overlay');
+    if (overlay) {
+      overlay.querySelector('.victory-turns').textContent = player.totalTurns;
+      overlay.querySelector('.victory-kills').textContent = player.enemiesKilled;
+      overlay.querySelector('.victory-items').textContent = player.itemsCollected;
+      overlay.querySelector('.victory-level').textContent = 'Lv.' + player.level;
       overlay.style.display = 'flex';
     }
   };

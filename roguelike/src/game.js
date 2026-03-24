@@ -2,6 +2,8 @@
 var Game = (function() {
   'use strict';
 
+  var MAX_FLOOR = 20;
+
   function Game() {
     this.dungeon = null;
     this.player = null;
@@ -11,6 +13,7 @@ var Game = (function() {
     this.explored = new Set();
     this.ui = null;
     this.gameOver = false;
+    this.victory = false;
     this.inventoryOpen = false;
     this.inventorySelection = 0;
   }
@@ -32,11 +35,8 @@ var Game = (function() {
     }
     this.player.floor = this.floorNum;
 
-    // Spawn enemies
     var startRoom = this.dungeon.rooms[0];
     this.enemies = Enemy.spawnForFloor(this.dungeon, this.floorNum, startRoom);
-
-    // Spawn items
     this.items = Item.spawnForFloor(this.dungeon, this.floorNum, startRoom);
   };
 
@@ -77,12 +77,10 @@ var Game = (function() {
   };
 
   Game.prototype.dropItem = function(item) {
-    // Check if something already on ground
     if (this.getItemAt(this.player.x, this.player.y)) {
       this.ui.addMessage('ここには既にアイテムがある');
       return false;
     }
-    // Unequip if equipped
     if (this.player.weapon === item) {
       this.player.weapon = null;
       this.player._recalcStats();
@@ -103,7 +101,6 @@ var Game = (function() {
     var consumed = item.use(this, this.player);
     if (consumed) {
       this.player.removeFromInventory(item);
-      // Adjust inventory selection
       if (this.inventorySelection >= this.player.inventory.length) {
         this.inventorySelection = Math.max(0, this.player.inventory.length - 1);
       }
@@ -112,7 +109,7 @@ var Game = (function() {
   };
 
   Game.prototype.movePlayer = function(dx, dy) {
-    if (this.gameOver) return false;
+    if (this.gameOver || this.victory) return false;
 
     var newX = this.player.x + dx;
     var newY = this.player.y + dy;
@@ -125,7 +122,6 @@ var Game = (function() {
 
     if (this.player.canMoveTo(newX, newY, this.dungeon)) {
       this.player.moveTo(newX, newY);
-      // Check for item on tile
       var item = this.getItemAt(newX, newY);
       if (item) {
         this.ui.addMessage('足元に' + item.name + 'がある（gキーで拾う）');
@@ -143,6 +139,7 @@ var Game = (function() {
     this.ui.addMessage(enemy.name + 'に ' + damage + ' ダメージを与えた！');
 
     if (died) {
+      this.player.enemiesKilled++;
       this.ui.addMessage(enemy.name + 'を倒した！ 経験値' + enemy.exp + '獲得');
       this.player.gainExp(enemy.exp, this.ui);
     }
@@ -164,9 +161,8 @@ var Game = (function() {
   };
 
   Game.prototype.processEnemyTurns = function() {
-    if (this.gameOver) return;
+    if (this.gameOver || this.victory) return;
 
-    // Tick player buffs
     this.player.tickBuffs();
 
     for (var i = 0; i < this.enemies.length; i++) {
@@ -180,9 +176,16 @@ var Game = (function() {
   };
 
   Game.prototype.descend = function() {
-    if (this.gameOver) return false;
+    if (this.gameOver || this.victory) return false;
     var tile = this.dungeon.grid[this.player.y][this.player.x];
     if (tile === Dungeon.TILE.STAIRS_DOWN) {
+      // Victory condition: descend from floor 20
+      if (this.floorNum >= MAX_FLOOR) {
+        this.victory = true;
+        this.ui.addMessage('ダンジョンをクリアした！');
+        this.ui.showVictory(this.player);
+        return true;
+      }
       this.floorNum++;
       this.newFloor();
       this.ui.addMessage(this.floorNum + 'Fに降りた');

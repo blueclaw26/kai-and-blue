@@ -22,7 +22,7 @@ var Enemy = (function() {
     if (this.hp <= 0) {
       this.hp = 0;
       this.dead = true;
-      return true; // died
+      return true;
     }
     return false;
   };
@@ -30,7 +30,6 @@ var Enemy = (function() {
   Enemy.prototype.act = function(game) {
     if (this.dead) return;
 
-    // Handle confusion
     if (this.confused > 0) {
       this.confused--;
       this._moveRandom(game);
@@ -42,22 +41,16 @@ var Enemy = (function() {
     var dy = player.y - this.y;
     var dist = Math.abs(dx) + Math.abs(dy);
 
-    // Adjacent to player? Attack!
-    if (dist === 1 || (Math.abs(dx) === 1 && Math.abs(dy) === 1 && dist === 2)) {
-      // Only attack if truly adjacent (4-dir for simplicity)
-      if (dist === 1) {
-        game.enemyAttack(this);
-        return;
-      }
+    if (dist === 1) {
+      game.enemyAttack(this);
+      return;
     }
 
-    // Check if in player's FOV or same room
     var inRange = this._isNearPlayer(game, 10);
 
     if (inRange) {
       this.moveTowardPlayer(game);
     } else {
-      // Random movement 25% chance
       if (Math.random() < 0.25) {
         this._moveRandom(game);
       }
@@ -75,11 +68,9 @@ var Enemy = (function() {
     var dx = player.x - this.x;
     var dy = player.y - this.y;
 
-    // Determine preferred direction
     var stepX = dx === 0 ? 0 : (dx > 0 ? 1 : -1);
     var stepY = dy === 0 ? 0 : (dy > 0 ? 1 : -1);
 
-    // Try moves in priority order
     var moves = [];
     if (Math.abs(dx) >= Math.abs(dy)) {
       if (stepX !== 0) moves.push([stepX, 0]);
@@ -94,7 +85,6 @@ var Enemy = (function() {
       var ny = this.y + moves[i][1];
 
       if (this._canMoveToTile(nx, ny, game)) {
-        // Check if target is player
         if (nx === player.x && ny === player.y) {
           game.enemyAttack(this);
           return;
@@ -107,7 +97,6 @@ var Enemy = (function() {
 
   Enemy.prototype._moveRandom = function(game) {
     var dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]];
-    // Shuffle
     for (var i = dirs.length - 1; i > 0; i--) {
       var j = Math.floor(Math.random() * (i + 1));
       var tmp = dirs[i]; dirs[i] = dirs[j]; dirs[j] = tmp;
@@ -124,7 +113,6 @@ var Enemy = (function() {
 
   Enemy.prototype._canMoveToTile = function(x, y, game) {
     if (!this.canMoveTo(x, y, game.dungeon)) return false;
-    // Check other enemies
     for (var i = 0; i < game.enemies.length; i++) {
       var e = game.enemies[i];
       if (e !== this && !e.dead && e.x === x && e.y === y) return false;
@@ -132,23 +120,49 @@ var Enemy = (function() {
     return true;
   };
 
-  // Spawn enemies for a floor
-  Enemy.spawnForFloor = function(dungeon, floorNum, playerStartRoom) {
-    var enemies = [];
-    var count = 3 + Math.floor(Math.random() * 4); // 3-6
-
-    // Get eligible enemy types for this floor
+  // Pick an enemy from FLOOR_TABLE weighted for given floor
+  function pickEnemyForFloor(floorNum) {
+    var table = FLOOR_TABLE.enemies;
     var eligible = [];
-    for (var key in ENEMY_DATA) {
-      var data = ENEMY_DATA[key];
-      if (floorNum >= data.minFloor && floorNum <= data.maxFloor) {
-        eligible.push(data);
+    var totalWeight = 0;
+
+    for (var i = 0; i < table.length; i++) {
+      var entry = table[i];
+      if (floorNum >= entry[0] && floorNum <= entry[1]) {
+        eligible.push({ id: entry[2], weight: entry[3] });
+        totalWeight += entry[3];
       }
     }
+
     if (eligible.length === 0) {
-      // Fallback: use mamel
-      eligible.push(ENEMY_DATA.mamel);
+      return 'mamel'; // fallback
     }
+
+    var roll = Math.random() * totalWeight;
+    var cumulative = 0;
+    for (var j = 0; j < eligible.length; j++) {
+      cumulative += eligible[j].weight;
+      if (roll < cumulative) {
+        return eligible[j].id;
+      }
+    }
+    return eligible[eligible.length - 1].id;
+  }
+
+  // Spawn enemies for a floor using FLOOR_TABLE
+  Enemy.spawnForFloor = function(dungeon, floorNum, playerStartRoom) {
+    var enemies = [];
+
+    // Enemy count scales with floor depth
+    var minCount, maxCount;
+    if (floorNum <= 5) {
+      minCount = 3; maxCount = 6;
+    } else if (floorNum <= 10) {
+      minCount = 5; maxCount = 8;
+    } else {
+      minCount = 6; maxCount = 10;
+    }
+    var count = minCount + Math.floor(Math.random() * (maxCount - minCount + 1));
 
     // Get rooms excluding player's starting room
     var availableRooms = [];
@@ -176,18 +190,34 @@ var Enemy = (function() {
       var ex = room.x + 1 + Math.floor(Math.random() * (room.w - 2));
       var ey = room.y + 1 + Math.floor(Math.random() * (room.h - 2));
 
-      // Make sure not on stairs
       if (dungeon.grid[ey] && dungeon.grid[ey][ex] === Dungeon.TILE.STAIRS_DOWN) continue;
 
-      // Check no enemy already there
       var occupied = false;
       for (var j = 0; j < enemies.length; j++) {
         if (enemies[j].x === ex && enemies[j].y === ey) { occupied = true; break; }
       }
       if (occupied) continue;
 
-      var template = eligible[Math.floor(Math.random() * eligible.length)];
-      enemies.push(new Enemy(ex, ey, template));
+      var enemyId = pickEnemyForFloor(floorNum);
+      var template = ENEMY_DATA[enemyId];
+      if (!template) continue;
+
+      var enemy = new Enemy(ex, ey, template);
+
+      // Stat scaling: +10% per 5 floors above enemy's minFloor
+      var floorsAbove = floorNum - template.minFloor;
+      if (floorsAbove > 0) {
+        var scaleTiers = Math.floor(floorsAbove / 5);
+        if (scaleTiers > 0) {
+          var bonus = 1 + scaleTiers * 0.1;
+          enemy.hp = Math.floor(enemy.hp * bonus);
+          enemy.maxHp = enemy.hp;
+          enemy.attack = Math.floor(enemy.attack * bonus);
+          enemy.defense = Math.floor(enemy.defense * bonus);
+        }
+      }
+
+      enemies.push(enemy);
     }
 
     return enemies;

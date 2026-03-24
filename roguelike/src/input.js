@@ -48,7 +48,7 @@ var Input = (function() {
   }
 
   Input.prototype.handleKey = function(e) {
-    if (this.game.gameOver) return;
+    if (this.game.gameOver || this.game.victory) return;
 
     // Inventory mode
     if (this.game.inventoryOpen) {

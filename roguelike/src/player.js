@@ -3,25 +3,33 @@ var Player = (function() {
   'use strict';
 
   var MAX_INVENTORY = 20;
-  var EXP_THRESHOLDS = [0, 10, 25, 50, 80, 120, 170, 230, 300, 400, 500];
+  var EXP_THRESHOLDS = [0, 10, 25, 50, 80, 120, 170, 230, 300, 400, 500, 620, 760, 920, 1100, 1300, 1520, 1760, 2020, 2300];
 
   function Player(x, y) {
     Entity.call(this, x, y, '@', '#4fc3f7', 'Player');
-    this.hp = 15;
-    this.maxHp = 15;
-    this.baseAttack = 3;
-    this.attack = 3;
+    this.hp = 20;
+    this.maxHp = 20;
+    this.baseAttack = 2;
+    this.attack = 2;
     this.baseDefense = 1;
     this.defense = 1;
     this.level = 1;
     this.exp = 0;
     this.floor = 1;
     this.satiety = 100;
+    this.maxSatiety = 100;
+    this._satietyAccum = 0; // accumulator for fractional satiety decrease
+    this._hungryWarned = false; // track if we showed the hungry warning
+
+    // Stats tracking for victory screen
+    this.totalTurns = 0;
+    this.enemiesKilled = 0;
+    this.itemsCollected = 0;
 
     // Inventory
     this.inventory = [];
-    this.weapon = null;   // equipped weapon (Item reference)
-    this.shield = null;   // equipped shield (Item reference)
+    this.weapon = null;
+    this.shield = null;
 
     // Buffs
     this.powerupTurns = 0;
@@ -53,6 +61,38 @@ var Player = (function() {
     }
   };
 
+  // Process satiety decrease per turn. Returns messages to display.
+  Player.prototype.tickSatiety = function(ui) {
+    this._satietyAccum += 0.1;
+    if (this._satietyAccum >= 1) {
+      this._satietyAccum -= 1;
+      this.satiety = Math.max(0, this.satiety - 1);
+    }
+
+    // Warning at satiety <= 10
+    if (this.satiety <= 10 && this.satiety > 0 && !this._hungryWarned) {
+      this._hungryWarned = true;
+      if (ui) ui.addMessage('お腹が減ってきた...');
+    }
+
+    // Reset warning flag when satiety goes above 10
+    if (this.satiety > 10) {
+      this._hungryWarned = false;
+    }
+
+    // Starvation damage
+    if (this.satiety <= 0) {
+      if (ui) ui.addMessage('お腹が空いて足元がふらつく...');
+      this.hp -= 1;
+      if (this.hp <= 0) {
+        this.hp = 0;
+        return 'dead';
+      }
+    }
+
+    return 'ok';
+  };
+
   Player.prototype.canPickUp = function() {
     return this.inventory.length < MAX_INVENTORY;
   };
@@ -60,6 +100,7 @@ var Player = (function() {
   Player.prototype.pickUp = function(item) {
     if (!this.canPickUp()) return false;
     this.inventory.push(item);
+    this.itemsCollected++;
     return true;
   };
 
@@ -73,7 +114,6 @@ var Player = (function() {
   Player.prototype.equip = function(item, ui) {
     if (item.type === 'weapon') {
       if (this.weapon === item) {
-        // Unequip
         this.weapon = null;
         this._recalcStats();
         ui.addMessage(item.name + 'を外した');

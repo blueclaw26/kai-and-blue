@@ -13,13 +13,22 @@ var TurnManager = (function() {
     var result = action();
 
     if (result) {
-      // Natural HP regen (1 HP per turn, ~1/200 maxHp equivalent feel)
       var p = this.game.player;
-      if (p.hp < p.maxHp && p.hp > 0) {
-        // Regen counter: heal 1 HP every few turns based on maxHp
+      p.totalTurns++;
+
+      // Satiety decrease
+      var satietyResult = p.tickSatiety(this.ui);
+      if (satietyResult === 'dead') {
+        this.game.gameOver = true;
+        this.ui.addMessage('空腹で倒れてしまった... ' + this.game.floorNum + 'Fで力尽きた');
+        this.ui.showGameOver(this.game.floorNum, p.level);
+      }
+
+      // Natural HP regen only when satiety > 0
+      if (!this.game.gameOver && p.satiety > 0 && p.hp < p.maxHp && p.hp > 0) {
         if (!p._regenCounter) p._regenCounter = 0;
         p._regenCounter++;
-        var regenRate = Math.max(2, Math.floor(p.maxHp / 5)); // heal 1 HP every N turns
+        var regenRate = Math.max(2, Math.floor(p.maxHp / 5));
         if (p._regenCounter >= regenRate) {
           p.hp = Math.min(p.maxHp, p.hp + 1);
           p._regenCounter = 0;
@@ -27,7 +36,9 @@ var TurnManager = (function() {
       }
 
       // Enemy turns
-      this.game.processEnemyTurns();
+      if (!this.game.gameOver) {
+        this.game.processEnemyTurns();
+      }
     }
 
     // Render

@@ -22,10 +22,17 @@
     // Bind input
     new Input(turnManager, game);
 
-    // Restart button
+    // Restart buttons
     var restartBtn = document.getElementById('restart-btn');
     if (restartBtn) {
       restartBtn.addEventListener('click', function() {
+        window.location.reload();
+      });
+    }
+
+    var victoryRestartBtn = document.getElementById('victory-restart-btn');
+    if (victoryRestartBtn) {
+      victoryRestartBtn.addEventListener('click', function() {
         window.location.reload();
       });
     }

@@ -14,7 +14,6 @@ var Item = (function() {
     this.identified = true;
     this.cursed = false;
 
-    // Type-specific properties
     if (data.attack !== undefined) this.attack = data.attack;
     if (data.defense !== undefined) this.defense = data.defense;
     if (data.slots !== undefined) this.slots = data.slots;
@@ -79,7 +78,6 @@ var Item = (function() {
     var ui = game.ui;
     switch (this.effect) {
       case 'reveal_map':
-        // Reveal entire floor
         var dungeon = game.dungeon;
         for (var y = 0; y < dungeon.height; y++) {
           for (var x = 0; x < dungeon.width; x++) {
@@ -121,66 +119,72 @@ var Item = (function() {
 
   Item.prototype._useFood = function(game, player) {
     var ui = game.ui;
-    player.satiety = Math.min((player.satiety || 100) + this.satiety, 200);
-    ui.addMessage(this.name + 'を食べた（満腹度+' + this.satiety + '）');
+    var maxSat = player.maxSatiety || 100;
+    var oldSatiety = player.satiety;
+    player.satiety = Math.min(player.satiety + this.satiety, maxSat);
+    var restored = Math.floor(player.satiety - oldSatiety);
+    ui.addMessage(this.name + 'を食べた（満腹度+' + restored + '）');
+    // Reset hungry warning
+    if (player.satiety > 10) {
+      player._hungryWarned = false;
+    }
     return true;
   };
 
-  // Spawn items for a floor
+  // Pick an item from FLOOR_TABLE weighted for given floor
+  function pickItemForFloor(floorNum) {
+    var table = FLOOR_TABLE.items;
+    var eligible = [];
+    var totalWeight = 0;
+
+    for (var i = 0; i < table.length; i++) {
+      var entry = table[i];
+      if (floorNum >= entry[0] && floorNum <= entry[1]) {
+        eligible.push({ id: entry[2], weight: entry[3] });
+        totalWeight += entry[3];
+      }
+    }
+
+    if (eligible.length === 0) {
+      return 'herb'; // fallback
+    }
+
+    var roll = Math.random() * totalWeight;
+    var cumulative = 0;
+    for (var j = 0; j < eligible.length; j++) {
+      cumulative += eligible[j].weight;
+      if (roll < cumulative) {
+        return eligible[j].id;
+      }
+    }
+    return eligible[eligible.length - 1].id;
+  }
+
+  // Spawn items for a floor using FLOOR_TABLE
   Item.spawnForFloor = function(dungeon, floorNum, playerStartRoom) {
     var items = [];
     var count = 3 + Math.floor(Math.random() * 6); // 3-8
 
-    // Get eligible items and build weighted list
-    var eligible = [];
-    var totalWeight = 0;
-    for (var key in ITEM_DATA) {
-      var data = ITEM_DATA[key];
-      if (floorNum >= (data.minFloor || 1)) {
-        eligible.push({ key: key, weight: data.weight || 5 });
-        totalWeight += (data.weight || 5);
-      }
-    }
-
-    if (eligible.length === 0) return items;
-
-    // Get rooms excluding player start
     var pCenter = {
       x: Math.floor(playerStartRoom.x + playerStartRoom.w / 2),
       y: Math.floor(playerStartRoom.y + playerStartRoom.h / 2)
     };
 
     for (var i = 0; i < count; i++) {
-      // Pick random room
       var room = dungeon.rooms[Math.floor(Math.random() * dungeon.rooms.length)];
-
-      // Random position in room
       var ix = room.x + 1 + Math.floor(Math.random() * (room.w - 2));
       var iy = room.y + 1 + Math.floor(Math.random() * (room.h - 2));
 
-      // Don't place on stairs or player start
       if (dungeon.grid[iy] && dungeon.grid[iy][ix] === Dungeon.TILE.STAIRS_DOWN) continue;
       if (ix === pCenter.x && iy === pCenter.y) continue;
 
-      // Check no item already there
       var occupied = false;
       for (var j = 0; j < items.length; j++) {
         if (items[j].x === ix && items[j].y === iy) { occupied = true; break; }
       }
       if (occupied) continue;
 
-      // Weighted random selection
-      var roll = Math.random() * totalWeight;
-      var cumulative = 0;
-      var selectedKey = eligible[0].key;
-      for (var k = 0; k < eligible.length; k++) {
-        cumulative += eligible[k].weight;
-        if (roll < cumulative) {
-          selectedKey = eligible[k].key;
-          break;
-        }
-      }
-
+      var selectedKey = pickItemForFloor(floorNum);
       items.push(new Item(ix, iy, selectedKey));
     }
 
