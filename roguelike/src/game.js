@@ -163,28 +163,49 @@ var Game = (function() {
     return null;
   };
 
-  // Trigger theft
+  // Trigger theft - full Shiren-style thief mode
   Game.prototype._triggerTheft = function() {
     if (this.shopkeeperHostile) return;
     this.shopkeeperHostile = true;
 
+    this.ui.addMessage('泥棒！！！', 'damage');
+
     var sk = this.getShopkeeper();
     if (sk) {
-      this.ui.addMessage('店主「泥棒だ！」', 'enemy_special');
-      // Shopkeeper becomes hostile — it will now chase player via normal enemy AI
-      sk.isShopkeeper = false; // remove shopkeeper flag so it acts like a normal (very strong) enemy
+      // Shopkeeper becomes hostile with double speed
+      sk.isShopkeeper = false; // acts like a normal enemy now
+      sk.doubleSpeed = true; // 2 actions per turn
+      sk.immuneToStatus = true; // immune to confusion/paralysis/slow
+      this.ui.addMessage('店主が怒って追いかけてきた！', 'enemy_special');
     }
-    // Spawn guard enemies near stairs
+
+    // Spawn 2-3 guard dogs near stairs
     var stairsPos = this.dungeon.stairs;
-    var guardData = ENEMY_DATA.minotaur; // strong guards
-    for (var g = 0; g < 2; g++) {
-      var gx = stairsPos.x + (g === 0 ? -1 : 1);
-      var gy = stairsPos.y;
-      if (gx >= 0 && gx < this.dungeon.width && this.dungeon.grid[gy][gx] !== Dungeon.TILE.WALL) {
-        var guard = new Enemy(gx, gy, guardData, 'minotaur');
+    var guardData = ENEMY_DATA.guard_dog;
+    var guardCount = 2 + Math.floor(Math.random() * 2); // 2-3
+    var guardDirs = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]];
+    var spawned = 0;
+
+    for (var g = 0; g < guardDirs.length && spawned < guardCount; g++) {
+      var gx = stairsPos.x + guardDirs[g][0];
+      var gy = stairsPos.y + guardDirs[g][1];
+      if (gx >= 0 && gx < this.dungeon.width && gy >= 0 && gy < this.dungeon.height &&
+          this.dungeon.grid[gy][gx] !== Dungeon.TILE.WALL && !this.getEnemyAt(gx, gy)) {
+        var guard = new Enemy(gx, gy, guardData, 'guard_dog');
         this.enemies.push(guard);
+        spawned++;
       }
     }
+
+    if (spawned > 0) {
+      this.ui.addMessage('番犬が出現した！', 'enemy_special');
+    }
+
+    // Clear shop items flag from inventory items and reset debt
+    for (var i = 0; i < this.player.inventory.length; i++) {
+      this.player.inventory[i].shopItem = false;
+    }
+    this.shopDebt = 0;
   };
 
   Game.prototype.getTrapAt = function(x, y) {
@@ -219,6 +240,10 @@ var Game = (function() {
   Game.prototype.pickUpItem = function() {
     var item = this.getItemAt(this.player.x, this.player.y);
     if (!item) {
+      // If in shop with debt, 'g' pays the debt
+      if (this.inShop && this.shopDebt > 0 && !this.shopkeeperHostile) {
+        return this._payShopDebt();
+      }
       this.ui.addMessage('足元には何もない', 'system');
       return false;
     }
@@ -231,9 +256,9 @@ var Game = (function() {
       return true;
     }
 
-    // Shop item: buy instead of pick up
+    // Shop item: pick up but track as debt (Shiren-style)
     if (item.shopItem && !this.shopkeeperHostile) {
-      return this._buyItem(item);
+      return this._pickUpShopItem(item);
     }
 
     if (!this.player.canPickUp()) {
@@ -246,23 +271,38 @@ var Game = (function() {
     return true;
   };
 
-  // Buy item from shop
-  Game.prototype._buyItem = function(item) {
-    var price = item.getBuyPrice();
-    if (this.player.gold < price) {
-      this.ui.addMessage(item.getDisplayName() + 'は' + price + 'ギタン。お金が足りない！', 'system');
-      return false;
-    }
+  // Pick up shop item - add to inventory + add debt
+  Game.prototype._pickUpShopItem = function(item) {
     if (!this.player.canPickUp()) {
       this.ui.addMessage('持ち物がいっぱいだ', 'system');
       return false;
     }
-    this.player.gold -= price;
-    item.shopItem = false;
+    var price = item.getBuyPrice();
     this.player.pickUp(item);
     this.removeItem(item);
-    this.ui.addMessage(item.getDisplayName() + 'を' + price + 'ギタンで購入した', 'pickup');
+    // Keep shopItem flag - tracks that it's unpaid
+    this.shopDebt += price;
+    this.ui.addMessage(item.getDisplayName() + 'を手に取った（' + price + 'ギタン）', 'pickup');
     return true;
+  };
+
+  // Pay off shop debt
+  Game.prototype._payShopDebt = function() {
+    if (this.shopDebt <= 0) return false;
+    if (this.player.gold >= this.shopDebt) {
+      this.player.gold -= this.shopDebt;
+      this.ui.addMessage(this.shopDebt + 'ギタン支払った', 'pickup');
+      this.shopDebt = 0;
+      // Clear shopItem flag from all inventory items
+      for (var i = 0; i < this.player.inventory.length; i++) {
+        this.player.inventory[i].shopItem = false;
+      }
+      this.ui.addMessage('店主「まいどあり！」', 'system');
+      return true;
+    } else {
+      this.ui.addMessage('ギタンが足りない！（' + this.shopDebt + 'ギタン必要）', 'damage');
+      return false;
+    }
   };
 
   Game.prototype.dropItem = function(item) {
@@ -323,6 +363,19 @@ var Game = (function() {
     return consumed;
   };
 
+  // Check if place-swap with shopkeeper should trigger theft
+  Game.prototype.checkSwapTheft = function(enemy) {
+    if (enemy.isShopkeeper && !this.shopkeeperHostile) {
+      // After swap, check if player is now outside shop
+      if (!this.isInShop(this.player.x, this.player.y)) {
+        this.ui.addMessage('店主と場所を入れ替えた！', 'system');
+        if (this.shopDebt > 0) {
+          this._triggerTheft();
+        }
+      }
+    }
+  };
+
   Game.prototype.movePlayer = function(dx, dy) {
     if (this.gameOver || this.victory) return false;
 
@@ -331,6 +384,12 @@ var Game = (function() {
 
     var enemy = this.getEnemyAt(newX, newY);
     if (enemy) {
+      // Attacking shopkeeper triggers thief mode
+      if (enemy.isShopkeeper && !this.shopkeeperHostile) {
+        this.ui.addMessage('店主を攻撃した！', 'attack');
+        this.ui.addMessage('店主が激怒した！', 'enemy_special');
+        this._triggerTheft();
+      }
       this.playerAttack(enemy);
       return true;
     }
@@ -341,22 +400,15 @@ var Game = (function() {
     if (this.player.canMoveTo(newX, newY, this.dungeon)) {
       this.player.moveTo(newX, newY);
 
+      // Update inShop status
+      this.inShop = this.isInShop(newX, newY);
+
       // Check for trap
       this.checkPlayerTrap();
 
-      // Check if player left shop with unpaid items
-      if (wasInShop && !this.isInShop(newX, newY) && !this.shopkeeperHostile) {
-        // Check if player has any shop items (stolen)
-        var hasStolenItems = false;
-        for (var s = 0; s < this.player.inventory.length; s++) {
-          if (this.player.inventory[s].shopItem) {
-            hasStolenItems = true;
-            break;
-          }
-        }
-        if (hasStolenItems) {
-          this._triggerTheft();
-        }
+      // Check if player left shop with debt (thief!)
+      if (wasInShop && !this.inShop && !this.shopkeeperHostile && this.shopDebt > 0) {
+        this._triggerTheft();
       }
 
       // Auto-pickup items
@@ -370,7 +422,7 @@ var Game = (function() {
         }
         // Shop items: show price instead of auto-pickup
         else if (item.shopItem && !this.shopkeeperHostile) {
-          this.ui.addMessage(item.getDisplayName() + 'は' + item.getBuyPrice() + 'ギタン（gキーで購入）', 'system');
+          this.ui.addMessage(item.getDisplayName() + 'がある（' + item.getBuyPrice() + 'ギタン / gで手に取る）', 'system');
         }
         // Normal items: auto-pickup
         else {
@@ -617,18 +669,21 @@ var Game = (function() {
       // Drop loot when enemy dies
       if (!enemy.isShopkeeper) {
         var dropRoll = Math.random();
-        if (dropRoll < 0.12) {
-          // 12% chance: drop gold (scaled with floor)
-          var goldAmount = Math.floor(10 + Math.random() * (20 + this.floorNum * 10));
-          var goldItem = this._createGoldItem(enemy.x, enemy.y, goldAmount);
-          this.items.push(goldItem);
-        } else if (dropRoll < 0.20) {
-          // 8% chance: drop a random item appropriate to the floor
-          var droppedKey = this._pickItemForFloor(this.floorNum);
-          var droppedItem = new Item(enemy.x, enemy.y, droppedKey);
-          this.items.push(droppedItem);
+        if (dropRoll < 0.15) {
+          // 15% chance: drop something
+          if (Math.random() < 0.15) {
+            // ~2% overall: drop gold
+            var goldAmount = Math.floor(10 + Math.random() * (20 + this.floorNum * 10));
+            var goldItem = this._createGoldItem(enemy.x, enemy.y, goldAmount);
+            this.items.push(goldItem);
+          } else {
+            // ~13% overall: drop a random item
+            var droppedKey = this._pickItemForFloor(this.floorNum);
+            var droppedItem = new Item(enemy.x, enemy.y, droppedKey);
+            this.items.push(droppedItem);
+          }
         }
-        // 10% chance: drop nothing
+        // 85% chance: drop nothing
       }
     }
   };
@@ -753,6 +808,16 @@ var Game = (function() {
         this.enemies[i].act(this);
         if (!this.enemies[i].dead && (this.enemies[i].x !== oldX || this.enemies[i].y !== oldY)) {
           this.checkEnemyTrap(this.enemies[i]);
+        }
+
+        // Double speed: act twice per turn (hostile shopkeeper)
+        if (!this.enemies[i].dead && this.enemies[i].doubleSpeed && !this.gameOver) {
+          var oldX2 = this.enemies[i].x;
+          var oldY2 = this.enemies[i].y;
+          this.enemies[i].act(this);
+          if (!this.enemies[i].dead && (this.enemies[i].x !== oldX2 || this.enemies[i].y !== oldY2)) {
+            this.checkEnemyTrap(this.enemies[i]);
+          }
         }
       }
       if (this.gameOver) break;
@@ -974,6 +1039,10 @@ var Game = (function() {
         player.moveTo(hitEnemy.x, hitEnemy.y);
         hitEnemy.moveTo(oldPx, oldPy);
         ui.addMessage(hitEnemy.name + 'と場所を入れ替えた！', 'attack');
+        // Update inShop status after swap
+        this.inShop = this.isInShop(player.x, player.y);
+        // Check if swapping with shopkeeper triggers theft
+        this.checkSwapTheft(hitEnemy);
         break;
 
       case 'paralyze':
