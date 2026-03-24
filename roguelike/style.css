@@ -227,6 +227,20 @@ body {
   padding: 10px;
 }
 
+.guide-link {
+  display: block;
+  color: #e8a44a;
+  text-decoration: none;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  text-align: center;
+  padding: 2px 0;
+}
+.guide-link:hover {
+  text-decoration: underline;
+  color: #f0c060;
+}
+
 .panel-title {
   font-family: 'Courier New', monospace;
   font-size: 11px;

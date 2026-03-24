@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>攻略ガイド - Roguelike Dungeon</title>
+  <link rel="stylesheet" href="guide.css">
+</head>
+<body>
+  <div class="guide-container">
+    <a href="./index.html" class="back-link">← ダンジョンに戻る</a>
+
+    <header class="guide-header">
+      <h1>攻略ガイド</h1>
+      <div class="subtitle">Roguelike Dungeon リファレンス</div>
+    </header>
+
+    <!-- Table of Contents -->
+    <nav class="toc">
+      <h2>目次</h2>
+      <ol>
+        <li><a href="#controls">操作方法</a></li>
+        <li><a href="#systems">基本システム</a></li>
+        <li><a href="#damage">ダメージ計算</a></li>
+        <li><a href="#items">アイテム一覧</a></li>
+        <li><a href="#enemies">敵一覧</a></li>
+        <li><a href="#traps">罠一覧</a></li>
+        <li><a href="#status">状態異常</a></li>
+        <li><a href="#shop">店</a></li>
+      </ol>
+    </nav>
+
+    <!-- 1. 操作方法 -->
+    <section class="section" id="controls">
+      <h2>1. 操作方法</h2>
+      <ul class="key-list">
+        <li><kbd>矢印</kbd> <span class="key-desc">移動（4方向）</span></li>
+        <li><kbd>h</kbd><kbd>j</kbd><kbd>k</kbd><kbd>l</kbd> <span class="key-desc">移動 vi風（左・下・上・右）</span></li>
+        <li><kbd>y</kbd><kbd>u</kbd><kbd>b</kbd><kbd>n</kbd> <span class="key-desc">ナナメ移動 vi風（左上・右上・左下・右下）</span></li>
+        <li><kbd>テンキー</kbd> <span class="key-desc">8方向移動</span></li>
+        <li><kbd>.</kbd> / <kbd>テンキー5</kbd> <span class="key-desc">足踏み（その場で1ターン経過）</span></li>
+        <li><kbd>&gt;</kbd> <span class="key-desc">階段を降りる</span></li>
+        <li><kbd>g</kbd> / <kbd>,</kbd> <span class="key-desc">アイテムを拾う（自動拾いもあり）</span></li>
+        <li><kbd>i</kbd> <span class="key-desc">持ち物を開く</span></li>
+        <li><kbd>e</kbd> <span class="key-desc">持ち物画面：使う</span></li>
+        <li><kbd>E</kbd> <span class="key-desc">持ち物画面：装備する</span></li>
+        <li><kbd>d</kbd> <span class="key-desc">持ち物画面：置く</span></li>
+        <li><kbd>t</kbd> <span class="key-desc">持ち物画面：投げる</span></li>
+        <li><kbd>Esc</kbd> <span class="key-desc">持ち物画面：閉じる</span></li>
+        <li><kbd>方向キー</kbd> <span class="key-desc">杖使用時：振る方向を選択</span></li>
+        <li><kbd>g</kbd> <span class="key-desc">店内：アイテムを購入</span></li>
+        <li><kbd>y</kbd> / <kbd>n</kbd> <span class="key-desc">売却確認</span></li>
+      </ul>
+    </section>
+
+    <!-- 2. 基本システム -->
+    <section class="section" id="systems">
+      <h2>2. 基本システム</h2>
+      <ul class="system-list">
+        <li><span class="sys-label">ターン制</span> — プレイヤーが1行動すると、全ての敵が1行動する</li>
+        <li><span class="sys-label">HP</span> — 0になると倒れる。自然回復あり（数ターンごとに+1）。満腹度が0のときは回復しない</li>
+        <li><span class="sys-label">満腹度</span> — 最大100。10ターンごとに-1。0になると毎ターン1ダメージ。おにぎりで回復</li>
+        <li><span class="sys-label">レベル</span> — 経験値で上昇。レベルアップでHP+3、攻撃+1、防御+1（2レベルごと）</li>
+        <li><span class="sys-label">視界</span> — 部屋内は全体が見える。通路では周囲6マス。一度見た場所は記憶される</li>
+        <li><span class="sys-label">識別</span> — 草・巻物・杖は未識別の場合がある。使用するか、識別の巻物で判明</li>
+        <li><span class="sys-label">自然湧き</span> — 毎ターン5%の確率で新しい敵がフロアに出現（最大15体）</li>
+        <li><span class="sys-label">ゴールド</span> — 敵撃破で獲得。店での売買に使用</li>
+      </ul>
+    </section>
+
+    <!-- 3. ダメージ計算 -->
+    <section class="section" id="damage">
+      <h2>3. ダメージ計算</h2>
+
+      <h3>プレイヤー攻撃</h3>
+      <div class="formula-block">
+        <div class="formula">ダメージ = max(1, 攻撃力 - 敵防御 + random(-1, 1))</div>
+        <div class="formula-note">攻撃力 = 基礎攻撃 + 武器攻撃 + 武器強化値 + レベルボーナス</div>
+      </div>
+
+      <h3>敵の攻撃</h3>
+      <div class="formula-block">
+        <div class="formula">ダメージ = max(1, 敵攻撃 - 防御力 + random(-1, 1))</div>
+        <div class="formula-note">防御力 = 基礎防御 + 盾防御 + 盾強化値 + レベルボーナス</div>
+      </div>
+
+      <h3>特殊効果</h3>
+      <ul class="system-list">
+        <li><span class="sys-label">特効武器</span> — ドラゴンキラー→ドラゴン系1.5倍、成仏のカマ→ゴースト系1.5倍</li>
+        <li><span class="sys-label">火炎ダメージ</span> — ドラゴン: 15-20、スカルドラゴン: 20（固定・防御無視）。ドラゴンシールドで50%軽減</li>
+        <li><span class="sys-label">痛恨の一撃</span> — タウロスが25%の確率で2倍ダメージ</li>
+        <li><span class="sys-label">反射</span> — バトルカウンター装備時、受けたダメージの30%を反射</li>
+      </ul>
+    </section>
+
+    <!-- 4. アイテム一覧 -->
+    <section class="section" id="items">
+      <h2>4. アイテム一覧</h2>
+
+      <!-- 武器 -->
+      <h3>武器 <span class="key-desc">( / )</span></h3>
+      <table class="data-table">
+        <thead>
+          <tr><th>名前</th><th>攻撃力</th><th>印</th><th>特殊</th><th>出現階</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>木刀</td><td class="num">3</td><td class="num">3</td><td>—</td><td class="floor">1F~</td></tr>
+          <tr><td>青銅の太刀</td><td class="num">4</td><td class="num">3</td><td>—</td><td class="floor">2F~</td></tr>
+          <tr><td>カタナ</td><td class="num">5</td><td class="num">4</td><td>—</td><td class="floor">1F~</td></tr>
+          <tr><td>どうたぬき</td><td class="num">8</td><td class="num">5</td><td>—</td><td class="floor">6F~</td></tr>
+          <tr><td>成仏のカマ</td><td class="num">5</td><td class="num">4</td><td class="special">ゴースト特効</td><td class="floor">3F~</td></tr>
+          <tr><td>ドレインバスター</td><td class="num">6</td><td class="num">4</td><td class="special">特殊能力持ち特効</td><td class="floor">5F~</td></tr>
+          <tr><td>ドラゴンキラー</td><td class="num">10</td><td class="num">5</td><td class="special">ドラゴン特効</td><td class="floor">8F~</td></tr>
+          <tr><td>カブラステギ</td><td class="num">15</td><td class="num">8</td><td>—</td><td class="floor">12F~</td></tr>
+        </tbody>
+      </table>
+
+      <!-- 盾 -->
+      <h3>盾 <span class="key-desc">( [ )</span></h3>
+      <table class="data-table">
+        <thead>
+          <tr><th>名前</th><th>防御力</th><th>印</th><th>特殊</th><th>出現階</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>木甲の盾</td><td class="num">2</td><td class="num">3</td><td>—</td><td class="floor">1F~</td></tr>
+          <tr><td>皮甲の盾</td><td class="num">3</td><td class="num">3</td><td>—</td><td class="floor">2F~</td></tr>
+          <tr><td>鉄甲の盾</td><td class="num">4</td><td class="num">4</td><td>—</td><td class="floor">1F~</td></tr>
+          <tr><td>鉄の盾+1</td><td class="num">6</td><td class="num">5</td><td>—</td><td class="floor">5F~</td></tr>
+          <tr><td>ドラゴンシールド</td><td class="num">5</td><td class="num">4</td><td class="special">炎50%軽減</td><td class="floor">7F~</td></tr>
+          <tr><td>爆発よけの盾</td><td class="num">4</td><td class="num">3</td><td class="special">爆発50%軽減</td><td class="floor">6F~</td></tr>
+          <tr><td>バトルカウンター</td><td class="num">3</td><td class="num">3</td><td class="special">被ダメ30%反射</td><td class="floor">5F~</td></tr>
+        </tbody>
+      </table>
+
+      <!-- 草 -->
+      <h3>草 <span class="key-desc">( ! )</span></h3>
+      <table class="data-table">
+        <thead>
+          <tr><th>名前</th><th>効果</th><th>出現階</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>薬草</td><td>HP+25回復</td><td class="floor">1F~</td></tr>
+          <tr><td>オトギリソウ</td><td>HP+50回復</td><td class="floor">3F~</td></tr>
+          <tr><td>ちからの種</td><td>攻撃力+1</td><td class="floor">1F~</td></tr>
+          <tr><td>毒消し草</td><td>毒状態回復</td><td class="floor">1F~</td></tr>
+        </tbody>
+      </table>
+
+      <!-- 巻物 -->
+      <h3>巻物 <span class="key-desc">( ? )</span></h3>
+      <table class="data-table">
+        <thead>
+          <tr><th>名前</th><th>効果</th><th>出現階</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>識別の巻物</td><td>アイテム1つを識別</td><td class="floor">1F~</td></tr>
+          <tr><td>混乱の巻物</td><td>視界内の敵を混乱</td><td class="floor">1F~</td></tr>
+          <tr><td>パワーアップの巻物</td><td>装備+1強化</td><td class="floor">3F~</td></tr>
+          <tr><td>あかりの巻物</td><td>フロア全体＋罠を可視化</td><td class="floor">1F~</td></tr>
+          <tr><td>天の恵みの巻物</td><td>武器+1強化</td><td class="floor">5F~</td></tr>
+          <tr><td>地の恵みの巻物</td><td>盾+1強化</td><td class="floor">5F~</td></tr>
+        </tbody>
+      </table>
+
+      <!-- 杖 -->
+      <h3>杖 <span class="key-desc">( / )</span></h3>
+      <table class="data-table">
+        <thead>
+          <tr><th>名前</th><th>効果</th><th>回数</th><th>出現階</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>ふきとばしの杖</td><td>敵を5マス後退（壁衝突で5ダメージ）</td><td class="num">5</td><td class="floor">1F~</td></tr>
+          <tr><td>場所替えの杖</td><td>対象と位置交換</td><td class="num">3</td><td class="floor">3F~</td></tr>
+          <tr><td>かなしばりの杖</td><td>10ターン行動不能（攻撃で解除）</td><td class="num">4</td><td class="floor">2F~</td></tr>
+          <tr><td>鈍足の杖</td><td>15ターン鈍足</td><td class="num">5</td><td class="floor">1F~</td></tr>
+          <tr><td>いかずちの杖</td><td>20固定ダメージ</td><td class="num">3</td><td class="floor">5F~</td></tr>
+          <tr><td>トンネルの杖</td><td>壁を10マス掘削</td><td class="num">4</td><td class="floor">3F~</td></tr>
+        </tbody>
+      </table>
+
+      <!-- 食料 -->
+      <h3>食料 <span class="key-desc">( % )</span></h3>
+      <table class="data-table">
+        <thead>
+          <tr><th>名前</th><th>満腹度回復</th><th>出現階</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>おにぎり</td><td class="num">+50</td><td class="floor">1F~</td></tr>
+          <tr><td>大きいおにぎり</td><td class="num">+100</td><td class="floor">3F~</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 5. 敵一覧 -->
+    <section class="section" id="enemies">
+      <h2>5. 敵一覧</h2>
+      <table class="data-table">
+        <thead>
+          <tr><th>名前</th><th>記号</th><th>HP</th><th>攻</th><th>防</th><th>経験値</th><th>出現階</th><th>特殊能力</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>マムル</td><td class="symbol">M</td><td class="num">3</td><td class="num">1</td><td class="num">0</td><td class="num">3</td><td class="floor">1-5F</td><td>—</td></tr>
+          <tr><td>チンタラ</td><td class="symbol">C</td><td class="num">5</td><td class="num">2</td><td class="num">0</td><td class="num">5</td><td class="floor">1-7F</td><td>—</td></tr>
+          <tr><td>にぎり見習い</td><td class="symbol">N</td><td class="num">8</td><td class="num">3</td><td class="num">1</td><td class="num">10</td><td class="floor">3-10F</td><td class="special">アイテムをおにぎり化(10%)</td></tr>
+          <tr><td>ぼうれい武者</td><td class="symbol">G</td><td class="num">12</td><td class="num">4</td><td class="num">1</td><td class="num">15</td><td class="floor">5-12F</td><td class="special">壁通過</td></tr>
+          <tr><td>パ王</td><td class="symbol">P</td><td class="num">15</td><td class="num">5</td><td class="num">2</td><td class="num">20</td><td class="floor">7-15F</td><td class="special">混乱/鈍足の魔法</td></tr>
+          <tr><td>ドラゴン</td><td class="symbol">D</td><td class="num">30</td><td class="num">10</td><td class="num">4</td><td class="num">50</td><td class="floor">10-20F</td><td class="special">直線火炎(15-20)</td></tr>
+          <tr><td>スカルドラゴン</td><td class="symbol">S</td><td class="num">25</td><td class="num">8</td><td class="num">3</td><td class="num">35</td><td class="floor">12-20F</td><td class="special">フロア全域火炎(20)</td></tr>
+          <tr><td>タウロス</td><td class="symbol">T</td><td class="num">35</td><td class="num">12</td><td class="num">5</td><td class="num">60</td><td class="floor">15-20F</td><td class="special">痛恨の一撃(25%で2倍)</td></tr>
+          <tr><td>店主</td><td class="symbol">$</td><td class="num">200</td><td class="num">50</td><td class="num">30</td><td class="num">—</td><td class="floor">店のみ</td><td class="special">泥棒時に敵対</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 6. 罠一覧 -->
+    <section class="section" id="traps">
+      <h2>6. 罠一覧</h2>
+      <table class="data-table">
+        <thead>
+          <tr><th>名前</th><th>効果</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>地雷</td><td>20ダメージ＋周囲15ダメージ、アイテム消滅。爆発よけの盾で半減</td></tr>
+          <tr><td>落とし穴</td><td>5ダメージ＋次の階へ落下</td></tr>
+          <tr><td>毒矢の罠</td><td>5ダメージ＋攻撃力-1</td></tr>
+          <tr><td>睡眠ガス</td><td>5ターン睡眠（攻撃で覚醒）</td></tr>
+          <tr><td>回転盤</td><td>10ターン混乱</td></tr>
+          <tr><td>デロデロの罠</td><td>満腹度-30、おにぎり腐敗</td></tr>
+          <tr><td>転び石</td><td>持ち物1つ落下</td></tr>
+          <tr><td>サビの罠</td><td>盾防御力-1</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 7. 状態異常 -->
+    <section class="section" id="status">
+      <h2>7. 状態異常</h2>
+      <table class="data-table">
+        <thead>
+          <tr><th>名前</th><th>効果</th><th>発生源</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>混乱</td><td>移動方向がランダムになる</td><td>回転盤、パ王、混乱の巻物</td></tr>
+          <tr><td>鈍足</td><td>2ターンに1回しか行動できない</td><td>パ王、鈍足の杖</td></tr>
+          <tr><td>睡眠</td><td>行動不能</td><td>睡眠ガス（攻撃で覚醒）</td></tr>
+          <tr><td>かなしばり</td><td>行動不能</td><td>かなしばりの杖（攻撃で解除）</td></tr>
+          <tr><td>強化</td><td>攻撃力1.5倍</td><td>パワーアップの巻物</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 8. 店 -->
+    <section class="section" id="shop">
+      <h2>8. 店</h2>
+      <ul class="shop-list">
+        <li>2F以降、20%の確率で出現</li>
+        <li>明るい床色の部屋に店主（<kbd>$</kbd>）とアイテムが陳列されている</li>
+        <li>アイテムの上で<kbd>g</kbd>キーを押すと購入（ゴールド消費）</li>
+        <li>自分のアイテムを床に置くと売却を提案される（<kbd>y</kbd>/<kbd>n</kbd>）</li>
+        <li><span class="warning">泥棒</span> — 代金を払わずに店の外へ出ると、店主が敵対化＋階段に番犬が出現する</li>
+      </ul>
+    </section>
+
+    <footer class="guide-footer">
+      <a href="./index.html">← ダンジョンに戻る</a>
+    </footer>
+  </div>
+</body>
+</html>

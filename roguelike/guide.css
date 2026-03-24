@@ -1,0 +1,292 @@
+/* Roguelike Guide - Dark Theme */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0a0e1a;
+  --bg-section: #111627;
+  --bg-table: #0d1220;
+  --border: #1a2040;
+  --text: #c8cad0;
+  --text-dim: #6a7090;
+  --amber: #f0c060;
+  --amber-dim: #a08030;
+  --cyan: #60d0e0;
+  --cyan-dim: #308090;
+  --red: #e06060;
+  --green: #60c060;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 1rem;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Courier New', 'Monaco', 'Consolas', monospace;
+  font-size: 14px;
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+a { color: var(--cyan); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Layout */
+.guide-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+/* Header */
+.guide-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.guide-header h1 {
+  font-size: 1.8rem;
+  color: var(--amber);
+  margin-bottom: 0.3rem;
+  letter-spacing: 0.1em;
+}
+
+.guide-header .subtitle {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.back-link {
+  display: inline-block;
+  color: var(--cyan);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.back-link:hover { color: var(--amber); }
+
+/* Table of Contents */
+.toc {
+  background: var(--bg-section);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.2rem 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.toc h2 {
+  color: var(--amber);
+  font-size: 1rem;
+  margin-bottom: 0.8rem;
+  letter-spacing: 0.05em;
+}
+
+.toc ol {
+  list-style: none;
+  counter-reset: toc;
+  padding: 0;
+  columns: 2;
+  column-gap: 2rem;
+}
+
+.toc li {
+  counter-increment: toc;
+  margin-bottom: 0.3rem;
+}
+
+.toc li::before {
+  content: counter(toc) ". ";
+  color: var(--text-dim);
+}
+
+.toc a {
+  color: var(--cyan);
+}
+
+/* Sections */
+.section {
+  margin-bottom: 2.5rem;
+}
+
+.section h2 {
+  color: var(--amber);
+  font-size: 1.2rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.4rem;
+  margin-bottom: 1rem;
+  letter-spacing: 0.05em;
+}
+
+.section h3 {
+  color: var(--cyan);
+  font-size: 1rem;
+  margin: 1.5rem 0 0.7rem;
+}
+
+/* Key bindings */
+.key-list {
+  list-style: none;
+  padding: 0;
+}
+
+.key-list li {
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.key-list li:last-child { border-bottom: none; }
+
+kbd {
+  display: inline-block;
+  background: #1a2040;
+  color: var(--amber);
+  padding: 0.1em 0.5em;
+  border-radius: 3px;
+  border: 1px solid #2a3060;
+  font-family: inherit;
+  font-size: 0.9em;
+  margin: 0 0.15em;
+}
+
+.key-desc {
+  color: var(--text-dim);
+}
+
+/* System descriptions */
+.system-list {
+  list-style: none;
+  padding: 0;
+}
+
+.system-list li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.system-list li:last-child { border-bottom: none; }
+
+.sys-label {
+  color: var(--amber);
+  font-weight: bold;
+}
+
+/* Formulas */
+.formula-block {
+  background: var(--bg-section);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem 1.2rem;
+  margin: 0.7rem 0;
+}
+
+.formula {
+  color: var(--cyan);
+  font-weight: bold;
+}
+
+.formula-note {
+  color: var(--text-dim);
+  font-size: 0.9em;
+  margin-left: 1.5rem;
+}
+
+/* Tables */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0 1rem;
+  font-size: 0.9em;
+  background: var(--bg-table);
+}
+
+.data-table th {
+  background: #151b30;
+  color: var(--amber);
+  font-weight: bold;
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: 0.4rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table tr:hover td {
+  background: #131830;
+}
+
+.data-table .num {
+  text-align: center;
+  color: var(--cyan);
+}
+
+.data-table .special {
+  color: var(--amber);
+  font-size: 0.85em;
+}
+
+.data-table .symbol {
+  text-align: center;
+  font-weight: bold;
+  color: var(--amber);
+  font-size: 1.1em;
+}
+
+.data-table .floor {
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* Shop section */
+.shop-list {
+  list-style: none;
+  padding: 0;
+}
+
+.shop-list li {
+  padding: 0.4rem 0;
+  padding-left: 1.2rem;
+  position: relative;
+  border-bottom: 1px solid var(--border);
+}
+
+.shop-list li::before {
+  content: "▸";
+  position: absolute;
+  left: 0;
+  color: var(--amber);
+}
+
+.shop-list li:last-child { border-bottom: none; }
+
+.warning {
+  color: var(--red);
+  font-weight: bold;
+}
+
+/* Footer */
+.guide-footer {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  body { font-size: 13px; }
+  .guide-container { padding: 1rem; }
+  .toc ol { columns: 1; }
+  .data-table { font-size: 0.8em; }
+  .data-table th, .data-table td { padding: 0.3rem 0.4rem; }
+  .guide-header h1 { font-size: 1.4rem; }
+}
