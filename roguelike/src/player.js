@@ -34,6 +34,9 @@ var Player = (function() {
     // Buffs
     this.powerupTurns = 0;
 
+    // Sleep state
+    this.sleepTurns = 0;
+
     // Status effects: [{type: 'confused'|'slowed'|'strengthened', turnsLeft: N}]
     this.statusEffects = [];
     this._slowedSkip = false; // toggle for slowed: skip every other turn
@@ -43,8 +46,10 @@ var Player = (function() {
   Player.prototype.constructor = Player;
 
   Player.prototype._recalcStats = function() {
-    this.attack = this.baseAttack + (this.weapon ? this.weapon.attack : 0) + (this.level - 1);
-    this.defense = this.baseDefense + (this.shield ? this.shield.defense : 0) + Math.floor((this.level - 1) / 2);
+    var weaponAtk = this.weapon ? this.weapon.getEffectiveAttack() : 0;
+    var shieldDef = this.shield ? this.shield.getEffectiveDefense() : 0;
+    this.attack = this.baseAttack + weaponAtk + (this.level - 1);
+    this.defense = this.baseDefense + shieldDef + Math.floor((this.level - 1) / 2);
     if (this.powerupTurns > 0) {
       this.attack += 5;
     }
@@ -119,7 +124,30 @@ var Player = (function() {
         case 'strengthened': parts.push('[強化]'); break;
       }
     }
+    if (this.sleepTurns > 0) parts.push('[睡眠]');
     return parts.join(' ');
+  };
+
+  // --- Sleep System ---
+
+  Player.prototype.isSleeping = function() {
+    return this.sleepTurns > 0;
+  };
+
+  Player.prototype.tickSleep = function(ui) {
+    if (this.sleepTurns > 0) {
+      this.sleepTurns--;
+      if (this.sleepTurns <= 0) {
+        if (ui) ui.addMessage('目が覚めた', 'system');
+      }
+    }
+  };
+
+  Player.prototype.wakeUp = function(ui) {
+    if (this.sleepTurns > 0) {
+      this.sleepTurns = 0;
+      if (ui) ui.addMessage('攻撃を受けて目が覚めた！', 'damage');
+    }
   };
 
   // --- End Status Effects ---

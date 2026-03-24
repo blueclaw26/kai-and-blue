@@ -148,6 +148,25 @@ var Renderer = (function() {
       }
     }
 
+    // Draw visible traps (below items, above floor)
+    var traps = game.traps || [];
+    ctx.font = 'bold 14px monospace';
+    for (var i = 0; i < traps.length; i++) {
+      var trap = traps[i];
+      if (!trap.visible || trap.consumed) continue;
+      var tKey = trap.x + ',' + trap.y;
+      if (!visible[tKey] && !explored.has(tKey)) continue;
+
+      var tScreenX = (trap.x - camX) * TILE_SIZE;
+      var tScreenY = (trap.y - camY) * TILE_SIZE;
+      if (!visible[tKey]) {
+        ctx.globalAlpha = 0.35;
+      }
+      ctx.fillStyle = trap.color;
+      ctx.fillText(trap.char, tScreenX + TILE_SIZE / 2, tScreenY + TILE_SIZE / 2);
+      ctx.globalAlpha = 1.0;
+    }
+
     // Draw items (only visible, below enemies/player)
     ctx.font = 'bold 16px monospace';
     for (var i = 0; i < items.length; i++) {
@@ -184,10 +203,10 @@ var Renderer = (function() {
     ctx.fillText(player.char, playerScreenX + TILE_SIZE / 2, playerScreenY + TILE_SIZE / 2);
 
     // Minimap
-    this.renderMinimap(dungeon, player, enemies, items, explored, visible);
+    this.renderMinimap(game, dungeon, player, enemies, items, explored, visible);
   };
 
-  Renderer.prototype.renderMinimap = function(dungeon, player, enemies, items, explored, visible) {
+  Renderer.prototype.renderMinimap = function(game, dungeon, player, enemies, items, explored, visible) {
     var ctx = this.miniCtx;
     var t = this.miniTile;
     this.miniCanvas.width = dungeon.width * t;
@@ -224,6 +243,16 @@ var Renderer = (function() {
           ctx.fillRect(x * t, y * t, t, t);
         }
       }
+    }
+
+    // Traps on minimap (visible only)
+    var traps = game.traps || [];
+    for (var i = 0; i < traps.length; i++) {
+      var trap = traps[i];
+      if (!trap.visible || trap.consumed) continue;
+      if (!explored.has(trap.x + ',' + trap.y)) continue;
+      ctx.fillStyle = trap.color;
+      ctx.fillRect(trap.x * t, trap.y * t, t, t);
     }
 
     // Items on minimap (yellow dots, only visible)

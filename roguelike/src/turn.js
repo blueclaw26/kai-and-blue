@@ -11,6 +11,23 @@ var TurnManager = (function() {
   TurnManager.prototype.processTurn = function(action) {
     var p = this.game.player;
 
+    // Check if player is sleeping - can't act
+    if (p.isSleeping()) {
+      this.ui.addMessage('眠っていて動けない...', 'damage');
+      p.totalTurns++;
+      p.tickStatusEffects(this.ui);
+      p.tickSatiety(this.ui);
+      p.tickBuffs();
+
+      if (!this.game.gameOver) {
+        this.game.processEnemyTurns();
+      }
+
+      this.renderer.render(this.game);
+      this.ui.updateStatus(this.game);
+      return true;
+    }
+
     // Check if player is slowed and should skip this turn
     if (p.isSlowedSkip()) {
       this.ui.addMessage('足が重くて動けない...', 'damage');

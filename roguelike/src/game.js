@@ -10,6 +10,7 @@ var Game = (function() {
     this.player = null;
     this.enemies = [];
     this.items = [];
+    this.traps = [];
     this.floorNum = 1;
     this.explored = new Set();
     this.ui = null;
@@ -41,6 +42,15 @@ var Game = (function() {
     var startRoom = this.dungeon.rooms[0];
     this.enemies = Enemy.spawnForFloor(this.dungeon, this.floorNum, startRoom);
     this.items = Item.spawnForFloor(this.dungeon, this.floorNum, startRoom);
+    this.traps = Trap.spawnForFloor(this.dungeon, this.floorNum, this.items);
+  };
+
+  Game.prototype.getTrapAt = function(x, y) {
+    for (var i = 0; i < this.traps.length; i++) {
+      var t = this.traps[i];
+      if (!t.consumed && t.x === x && t.y === y) return t;
+    }
+    return null;
   };
 
   Game.prototype.getEnemyAt = function(x, y) {
@@ -125,18 +135,254 @@ var Game = (function() {
 
     if (this.player.canMoveTo(newX, newY, this.dungeon)) {
       this.player.moveTo(newX, newY);
+
+      // Check for trap
+      this.checkPlayerTrap();
+
+      // Auto-pickup items
       var item = this.getItemAt(newX, newY);
       if (item) {
-        this.ui.addMessage('足元に' + item.name + 'がある（gキーで拾う）', 'system');
+        if (this.player.inventory.length < 20) {
+          var idx = this.items.indexOf(item);
+          if (idx !== -1) {
+            this.items.splice(idx, 1);
+            this.player.inventory.push(item);
+            this.ui.addMessage(item.name + 'を拾った', 'pickup');
+          }
+        } else {
+          this.ui.addMessage('持ち物がいっぱいで' + item.name + 'を拾えない', 'system');
+        }
       }
       return true;
     }
     return false;
   };
 
+  // --- Trap triggering ---
+
+  Game.prototype.checkPlayerTrap = function() {
+    var trap = this.getTrapAt(this.player.x, this.player.y);
+    if (!trap) return;
+
+    trap.visible = true;
+    this.triggerTrap(trap, this.player);
+  };
+
+  Game.prototype.checkEnemyTrap = function(enemy) {
+    var trap = this.getTrapAt(enemy.x, enemy.y);
+    if (!trap) return;
+
+    // Enemies only trigger landmine and pitfall
+    if (trap.effect !== 'explosion' && trap.effect !== 'pitfall') return;
+
+    trap.visible = true;
+    this.triggerTrapOnEnemy(trap, enemy);
+  };
+
+  Game.prototype.triggerTrap = function(trap, player) {
+    var ui = this.ui;
+
+    switch (trap.effect) {
+      case 'explosion': // 地雷
+        var blastDmg = 20;
+        // Check blast_resist shield
+        if (player.shield && player.shield.special === 'blast_resist') {
+          blastDmg = Math.floor(blastDmg * 0.5);
+          ui.addMessage('地雷が爆発した！ 盾が爆風を防いだ！ ' + blastDmg + 'ダメージ', 'damage');
+        } else {
+          ui.addMessage('地雷が爆発した！ ' + blastDmg + 'ダメージ', 'damage');
+        }
+        player.hp -= blastDmg;
+        // Damage adjacent enemies
+        for (var i = 0; i < this.enemies.length; i++) {
+          var e = this.enemies[i];
+          if (!e.dead && Math.abs(e.x - trap.x) <= 1 && Math.abs(e.y - trap.y) <= 1) {
+            var died = e.takeDamage(15);
+            ui.addMessage(e.name + 'に15ダメージ！', 'attack');
+            if (died) {
+              player.enemiesKilled++;
+              ui.addMessage(e.name + 'を倒した！ 経験値' + e.exp + '獲得', 'attack');
+              player.gainExp(e.exp, ui);
+            }
+          }
+        }
+        // Destroy items on ground in radius
+        for (var j = this.items.length - 1; j >= 0; j--) {
+          var it = this.items[j];
+          if (Math.abs(it.x - trap.x) <= 1 && Math.abs(it.y - trap.y) <= 1) {
+            ui.addMessage(it.name + 'が爆発で消滅した', 'system');
+            this.items.splice(j, 1);
+          }
+        }
+        trap.consumed = true;
+        this._checkPlayerDeath();
+        break;
+
+      case 'pitfall': // 落とし穴
+        ui.addMessage('落とし穴に落ちた！', 'damage');
+        player.hp -= 5;
+        if (this._checkPlayerDeath()) break;
+        // Fall to next floor
+        if (this.floorNum >= MAX_FLOOR) {
+          this.victory = true;
+          ui.addMessage('ダンジョンをクリアした！', 'levelup');
+          ui.showVictory(player);
+        } else {
+          this.floorNum++;
+          this.newFloor();
+          ui.addMessage(this.floorNum + 'Fに落ちた', 'system');
+        }
+        break;
+
+      case 'poison': // 毒矢の罠
+        ui.addMessage('毒矢が飛んできた！ ちからが下がった', 'damage');
+        player.hp -= 5;
+        player.baseAttack = Math.max(1, player.baseAttack - 1);
+        player._recalcStats();
+        this._checkPlayerDeath();
+        break;
+
+      case 'sleep': // 睡眠ガス
+        ui.addMessage('睡眠ガスを吸い込んだ！', 'damage');
+        player.sleepTurns = 5;
+        break;
+
+      case 'confuse': // 回転盤
+        ui.addMessage('目が回った！', 'damage');
+        player.addStatusEffect('confused', 10, ui);
+        break;
+
+      case 'hunger': // デロデロの罠
+        ui.addMessage('デロデロの罠！ 満腹度が下がった', 'damage');
+        player.satiety = Math.max(0, player.satiety - 30);
+        // Turn onigiri in inventory rotten
+        for (var k = 0; k < player.inventory.length; k++) {
+          var inv = player.inventory[k];
+          if (inv.type === 'food' && (inv.dataKey === 'onigiri' || inv.dataKey === 'big_onigiri')) {
+            inv.cursed = true;
+            inv.name = '腐った' + inv.name;
+            inv.color = '#4a6741';
+            ui.addMessage(inv.name + 'が腐ってしまった！', 'damage');
+          }
+        }
+        break;
+
+      case 'trip': // 転び石
+        ui.addMessage('転んで持ち物を落としてしまった！', 'damage');
+        // Drop 1 random non-equipped item
+        var droppable = [];
+        for (var m = 0; m < player.inventory.length; m++) {
+          var item = player.inventory[m];
+          if (item !== player.weapon && item !== player.shield) {
+            droppable.push(item);
+          }
+        }
+        if (droppable.length > 0) {
+          var dropped = droppable[Math.floor(Math.random() * droppable.length)];
+          player.removeFromInventory(dropped);
+          dropped.x = player.x;
+          dropped.y = player.y;
+          this.items.push(dropped);
+          ui.addMessage(dropped.name + 'を落とした', 'system');
+        }
+        break;
+
+      case 'rust': // サビの罠
+        if (player.shield) {
+          var shield = player.shield;
+          // Reduce defense (base or plus) by 1
+          if (shield.plus > 0) {
+            shield.plus--;
+          } else {
+            shield.defense = Math.max(0, shield.defense - 1);
+          }
+          player._recalcStats();
+          ui.addMessage('盾が錆びた！ 防御力が1下がった', 'damage');
+        } else {
+          ui.addMessage('サビの罠を踏んだ！ しかし盾を装備していない', 'system');
+        }
+        break;
+    }
+  };
+
+  Game.prototype.triggerTrapOnEnemy = function(trap, enemy) {
+    var ui = this.ui;
+
+    switch (trap.effect) {
+      case 'explosion': // 地雷
+        ui.addMessage(enemy.name + 'が地雷を踏んだ！', 'attack');
+        var died = enemy.takeDamage(20);
+        if (died) {
+          this.player.enemiesKilled++;
+          ui.addMessage(enemy.name + 'を倒した！ 経験値' + enemy.exp + '獲得', 'attack');
+          this.player.gainExp(enemy.exp, ui);
+        }
+        // Also damage player if adjacent
+        var px = this.player.x;
+        var py = this.player.y;
+        if (Math.abs(px - trap.x) <= 1 && Math.abs(py - trap.y) <= 1) {
+          var blastDmg = 15;
+          if (this.player.shield && this.player.shield.special === 'blast_resist') {
+            blastDmg = Math.floor(blastDmg * 0.5);
+          }
+          this.player.hp -= blastDmg;
+          ui.addMessage('爆風で' + blastDmg + 'ダメージを受けた！', 'damage');
+          this._checkPlayerDeath();
+        }
+        trap.consumed = true;
+        break;
+
+      case 'pitfall': // 落とし穴 - enemy disappears
+        ui.addMessage(enemy.name + 'が落とし穴に落ちた！', 'attack');
+        enemy.dead = true;
+        break;
+    }
+  };
+
+  Game.prototype._checkPlayerDeath = function() {
+    if (this.player.hp <= 0) {
+      this.player.hp = 0;
+      this.gameOver = true;
+      this.ui.addMessage('倒れてしまった... ' + this.floorNum + 'Fで力尽きた', 'damage');
+      this.ui.showGameOver(this.floorNum, this.player.level);
+      return true;
+    }
+    return false;
+  };
+
+  // --- Player attack with weapon specials ---
+
   Game.prototype.playerAttack = function(enemy) {
-    var rawDmg = this.player.attack - enemy.defense + Math.floor(Math.random() * 3) - 1;
+    var player = this.player;
+    var rawDmg = player.attack - enemy.defense + Math.floor(Math.random() * 3) - 1;
     var damage = Math.max(1, rawDmg);
+
+    // Weapon special multipliers
+    if (player.weapon && player.weapon.special) {
+      var special = player.weapon.special;
+      var multiplier = 1;
+
+      switch (special) {
+        case 'drain':
+          // 1.5x to enemies with special abilities
+          if (enemy.special) multiplier = 1.5;
+          break;
+        case 'ghost':
+          // 1.5x to ぼうれい武者
+          if (enemy.enemyId === 'midnighthat') multiplier = 1.5;
+          break;
+        case 'dragon':
+          // 1.5x to ドラゴン and スカルドラゴン
+          if (enemy.enemyId === 'dragon' || enemy.enemyId === 'skull_mage') multiplier = 1.5;
+          break;
+      }
+
+      if (multiplier > 1) {
+        damage = Math.floor(damage * multiplier);
+        this.ui.addMessage('特効！ ', 'attack');
+      }
+    }
+
     var died = enemy.takeDamage(damage);
 
     this.ui.addMessage(enemy.name + 'に ' + damage + ' ダメージを与えた！', 'attack');
@@ -150,6 +396,9 @@ var Game = (function() {
 
   Game.prototype.enemyAttack = function(enemy) {
     var player = this.player;
+
+    // Wake player from sleep if hit
+    player.wakeUp(this.ui);
 
     // --- Nigiri special: 10% chance to turn an inventory item into onigiri ---
     if (enemy.special === 'onigiri' && Math.random() < 0.1) {
@@ -189,6 +438,18 @@ var Game = (function() {
 
     player.hp -= damage;
 
+    // Counter shield: reflect 30% damage
+    if (player.shield && player.shield.special === 'counter' && !enemy.dead) {
+      var counterDmg = Math.max(1, Math.floor(damage * 0.3));
+      var died = enemy.takeDamage(counterDmg);
+      this.ui.addMessage('バトルカウンターの反撃！ ' + enemy.name + 'に' + counterDmg + 'ダメージ', 'attack');
+      if (died) {
+        player.enemiesKilled++;
+        this.ui.addMessage(enemy.name + 'を倒した！ 経験値' + enemy.exp + '獲得', 'attack');
+        player.gainExp(enemy.exp, this.ui);
+      }
+    }
+
     if (player.hp <= 0) {
       player.hp = 0;
       this.gameOver = true;
@@ -201,15 +462,25 @@ var Game = (function() {
     if (this.gameOver || this.victory) return;
 
     this.player.tickBuffs();
+    this.player.tickSleep(this.ui);
 
     for (var i = 0; i < this.enemies.length; i++) {
       if (!this.enemies[i].dead) {
+        var oldX = this.enemies[i].x;
+        var oldY = this.enemies[i].y;
         this.enemies[i].act(this);
+        // Check if enemy moved onto a trap
+        if (!this.enemies[i].dead && (this.enemies[i].x !== oldX || this.enemies[i].y !== oldY)) {
+          this.checkEnemyTrap(this.enemies[i]);
+        }
       }
       if (this.gameOver) break;
     }
 
     this.enemies = this.enemies.filter(function(e) { return !e.dead; });
+
+    // Remove consumed traps
+    this.traps = this.traps.filter(function(t) { return !t.consumed; });
 
     // Enemy spawn chance: 5% per turn, max 15 enemies
     if (!this.gameOver && !this.victory) {

@@ -21,18 +21,38 @@ var Item = (function() {
     if (data.value !== undefined) this.value = data.value;
     if (data.satiety !== undefined) this.satiety = data.satiety;
     if (data.uses !== undefined) this.uses = data.uses;
+    if (data.special !== undefined) this.special = data.special;
+
+    // Upgrade value for weapons/shields
+    this.plus = 0;
   }
 
   Item.prototype.getDisplayName = function() {
     var name = this.name;
+    // Show +N for weapons/shields
+    if ((this.type === 'weapon' || this.type === 'shield') && this.plus !== 0) {
+      name += (this.plus > 0 ? '+' : '') + this.plus;
+    }
     if (this.type === 'weapon' && this.attack !== undefined) {
-      name += ' (攻撃+' + this.attack + ')';
+      var totalAtk = this.attack + this.plus;
+      name += ' (攻撃+' + totalAtk + ')';
     } else if (this.type === 'shield' && this.defense !== undefined) {
-      name += ' (防御+' + this.defense + ')';
+      var totalDef = this.defense + this.plus;
+      name += ' (防御+' + totalDef + ')';
     } else if (this.type === 'staff') {
       name += '[' + this.uses + ']';
     }
     return name;
+  };
+
+  // Get effective attack value (base + plus)
+  Item.prototype.getEffectiveAttack = function() {
+    return (this.attack || 0) + (this.plus || 0);
+  };
+
+  // Get effective defense value (base + plus)
+  Item.prototype.getEffectiveDefense = function() {
+    return (this.defense || 0) + (this.plus || 0);
   };
 
   Item.prototype.use = function(game, player) {
@@ -91,6 +111,12 @@ var Item = (function() {
             }
           }
         }
+        // Also reveal all traps on the floor
+        if (game.traps) {
+          for (var i = 0; i < game.traps.length; i++) {
+            game.traps[i].visible = true;
+          }
+        }
         ui.addMessage(this.name + 'を読んだ。フロアの全体が明るくなった', 'system');
         return true;
       case 'confuse_enemies':
@@ -110,11 +136,40 @@ var Item = (function() {
         }
         return true;
       case 'powerup':
-        player.powerupTurns = (player.powerupTurns || 0) + 20;
-        ui.addMessage(this.name + 'を読んだ。攻撃力が上がった', 'heal');
+        // Upgrade equipped weapon or shield +1
+        if (player.weapon) {
+          player.weapon.plus = (player.weapon.plus || 0) + 1;
+          player._recalcStats();
+          ui.addMessage(this.name + 'を読んだ。' + player.weapon.name + 'が強化された！', 'heal');
+        } else if (player.shield) {
+          player.shield.plus = (player.shield.plus || 0) + 1;
+          player._recalcStats();
+          ui.addMessage(this.name + 'を読んだ。' + player.shield.name + 'が強化された！', 'heal');
+        } else {
+          player.powerupTurns = (player.powerupTurns || 0) + 20;
+          ui.addMessage(this.name + 'を読んだ。攻撃力が上がった', 'heal');
+        }
         return true;
       case 'identify':
         ui.addMessage(this.name + 'を読んだ。持ち物を識別した', 'system');
+        return true;
+      case 'weapon_upgrade':
+        if (player.weapon) {
+          player.weapon.plus = (player.weapon.plus || 0) + 1;
+          player._recalcStats();
+          ui.addMessage(this.name + 'を読んだ。' + player.weapon.name + 'の攻撃力が上がった！(+' + player.weapon.plus + ')', 'heal');
+        } else {
+          ui.addMessage(this.name + 'を読んだ。しかし武器を装備していない', 'system');
+        }
+        return true;
+      case 'shield_upgrade':
+        if (player.shield) {
+          player.shield.plus = (player.shield.plus || 0) + 1;
+          player._recalcStats();
+          ui.addMessage(this.name + 'を読んだ。' + player.shield.name + 'の防御力が上がった！(+' + player.shield.plus + ')', 'heal');
+        } else {
+          ui.addMessage(this.name + 'を読んだ。しかし盾を装備していない', 'system');
+        }
         return true;
       default:
         ui.addMessage(this.name + 'を読んだ');
@@ -124,6 +179,16 @@ var Item = (function() {
 
   Item.prototype._useFood = function(game, player) {
     var ui = game.ui;
+
+    // Rotten onigiri gives bad effects
+    if (this.cursed) {
+      player.satiety = Math.max(0, player.satiety - 20);
+      player.hp = Math.max(1, player.hp - 10);
+      player.addStatusEffect('confused', 5, ui);
+      ui.addMessage('腐ったおにぎりを食べた！ 気分が悪い...', 'damage');
+      return true;
+    }
+
     var maxSat = player.maxSatiety || 100;
     var oldSatiety = player.satiety;
     player.satiety = Math.min(player.satiety + this.satiety, maxSat);

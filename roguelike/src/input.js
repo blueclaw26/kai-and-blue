@@ -182,12 +182,20 @@ var Input = (function() {
       return;
     }
 
-    // Select item by letter (a-t)
-    var letterIdx = SLOT_LETTERS.indexOf(key);
-    if (letterIdx !== -1 && letterIdx < player.inventory.length) {
-      game.inventorySelection = letterIdx;
-      ui.renderInventory(game);
-      return;
+    // Action keys take priority over slot selection
+    if ((key === 'e' || key === 'E' || key === 'd' || key === 't') && player.inventory.length > 0) {
+      var selectedItem = player.inventory[game.inventorySelection];
+      if (selectedItem) {
+        // Let it fall through to action handlers below
+      }
+    } else {
+      // Select item by letter (a-t)
+      var letterIdx = SLOT_LETTERS.indexOf(key);
+      if (letterIdx !== -1 && letterIdx < player.inventory.length) {
+        game.inventorySelection = letterIdx;
+        ui.renderInventory(game);
+        return;
+      }
     }
 
     // Select by number keys 1-9, 0
