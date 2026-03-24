@@ -11,6 +11,7 @@ var Enemy = (function() {
     this.exp = data.exp;
     this.speed = 1;
     this.dead = false;
+    this.confused = 0;
   }
 
   Enemy.prototype = Object.create(Entity.prototype);
@@ -28,6 +29,13 @@ var Enemy = (function() {
 
   Enemy.prototype.act = function(game) {
     if (this.dead) return;
+
+    // Handle confusion
+    if (this.confused > 0) {
+      this.confused--;
+      this._moveRandom(game);
+      return;
+    }
 
     var player = game.player;
     var dx = player.x - this.x;

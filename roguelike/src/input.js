@@ -3,16 +3,10 @@ var Input = (function() {
   'use strict';
 
   var KEY_MAP = {
-    // Arrow keys
     'ArrowUp': [0, -1],
     'ArrowDown': [0, 1],
     'ArrowLeft': [-1, 0],
     'ArrowRight': [1, 0],
-    // WASD
-    'w': [0, -1], 'W': [0, -1],
-    'a': [-1, 0], 'A': [-1, 0],
-    's': [0, 1],  'S': [0, 1],
-    'd': [1, 0],  'D': [1, 0],
     // Vi-keys (4-dir)
     'h': [-1, 0], 'H': [-1, 0],
     'j': [0, 1],  'J': [0, 1],
@@ -43,6 +37,9 @@ var Input = (function() {
     'Numpad6', 'Numpad7', 'Numpad8', 'Numpad9'
   ];
 
+  // Slot letters a-t for inventory selection
+  var SLOT_LETTERS = 'abcdefghijklmnopqrst';
+
   function Input(turnManager, game) {
     this.turnManager = turnManager;
     this.game = game;
@@ -53,6 +50,12 @@ var Input = (function() {
   Input.prototype.handleKey = function(e) {
     if (this.game.gameOver) return;
 
+    // Inventory mode
+    if (this.game.inventoryOpen) {
+      this._handleInventoryKey(e);
+      return;
+    }
+
     var code = e.code;
     var key = e.key;
 
@@ -60,7 +63,26 @@ var Input = (function() {
       e.preventDefault();
     }
 
-    // Movement
+    // Open inventory
+    if (key === 'i' || key === 'I') {
+      e.preventDefault();
+      this.game.inventoryOpen = true;
+      this.game.inventorySelection = 0;
+      this.game.ui.renderInventory(this.game);
+      return;
+    }
+
+    // Pick up item
+    if (key === 'g' || key === ',') {
+      e.preventDefault();
+      var game = this.game;
+      this.turnManager.processTurn(function() {
+        return game.pickUpItem();
+      });
+      return;
+    }
+
+    // Movement (removed WASD to avoid conflicts with inventory keys)
     var dir = KEY_MAP[code] || KEY_MAP[key];
     if (dir) {
       e.preventDefault();
@@ -68,7 +90,6 @@ var Input = (function() {
       this.turnManager.processTurn(function() {
         return game.movePlayer(dir[0], dir[1]);
       });
-      // Check if player stepped on stairs
       if (this.game.isOnStairs()) {
         this.game.ui.addMessage('階段を見つけた！ (>キーで降りる)');
       }
@@ -86,6 +107,98 @@ var Input = (function() {
       var g = this.game;
       this.turnManager.processTurn(function() {
         return g.descend();
+      });
+      return;
+    }
+  };
+
+  Input.prototype._handleInventoryKey = function(e) {
+    e.preventDefault();
+    var game = this.game;
+    var player = game.player;
+    var ui = game.ui;
+    var key = e.key;
+
+    // Close inventory
+    if (key === 'Escape' || key === 'i' || key === 'I') {
+      game.inventoryOpen = false;
+      ui.hideInventory();
+      // Re-render game
+      this.turnManager.processTurn(function() { return false; });
+      return;
+    }
+
+    // Navigate selection with arrow keys
+    if (key === 'ArrowUp' || key === 'k') {
+      game.inventorySelection = Math.max(0, game.inventorySelection - 1);
+      ui.renderInventory(game);
+      return;
+    }
+    if (key === 'ArrowDown' || key === 'j') {
+      game.inventorySelection = Math.min(player.inventory.length - 1, game.inventorySelection + 1);
+      ui.renderInventory(game);
+      return;
+    }
+
+    // Select item by letter (a-t)
+    var letterIdx = SLOT_LETTERS.indexOf(key);
+    if (letterIdx !== -1 && letterIdx < player.inventory.length) {
+      game.inventorySelection = letterIdx;
+      ui.renderInventory(game);
+      return;
+    }
+
+    // Select by number keys 1-9, 0
+    if (key >= '1' && key <= '9') {
+      var numIdx = parseInt(key) - 1;
+      if (numIdx < player.inventory.length) {
+        game.inventorySelection = numIdx;
+        ui.renderInventory(game);
+      }
+      return;
+    }
+    if (key === '0') {
+      if (9 < player.inventory.length) {
+        game.inventorySelection = 9;
+        ui.renderInventory(game);
+      }
+      return;
+    }
+
+    // No item selected guard
+    if (player.inventory.length === 0) return;
+    var selectedItem = player.inventory[game.inventorySelection];
+    if (!selectedItem) return;
+
+    // Use item
+    if (key === 'e') {
+      game.inventoryOpen = false;
+      ui.hideInventory();
+      var item = selectedItem;
+      this.turnManager.processTurn(function() {
+        return game.useItem(item);
+      });
+      return;
+    }
+
+    // Equip item
+    if (key === 'E') {
+      game.inventoryOpen = false;
+      ui.hideInventory();
+      var item = selectedItem;
+      this.turnManager.processTurn(function() {
+        return player.equip(item, ui);
+      });
+      return;
+    }
+
+    // Drop item
+    if (key === 'd') {
+      game.inventoryOpen = false;
+      ui.hideInventory();
+      var item = selectedItem;
+      this.turnManager.processTurn(function() {
+        return game.dropItem(item);
       });
       return;
     }

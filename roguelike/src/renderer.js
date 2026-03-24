@@ -27,7 +27,6 @@ var Renderer = (function() {
     canvas.width = this.viewW * TILE_SIZE;
     canvas.height = this.viewH * TILE_SIZE;
 
-    // Minimap: 4px per tile
     this.miniTile = 4;
   }
 
@@ -69,7 +68,7 @@ var Renderer = (function() {
     }
   }
 
-  // Export computeFOV for external use
+  // Export computeFOV for external use (scrolls etc.)
   Renderer.computeFOV = computeFOV;
 
   Renderer.prototype.render = function(game) {
@@ -78,6 +77,7 @@ var Renderer = (function() {
     var player = game.player;
     var explored = game.explored;
     var enemies = game.enemies;
+    var items = game.items;
 
     // Compute FOV
     var visible = computeFOV(player.x, player.y, dungeon);
@@ -148,6 +148,19 @@ var Renderer = (function() {
       }
     }
 
+    // Draw items (only visible, below enemies/player)
+    ctx.font = 'bold 16px monospace';
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      var iKey = item.x + ',' + item.y;
+      if (!visible[iKey]) continue;
+
+      var iScreenX = (item.x - camX) * TILE_SIZE;
+      var iScreenY = (item.y - camY) * TILE_SIZE;
+      ctx.fillStyle = item.color;
+      ctx.fillText(item.char, iScreenX + TILE_SIZE / 2, iScreenY + TILE_SIZE / 2);
+    }
+
     // Draw enemies (only visible ones)
     ctx.font = 'bold 18px monospace';
     for (var i = 0; i < enemies.length; i++) {
@@ -171,10 +184,10 @@ var Renderer = (function() {
     ctx.fillText(player.char, playerScreenX + TILE_SIZE / 2, playerScreenY + TILE_SIZE / 2);
 
     // Minimap
-    this.renderMinimap(dungeon, player, enemies, explored, visible);
+    this.renderMinimap(dungeon, player, enemies, items, explored, visible);
   };
 
-  Renderer.prototype.renderMinimap = function(dungeon, player, enemies, explored, visible) {
+  Renderer.prototype.renderMinimap = function(dungeon, player, enemies, items, explored, visible) {
     var ctx = this.miniCtx;
     var t = this.miniTile;
     this.miniCanvas.width = dungeon.width * t;
@@ -201,6 +214,15 @@ var Renderer = (function() {
 
         ctx.fillRect(x * t, y * t, t, t);
       }
+    }
+
+    // Items on minimap (yellow dots, only visible)
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      var iKey = item.x + ',' + item.y;
+      if (!visible[iKey]) continue;
+      ctx.fillStyle = '#ffeb3b';
+      ctx.fillRect(item.x * t, item.y * t, t, t);
     }
 
     // Enemies on minimap (only visible)

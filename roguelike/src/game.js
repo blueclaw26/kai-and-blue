@@ -6,10 +6,13 @@ var Game = (function() {
     this.dungeon = null;
     this.player = null;
     this.enemies = [];
+    this.items = [];
     this.floorNum = 1;
     this.explored = new Set();
     this.ui = null;
     this.gameOver = false;
+    this.inventoryOpen = false;
+    this.inventorySelection = 0;
   }
 
   Game.prototype.init = function(ui) {
@@ -32,6 +35,9 @@ var Game = (function() {
     // Spawn enemies
     var startRoom = this.dungeon.rooms[0];
     this.enemies = Enemy.spawnForFloor(this.dungeon, this.floorNum, startRoom);
+
+    // Spawn items
+    this.items = Item.spawnForFloor(this.dungeon, this.floorNum, startRoom);
   };
 
   Game.prototype.getEnemyAt = function(x, y) {
@@ -42,21 +48,88 @@ var Game = (function() {
     return null;
   };
 
+  Game.prototype.getItemAt = function(x, y) {
+    for (var i = 0; i < this.items.length; i++) {
+      if (this.items[i].x === x && this.items[i].y === y) return this.items[i];
+    }
+    return null;
+  };
+
+  Game.prototype.removeItem = function(item) {
+    var idx = this.items.indexOf(item);
+    if (idx !== -1) this.items.splice(idx, 1);
+  };
+
+  Game.prototype.pickUpItem = function() {
+    var item = this.getItemAt(this.player.x, this.player.y);
+    if (!item) {
+      this.ui.addMessage('足元には何もない');
+      return false;
+    }
+    if (!this.player.canPickUp()) {
+      this.ui.addMessage('持ち物がいっぱいだ');
+      return false;
+    }
+    this.player.pickUp(item);
+    this.removeItem(item);
+    this.ui.addMessage(item.name + 'を拾った');
+    return true;
+  };
+
+  Game.prototype.dropItem = function(item) {
+    // Check if something already on ground
+    if (this.getItemAt(this.player.x, this.player.y)) {
+      this.ui.addMessage('ここには既にアイテムがある');
+      return false;
+    }
+    // Unequip if equipped
+    if (this.player.weapon === item) {
+      this.player.weapon = null;
+      this.player._recalcStats();
+    }
+    if (this.player.shield === item) {
+      this.player.shield = null;
+      this.player._recalcStats();
+    }
+    this.player.removeFromInventory(item);
+    item.x = this.player.x;
+    item.y = this.player.y;
+    this.items.push(item);
+    this.ui.addMessage(item.name + 'を足元に置いた');
+    return true;
+  };
+
+  Game.prototype.useItem = function(item) {
+    var consumed = item.use(this, this.player);
+    if (consumed) {
+      this.player.removeFromInventory(item);
+      // Adjust inventory selection
+      if (this.inventorySelection >= this.player.inventory.length) {
+        this.inventorySelection = Math.max(0, this.player.inventory.length - 1);
+      }
+    }
+    return consumed;
+  };
+
   Game.prototype.movePlayer = function(dx, dy) {
     if (this.gameOver) return false;
 
     var newX = this.player.x + dx;
     var newY = this.player.y + dy;
 
-    // Check for enemy at target
     var enemy = this.getEnemyAt(newX, newY);
     if (enemy) {
       this.playerAttack(enemy);
-      return true; // turn consumed
+      return true;
     }
 
     if (this.player.canMoveTo(newX, newY, this.dungeon)) {
       this.player.moveTo(newX, newY);
+      // Check for item on tile
+      var item = this.getItemAt(newX, newY);
+      if (item) {
+        this.ui.addMessage('足元に' + item.name + 'がある（gキーで拾う）');
+      }
       return true;
     }
     return false;
@@ -93,6 +166,9 @@ var Game = (function() {
   Game.prototype.processEnemyTurns = function() {
     if (this.gameOver) return;
 
+    // Tick player buffs
+    this.player.tickBuffs();
+
     for (var i = 0; i < this.enemies.length; i++) {
       if (!this.enemies[i].dead) {
         this.enemies[i].act(this);
@@ -100,7 +176,6 @@ var Game = (function() {
       if (this.gameOver) break;
     }
 
-    // Remove dead enemies
     this.enemies = this.enemies.filter(function(e) { return !e.dead; });
   };
 
