@@ -25,14 +25,13 @@
         <li><a href="#items">アイテム一覧</a></li>
         <li><a href="#enemies">敵一覧</a></li>
         <li><a href="#traps">罠一覧</a></li>
+        <li><a href="#seals">印一覧</a></li>
         <li><a href="#status">状態異常</a></li>
         <li><a href="#shop">店</a></li>
-        <li><a href="#bracelets">腕輪</a></li>
-        <li><a href="#arrows">矢</a></li>
       </ol>
     </nav>
 
-    <!-- 1. 操作方法 -->
+    <!-- 1. 操作方法 (static) -->
     <section class="section" id="controls">
       <h2>1. 操作方法</h2>
       <ul class="key-list">
@@ -40,6 +39,7 @@
         <li><kbd>h</kbd><kbd>j</kbd><kbd>k</kbd><kbd>l</kbd> <span class="key-desc">移動 vi風（左・下・上・右）</span></li>
         <li><kbd>y</kbd><kbd>u</kbd><kbd>b</kbd><kbd>n</kbd> <span class="key-desc">ナナメ移動 vi風（左上・右上・左下・右下）</span></li>
         <li><kbd>テンキー</kbd> <span class="key-desc">8方向移動</span></li>
+        <li><kbd>Shift+方向</kbd> <span class="key-desc">ダッシュ（壁/敵/アイテムまで直進）</span></li>
         <li><kbd>.</kbd> / <kbd>テンキー5</kbd> <span class="key-desc">足踏み（その場で1ターン経過）</span></li>
         <li><kbd>&gt;</kbd> <span class="key-desc">階段を降りる</span></li>
         <li><kbd>g</kbd> / <kbd>,</kbd> <span class="key-desc">アイテムを拾う（自動拾いもあり）</span></li>
@@ -48,14 +48,18 @@
         <li><kbd>E</kbd> <span class="key-desc">持ち物画面：装備する</span></li>
         <li><kbd>d</kbd> <span class="key-desc">持ち物画面：置く</span></li>
         <li><kbd>t</kbd> <span class="key-desc">持ち物画面：投げる</span></li>
+        <li><kbd>p</kbd> <span class="key-desc">持ち物画面：壺に入れる</span></li>
+        <li><kbd>o</kbd> <span class="key-desc">持ち物画面：壺から出す</span></li>
+        <li><kbd>s</kbd> <span class="key-desc">持ち物画面：整理（ソート）</span></li>
         <li><kbd>Esc</kbd> <span class="key-desc">持ち物画面：閉じる</span></li>
-        <li><kbd>方向キー</kbd> <span class="key-desc">杖使用時：振る方向を選択</span></li>
+        <li><kbd>方向キー</kbd> <span class="key-desc">杖/矢使用時：方向を選択</span></li>
+        <li><kbd>Enter</kbd> <span class="key-desc">NPCに話しかける（村）</span></li>
         <li><kbd>g</kbd> <span class="key-desc">店内：アイテムを購入</span></li>
         <li><kbd>y</kbd> / <kbd>n</kbd> <span class="key-desc">売却確認</span></li>
       </ul>
     </section>
 
-    <!-- 2. 基本システム -->
+    <!-- 2. 基本システム (static) -->
     <section class="section" id="systems">
       <h2>2. 基本システム</h2>
       <ul class="system-list">
@@ -63,14 +67,15 @@
         <li><span class="sys-label">HP</span> — 0になると倒れる。自然回復あり（数ターンごとに+1）。満腹度が0のときは回復しない</li>
         <li><span class="sys-label">満腹度</span> — 最大100。10ターンごとに-1。0になると毎ターン1ダメージ。おにぎりで回復</li>
         <li><span class="sys-label">レベル</span> — 経験値で上昇。レベルアップでHP+3、攻撃+1、防御+1（2レベルごと）</li>
-        <li><span class="sys-label">視界</span> — 部屋内は全体が見える。通路では周囲6マス。一度見た場所は記憶される</li>
-        <li><span class="sys-label">識別</span> — 草・巻物・杖は未識別の場合がある。使用するか、識別の巻物で判明</li>
+        <li><span class="sys-label">視界</span> — 部屋内は全体が見える。通路では周囲1マス。一度見た場所は記憶される</li>
+        <li><span class="sys-label">識別</span> — 草・巻物・杖は未識別の場合がある。使用するか、識別の巻物/壺で判明</li>
         <li><span class="sys-label">自然湧き</span> — 毎ターン5%の確率で新しい敵がフロアに出現（最大15体）</li>
         <li><span class="sys-label">ゴールド</span> — 敵撃破で獲得。店での売買に使用</li>
+        <li><span class="sys-label">村</span> — 死亡後は村に戻る。倉庫にアイテムを預けておける（最大20個）</li>
       </ul>
     </section>
 
-    <!-- 3. ダメージ計算 -->
+    <!-- 3. ダメージ計算 (static) -->
     <section class="section" id="damage">
       <h2>3. ダメージ計算</h2>
 
@@ -95,154 +100,33 @@
       </ul>
     </section>
 
-    <!-- 4. アイテム一覧 -->
+    <!-- 4. アイテム一覧 (auto-generated) -->
     <section class="section" id="items">
       <h2>4. アイテム一覧</h2>
-
-      <!-- 武器 -->
-      <h3>武器 <span class="key-desc">( / )</span></h3>
-      <table class="data-table">
-        <thead>
-          <tr><th>名前</th><th>攻撃力</th><th>印</th><th>特殊</th><th>出現階</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>木刀</td><td class="num">3</td><td class="num">3</td><td>—</td><td class="floor">1F~</td></tr>
-          <tr><td>青銅の太刀</td><td class="num">4</td><td class="num">3</td><td>—</td><td class="floor">2F~</td></tr>
-          <tr><td>カタナ</td><td class="num">5</td><td class="num">4</td><td>—</td><td class="floor">1F~</td></tr>
-          <tr><td>どうたぬき</td><td class="num">8</td><td class="num">5</td><td>—</td><td class="floor">6F~</td></tr>
-          <tr><td>成仏のカマ</td><td class="num">5</td><td class="num">4</td><td class="special">ゴースト特効</td><td class="floor">3F~</td></tr>
-          <tr><td>ドレインバスター</td><td class="num">6</td><td class="num">4</td><td class="special">特殊能力持ち特効</td><td class="floor">5F~</td></tr>
-          <tr><td>ドラゴンキラー</td><td class="num">10</td><td class="num">5</td><td class="special">ドラゴン特効</td><td class="floor">8F~</td></tr>
-          <tr><td>カブラステギ</td><td class="num">15</td><td class="num">8</td><td>—</td><td class="floor">12F~</td></tr>
-        </tbody>
-      </table>
-
-      <!-- 盾 -->
-      <h3>盾 <span class="key-desc">( [ )</span></h3>
-      <table class="data-table">
-        <thead>
-          <tr><th>名前</th><th>防御力</th><th>印</th><th>特殊</th><th>出現階</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>木甲の盾</td><td class="num">2</td><td class="num">3</td><td>—</td><td class="floor">1F~</td></tr>
-          <tr><td>皮甲の盾</td><td class="num">3</td><td class="num">3</td><td>—</td><td class="floor">2F~</td></tr>
-          <tr><td>鉄甲の盾</td><td class="num">4</td><td class="num">4</td><td>—</td><td class="floor">1F~</td></tr>
-          <tr><td>鉄の盾+1</td><td class="num">6</td><td class="num">5</td><td>—</td><td class="floor">5F~</td></tr>
-          <tr><td>ドラゴンシールド</td><td class="num">5</td><td class="num">4</td><td class="special">炎50%軽減</td><td class="floor">7F~</td></tr>
-          <tr><td>爆発よけの盾</td><td class="num">4</td><td class="num">3</td><td class="special">爆発50%軽減</td><td class="floor">6F~</td></tr>
-          <tr><td>バトルカウンター</td><td class="num">3</td><td class="num">3</td><td class="special">被ダメ30%反射</td><td class="floor">5F~</td></tr>
-        </tbody>
-      </table>
-
-      <!-- 草 -->
-      <h3>草 <span class="key-desc">( ! )</span></h3>
-      <table class="data-table">
-        <thead>
-          <tr><th>名前</th><th>効果</th><th>出現階</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>薬草</td><td>HP+25回復</td><td class="floor">1F~</td></tr>
-          <tr><td>オトギリソウ</td><td>HP+50回復</td><td class="floor">3F~</td></tr>
-          <tr><td>ちからの種</td><td>攻撃力+1</td><td class="floor">1F~</td></tr>
-          <tr><td>毒消し草</td><td>毒状態回復</td><td class="floor">1F~</td></tr>
-        </tbody>
-      </table>
-
-      <!-- 巻物 -->
-      <h3>巻物 <span class="key-desc">( ? )</span></h3>
-      <table class="data-table">
-        <thead>
-          <tr><th>名前</th><th>効果</th><th>出現階</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>識別の巻物</td><td>アイテム1つを識別</td><td class="floor">1F~</td></tr>
-          <tr><td>混乱の巻物</td><td>視界内の敵を混乱</td><td class="floor">1F~</td></tr>
-          <tr><td>パワーアップの巻物</td><td>装備+1強化</td><td class="floor">3F~</td></tr>
-          <tr><td>あかりの巻物</td><td>フロア全体＋罠を可視化</td><td class="floor">1F~</td></tr>
-          <tr><td>天の恵みの巻物</td><td>武器+1強化</td><td class="floor">5F~</td></tr>
-          <tr><td>地の恵みの巻物</td><td>盾+1強化</td><td class="floor">5F~</td></tr>
-        </tbody>
-      </table>
-
-      <!-- 杖 -->
-      <h3>杖 <span class="key-desc">( / )</span></h3>
-      <table class="data-table">
-        <thead>
-          <tr><th>名前</th><th>効果</th><th>回数</th><th>出現階</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>ふきとばしの杖</td><td>敵を5マス後退（壁衝突で5ダメージ）</td><td class="num">5</td><td class="floor">1F~</td></tr>
-          <tr><td>場所替えの杖</td><td>対象と位置交換</td><td class="num">3</td><td class="floor">3F~</td></tr>
-          <tr><td>かなしばりの杖</td><td>10ターン行動不能（攻撃で解除）</td><td class="num">4</td><td class="floor">2F~</td></tr>
-          <tr><td>鈍足の杖</td><td>15ターン鈍足</td><td class="num">5</td><td class="floor">1F~</td></tr>
-          <tr><td>いかずちの杖</td><td>20固定ダメージ</td><td class="num">3</td><td class="floor">5F~</td></tr>
-          <tr><td>トンネルの杖</td><td>壁を10マス掘削</td><td class="num">4</td><td class="floor">3F~</td></tr>
-        </tbody>
-      </table>
-
-      <!-- 食料 -->
-      <h3>食料 <span class="key-desc">( % )</span></h3>
-      <table class="data-table">
-        <thead>
-          <tr><th>名前</th><th>満腹度回復</th><th>出現階</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>おにぎり</td><td class="num">+50</td><td class="floor">1F~</td></tr>
-          <tr><td>大きいおにぎり</td><td class="num">+100</td><td class="floor">3F~</td></tr>
-        </tbody>
-      </table>
+      <div id="item-tables">読み込み中...</div>
     </section>
 
-    <!-- 5. 敵一覧 -->
+    <!-- 5. 敵一覧 (auto-generated) -->
     <section class="section" id="enemies">
       <h2>5. 敵一覧</h2>
-      <table class="data-table">
-        <thead>
-          <tr><th>名前</th><th>記号</th><th>HP</th><th>攻</th><th>防</th><th>経験値</th><th>出現階</th><th>特殊能力</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>マムル</td><td class="symbol">M</td><td class="num">3</td><td class="num">1</td><td class="num">0</td><td class="num">3</td><td class="floor">1-5F</td><td>—</td></tr>
-          <tr><td>チンタラ</td><td class="symbol">C</td><td class="num">5</td><td class="num">2</td><td class="num">0</td><td class="num">5</td><td class="floor">1-7F</td><td>—</td></tr>
-          <tr><td>にぎり見習い</td><td class="symbol">N</td><td class="num">8</td><td class="num">3</td><td class="num">1</td><td class="num">10</td><td class="floor">3-10F</td><td class="special">アイテムをおにぎり化(10%)</td></tr>
-          <tr><td>ぼうれい武者</td><td class="symbol">G</td><td class="num">12</td><td class="num">4</td><td class="num">1</td><td class="num">15</td><td class="floor">5-12F</td><td class="special">壁通過</td></tr>
-          <tr><td>パ王</td><td class="symbol">P</td><td class="num">15</td><td class="num">5</td><td class="num">2</td><td class="num">20</td><td class="floor">7-15F</td><td class="special">混乱/鈍足の魔法</td></tr>
-          <tr><td>ドラゴン</td><td class="symbol">D</td><td class="num">30</td><td class="num">10</td><td class="num">4</td><td class="num">50</td><td class="floor">10-20F</td><td class="special">直線火炎(15-20)</td></tr>
-          <tr><td>スカルドラゴン</td><td class="symbol">S</td><td class="num">25</td><td class="num">8</td><td class="num">3</td><td class="num">35</td><td class="floor">12-20F</td><td class="special">フロア全域火炎(20)</td></tr>
-          <tr><td>タウロス</td><td class="symbol">T</td><td class="num">35</td><td class="num">12</td><td class="num">5</td><td class="num">60</td><td class="floor">15-20F</td><td class="special">痛恨の一撃(25%で2倍)</td></tr>
-          <tr><td>ガマラ</td><td class="symbol">F</td><td class="num">6</td><td class="num">2</td><td class="num">0</td><td class="num">4</td><td class="floor">1-6F</td><td class="special">ゴールドを盗んで逃走</td></tr>
-          <tr><td>ボーイ</td><td class="symbol">B</td><td class="num">7</td><td class="num">2</td><td class="num">0</td><td class="num">5</td><td class="floor">2-8F</td><td class="special">直線上に矢(3ダメージ)</td></tr>
-          <tr><td>おばけ大根</td><td class="symbol">R</td><td class="num">10</td><td class="num">3</td><td class="num">1</td><td class="num">8</td><td class="floor">3-9F</td><td class="special">毒草投げ(攻撃-1)</td></tr>
-          <tr><td>ぬすっトド</td><td class="symbol">Z</td><td class="num">15</td><td class="num">3</td><td class="num">2</td><td class="num">12</td><td class="floor">4-10F</td><td class="special">アイテムを盗んでワープ</td></tr>
-          <tr><td>ケンゴウ</td><td class="symbol">K</td><td class="num">18</td><td class="num">7</td><td class="num">3</td><td class="num">18</td><td class="floor">6-14F</td><td class="special">装備を弾き飛ばす(20%)</td></tr>
-          <tr><td>ミドロ</td><td class="symbol">J</td><td class="num">20</td><td class="num">5</td><td class="num">2</td><td class="num">15</td><td class="floor">7-15F</td><td class="special">盾を錆びさせる(防御-1)</td></tr>
-          <tr><td>店主</td><td class="symbol">$</td><td class="num">200</td><td class="num">50</td><td class="num">30</td><td class="num">—</td><td class="floor">店のみ</td><td class="special">泥棒時に敵対</td></tr>
-        </tbody>
-      </table>
+      <div id="enemy-table">読み込み中...</div>
     </section>
 
-    <!-- 6. 罠一覧 -->
+    <!-- 6. 罠一覧 (auto-generated) -->
     <section class="section" id="traps">
       <h2>6. 罠一覧</h2>
-      <table class="data-table">
-        <thead>
-          <tr><th>名前</th><th>効果</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>地雷</td><td>20ダメージ＋周囲15ダメージ、アイテム消滅。爆発よけの盾で半減</td></tr>
-          <tr><td>落とし穴</td><td>5ダメージ＋次の階へ落下</td></tr>
-          <tr><td>毒矢の罠</td><td>5ダメージ＋攻撃力-1</td></tr>
-          <tr><td>睡眠ガス</td><td>5ターン睡眠（攻撃で覚醒）</td></tr>
-          <tr><td>回転盤</td><td>10ターン混乱</td></tr>
-          <tr><td>デロデロの罠</td><td>満腹度-30、おにぎり腐敗</td></tr>
-          <tr><td>転び石</td><td>持ち物1つ落下</td></tr>
-          <tr><td>サビの罠</td><td>盾防御力-1</td></tr>
-        </tbody>
-      </table>
+      <div id="trap-table">読み込み中...</div>
     </section>
 
-    <!-- 7. 状態異常 -->
+    <!-- 7. 印一覧 (auto-generated) -->
+    <section class="section" id="seals">
+      <h2>7. 印一覧</h2>
+      <div id="seal-table">読み込み中...</div>
+    </section>
+
+    <!-- 8. 状態異常 (static) -->
     <section class="section" id="status">
-      <h2>7. 状態異常</h2>
+      <h2>8. 状態異常</h2>
       <table class="data-table">
         <thead>
           <tr><th>名前</th><th>効果</th><th>発生源</th></tr>
@@ -257,57 +141,346 @@
       </table>
     </section>
 
-    <!-- 8. 店 -->
+    <!-- 9. 店 (static) -->
     <section class="section" id="shop">
-      <h2>8. 店</h2>
+      <h2>9. 店</h2>
       <ul class="shop-list">
         <li>2F以降、20%の確率で出現</li>
         <li>明るい床色の部屋に店主（<kbd>$</kbd>）とアイテムが陳列されている</li>
-        <li>アイテムの上で<kbd>g</kbd>キーを押すと購入（ゴールド消費）</li>
+        <li>アイテムの上で<kbd>g</kbd>キーを押すと手に取れる（債務が発生）</li>
+        <li>店内で<kbd>g</kbd>を押すと代金を支払う</li>
         <li>自分のアイテムを床に置くと売却を提案される（<kbd>y</kbd>/<kbd>n</kbd>）</li>
         <li><span class="warning">泥棒</span> — 代金を払わずに店の外へ出ると、店主が敵対化＋階段に番犬が出現する</li>
       </ul>
-    </section>
-
-    <!-- 9. 腕輪 -->
-    <section class="section" id="bracelets">
-      <h2>9. 腕輪</h2>
-      <p>装備スロット：1つのみ。[E]キーで装備/解除。</p>
-      <table class="data-table">
-        <thead>
-          <tr><th>名前</th><th>効果</th><th>出現階</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>透視の腕輪</td><td class="special">フロア全体の敵が見える</td><td class="floor">8F~</td></tr>
-          <tr><td>よくみえの腕輪</td><td class="special">フロア全体の罠が見える</td><td class="floor">5F~</td></tr>
-          <tr><td>浮遊の腕輪</td><td class="special">罠を踏んでも発動しない</td><td class="floor">7F~</td></tr>
-          <tr><td>力の腕輪</td><td class="special">攻撃力+5</td><td class="floor">5F~</td></tr>
-          <tr><td>ハラヘリの腕輪</td><td class="special">満腹度減少が2倍速（呪いアイテム）</td><td class="floor">1F~</td></tr>
-          <tr><td>回復の腕輪</td><td class="special">自然HP回復が2倍速</td><td class="floor">6F~</td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- 10. 矢 -->
-    <section class="section" id="arrows">
-      <h2>10. 矢</h2>
-      <p>同じ種類の矢はスタックされる。持ち物画面で[e]で使用→方向選択→発射。</p>
-      <table class="data-table">
-        <thead>
-          <tr><th>名前</th><th>ダメージ</th><th>出現階</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>木の矢</td><td class="num">3</td><td class="floor">1F~</td></tr>
-          <tr><td>鉄の矢</td><td class="num">7</td><td class="floor">4F~</td></tr>
-          <tr><td>銀の矢</td><td class="num">12</td><td class="floor">8F~</td></tr>
-        </tbody>
-      </table>
-      <p>ダメージ計算: max(1, 矢ダメージ - 敵防御/2)。外れた矢は50%の確率で地面に残る。</p>
     </section>
 
     <footer class="guide-footer">
       <a href="./index.html">← ダンジョンに戻る</a>
     </footer>
   </div>
+
+  <!-- Stub dependencies so data files can load without the full game -->
+  <script>
+    if (typeof Dungeon === 'undefined') {
+      var Dungeon = { TILE: { WALL: 0, FLOOR: 1, CORRIDOR: 2, STAIRS_DOWN: 3 } };
+    }
+    if (typeof window.IDENTIFIED_TYPES === 'undefined') {
+      window.IDENTIFIED_TYPES = new Set();
+    }
+    if (typeof window.FAKE_NAME_MAP === 'undefined') {
+      window.FAKE_NAME_MAP = {};
+    }
+  </script>
+  <!-- Load game data files for auto-generation -->
+  <script src="src/data/enemies.js"></script>
+  <script src="src/data/items.js"></script>
+  <script src="src/data/seals.js"></script>
+  <script src="src/trap.js"></script>
+  <script src="src/data/floors.js"></script>
+
+  <script>
+  (function() {
+    'use strict';
+
+    // --- Special ability descriptions ---
+    var SPECIAL_DESC = {
+      null: '—',
+      'onigiri': 'アイテムをおにぎり化(10%)',
+      'wallpass': '壁通過',
+      'magic': '混乱/鈍足の魔法',
+      'firebreath': '直線火炎(15-20)',
+      'floorfire': 'フロア全域火炎(20)',
+      'critical': '痛恨の一撃(25%で2倍)',
+      'steal_gold': 'ゴールドを盗んで逃走',
+      'arrow_shot': '直線上に矢(3ダメージ)',
+      'poison_throw': '毒草投げ(攻撃-1)',
+      'steal_item': 'アイテムを盗んでワープ',
+      'disarm': '装備を弾き飛ばす(20%)',
+      'rust_equipment': '盾を錆びさせる(防御-1)'
+    };
+
+    // --- Item effect descriptions ---
+    var ITEM_EFFECT_DESC = {
+      // Grass
+      'heal': 'HP回復',
+      'strength': '攻撃力+',
+      'cure_poison': '毒状態回復',
+      // Scrolls
+      'identify': 'アイテム1つを識別',
+      'confuse_enemies': '視界内の敵を混乱',
+      'powerup': '装備+1強化',
+      'reveal_map': 'フロア全体＋罠を可視化',
+      'weapon_upgrade': '武器+1強化',
+      'shield_upgrade': '盾+1強化',
+      'sanctuary': 'モンスター侵入不可タイル設置',
+      'extinction': '選んだ敵を永久消滅',
+      'great_hall': 'フロアを大部屋化',
+      'escape': 'ダンジョン脱出（10F以降で勝利扱い）',
+      // Staves
+      'knockback': '敵を5マス後退（壁衝突で5ダメージ）',
+      'swap': '対象と位置交換',
+      'paralyze': '10ターン行動不能（攻撃で解除）',
+      'slow': '15ターン鈍足',
+      'lightning': '20固定ダメージ',
+      'tunnel': '壁を10マス掘削',
+      // Pots
+      'storage': 'アイテムを保存・取出し可能',
+      'synthesis': '同種装備を合成',
+      'none': '入れるだけ（取り出せない）',
+      // Bracelets
+      'see_all': 'フロア全体の敵が見える',
+      'see_traps': 'フロア全体の罠が見える',
+      'float': '罠を踏んでも発動しない',
+      'strength_boost': '攻撃力+5',
+      'hunger': '満腹度減少が2倍速（呪い）',
+      'regen': '自然HP回復が2倍速'
+    };
+
+    // --- Trap effect descriptions ---
+    var TRAP_EFFECT_DESC = {
+      'explosion': '20ダメージ＋周囲15ダメージ、アイテム消滅。爆発よけの盾で半減',
+      'pitfall': '5ダメージ＋次の階へ落下',
+      'poison': '5ダメージ＋攻撃力-1',
+      'sleep': '5ターン睡眠（攻撃で覚醒）',
+      'confuse': '10ターン混乱',
+      'hunger': '満腹度-30、おにぎり腐敗',
+      'trip': '持ち物1つ落下',
+      'rust': '盾防御力-1（[金]印で防止）',
+      'arrow_wood': '木の矢3ダメージ＋矢ドロップ',
+      'arrow_iron': '鉄の矢7ダメージ＋矢ドロップ'
+    };
+
+    // =============================================
+    // Auto-generate Enemy Table
+    // =============================================
+    function generateEnemyTable() {
+      // Sort by minFloor
+      var entries = [];
+      for (var key in ENEMY_DATA) {
+        var e = ENEMY_DATA[key];
+        entries.push({ id: key, data: e });
+      }
+      entries.sort(function(a, b) { return a.data.minFloor - b.data.minFloor; });
+
+      var html = '<table class="data-table"><thead><tr>';
+      html += '<th>名前</th><th>記号</th><th>HP</th><th>攻</th><th>防</th><th>経験値</th><th>出現階</th><th>特殊能力</th>';
+      html += '</tr></thead><tbody>';
+
+      for (var i = 0; i < entries.length; i++) {
+        var e = entries[i].data;
+        var id = entries[i].id;
+        var floorStr;
+        if (e.isShopkeeper || id === 'guard_dog') {
+          floorStr = '特殊';
+        } else {
+          floorStr = e.minFloor + '-' + e.maxFloor + 'F';
+        }
+        var specialStr = SPECIAL_DESC[e.special] || (e.special ? e.special : '—');
+        if (e.isShopkeeper) specialStr = '泥棒時に敵対（倍速・状態異常無効）';
+        if (id === 'guard_dog') specialStr = '泥棒時に階段付近に出現';
+
+        html += '<tr>';
+        html += '<td>' + e.name + '</td>';
+        html += '<td class="symbol" style="color:' + e.color + ';">' + e.char + '</td>';
+        html += '<td class="num">' + e.hp + '</td>';
+        html += '<td class="num">' + e.attack + '</td>';
+        html += '<td class="num">' + e.defense + '</td>';
+        html += '<td class="num">' + (e.exp || '—') + '</td>';
+        html += '<td class="floor">' + floorStr + '</td>';
+        html += '<td>' + specialStr + '</td>';
+        html += '</tr>';
+      }
+      html += '</tbody></table>';
+      document.getElementById('enemy-table').innerHTML = html;
+    }
+
+    // =============================================
+    // Auto-generate Item Tables (grouped by type)
+    // =============================================
+    function generateItemTables() {
+      var groups = {
+        weapon:  { title: '武器', symbol: '/', items: [] },
+        shield:  { title: '盾', symbol: '[', items: [] },
+        grass:   { title: '草', symbol: '!', items: [] },
+        scroll:  { title: '巻物', symbol: '?', items: [] },
+        staff:   { title: '杖', symbol: '/', items: [] },
+        food:    { title: '食料', symbol: '%', items: [] },
+        pot:     { title: '壺', symbol: '{', items: [] },
+        bracelet:{ title: '腕輪', symbol: '=', items: [] },
+        arrow:   { title: '矢', symbol: ')', items: [] }
+      };
+
+      for (var key in ITEM_DATA) {
+        var d = ITEM_DATA[key];
+        if (groups[d.type]) {
+          groups[d.type].items.push({ id: key, data: d });
+        }
+      }
+
+      var html = '';
+
+      // Weapons
+      var wItems = groups.weapon.items.sort(function(a, b) { return a.data.attack - b.data.attack; });
+      html += '<h3>武器 <span class="key-desc">( / )</span></h3>';
+      html += '<table class="data-table"><thead><tr><th>名前</th><th>攻撃力</th><th>印数</th><th>特殊</th><th>買値</th><th>出現階</th></tr></thead><tbody>';
+      for (var wi = 0; wi < wItems.length; wi++) {
+        var w = wItems[wi].data;
+        var wSeal = ITEM_SEAL_MAP[wItems[wi].id];
+        var wSpecial = wSeal ? SEAL_DATA[wSeal].desc : '—';
+        html += '<tr><td>' + w.name + '</td><td class="num">' + w.attack + '</td><td class="num">' + w.slots + '</td>';
+        html += '<td class="special">' + wSpecial + '</td><td class="num">' + w.price + '</td><td class="floor">' + w.minFloor + 'F~</td></tr>';
+      }
+      html += '</tbody></table>';
+
+      // Shields
+      var sItems = groups.shield.items.sort(function(a, b) { return a.data.defense - b.data.defense; });
+      html += '<h3>盾 <span class="key-desc">( [ )</span></h3>';
+      html += '<table class="data-table"><thead><tr><th>名前</th><th>防御力</th><th>印数</th><th>特殊</th><th>買値</th><th>出現階</th></tr></thead><tbody>';
+      for (var si = 0; si < sItems.length; si++) {
+        var s = sItems[si].data;
+        var sSeal = ITEM_SEAL_MAP[sItems[si].id];
+        var sSpecial = sSeal ? SEAL_DATA[sSeal].desc : '—';
+        html += '<tr><td>' + s.name + '</td><td class="num">' + s.defense + '</td><td class="num">' + s.slots + '</td>';
+        html += '<td class="special">' + sSpecial + '</td><td class="num">' + s.price + '</td><td class="floor">' + s.minFloor + 'F~</td></tr>';
+      }
+      html += '</tbody></table>';
+
+      // Grass
+      var gItems = groups.grass.items;
+      html += '<h3>草 <span class="key-desc">( ! )</span></h3>';
+      html += '<table class="data-table"><thead><tr><th>名前</th><th>効果</th><th>買値</th><th>出現階</th></tr></thead><tbody>';
+      for (var gi = 0; gi < gItems.length; gi++) {
+        var g = gItems[gi].data;
+        var gDesc = ITEM_EFFECT_DESC[g.effect] || g.effect;
+        if (g.value) gDesc += (g.value > 0 ? g.value : '');
+        html += '<tr><td>' + g.name + '</td><td>' + gDesc + '</td><td class="num">' + g.price + '</td><td class="floor">' + g.minFloor + 'F~</td></tr>';
+      }
+      html += '</tbody></table>';
+
+      // Scrolls
+      var scItems = groups.scroll.items;
+      html += '<h3>巻物 <span class="key-desc">( ? )</span></h3>';
+      html += '<table class="data-table"><thead><tr><th>名前</th><th>効果</th><th>買値</th><th>出現階</th></tr></thead><tbody>';
+      for (var sci = 0; sci < scItems.length; sci++) {
+        var sc = scItems[sci].data;
+        var scDesc = ITEM_EFFECT_DESC[sc.effect] || sc.effect;
+        html += '<tr><td>' + sc.name + '</td><td>' + scDesc + '</td><td class="num">' + sc.price + '</td><td class="floor">' + sc.minFloor + 'F~</td></tr>';
+      }
+      html += '</tbody></table>';
+
+      // Staves
+      var stItems = groups.staff.items;
+      html += '<h3>杖 <span class="key-desc">( / )</span></h3>';
+      html += '<table class="data-table"><thead><tr><th>名前</th><th>効果</th><th>回数</th><th>買値</th><th>出現階</th></tr></thead><tbody>';
+      for (var sti = 0; sti < stItems.length; sti++) {
+        var st = stItems[sti].data;
+        var stDesc = ITEM_EFFECT_DESC[st.effect] || st.effect;
+        html += '<tr><td>' + st.name + '</td><td>' + stDesc + '</td><td class="num">' + (st.uses || '—') + '</td>';
+        html += '<td class="num">' + st.price + '</td><td class="floor">' + st.minFloor + 'F~</td></tr>';
+      }
+      html += '</tbody></table>';
+
+      // Food
+      var fItems = groups.food.items;
+      html += '<h3>食料 <span class="key-desc">( % )</span></h3>';
+      html += '<table class="data-table"><thead><tr><th>名前</th><th>満腹度回復</th><th>買値</th><th>出現階</th></tr></thead><tbody>';
+      for (var fi = 0; fi < fItems.length; fi++) {
+        var f = fItems[fi].data;
+        html += '<tr><td>' + f.name + '</td><td class="num">+' + f.satiety + '</td>';
+        html += '<td class="num">' + f.price + '</td><td class="floor">' + f.minFloor + 'F~</td></tr>';
+      }
+      html += '</tbody></table>';
+
+      // Pots
+      var pItems = groups.pot.items;
+      html += '<h3>壺 <span class="key-desc">( { )</span></h3>';
+      html += '<table class="data-table"><thead><tr><th>名前</th><th>容量</th><th>効果</th><th>買値</th><th>出現階</th></tr></thead><tbody>';
+      for (var pi = 0; pi < pItems.length; pi++) {
+        var p = pItems[pi].data;
+        var pDesc = ITEM_EFFECT_DESC[p.effect] || p.effect;
+        html += '<tr><td>' + p.name + '</td><td class="num">' + p.capacity + '</td>';
+        html += '<td>' + pDesc + '</td><td class="num">' + p.price + '</td><td class="floor">' + p.minFloor + 'F~</td></tr>';
+      }
+      html += '</tbody></table>';
+
+      // Bracelets
+      var bItems = groups.bracelet.items;
+      html += '<h3>腕輪 <span class="key-desc">( = )</span></h3>';
+      html += '<table class="data-table"><thead><tr><th>名前</th><th>効果</th><th>買値</th><th>出現階</th></tr></thead><tbody>';
+      for (var bi = 0; bi < bItems.length; bi++) {
+        var b = bItems[bi].data;
+        var bDesc = ITEM_EFFECT_DESC[b.effect] || b.effect;
+        html += '<tr><td>' + b.name + '</td><td class="special">' + bDesc + '</td>';
+        html += '<td class="num">' + b.price + '</td><td class="floor">' + b.minFloor + 'F~</td></tr>';
+      }
+      html += '</tbody></table>';
+
+      // Arrows
+      var aItems = groups.arrow.items.sort(function(a, b) { return a.data.damage - b.data.damage; });
+      html += '<h3>矢 <span class="key-desc">( ) )</span></h3>';
+      html += '<table class="data-table"><thead><tr><th>名前</th><th>ダメージ</th><th>買値</th><th>出現階</th></tr></thead><tbody>';
+      for (var ai = 0; ai < aItems.length; ai++) {
+        var a = aItems[ai].data;
+        html += '<tr><td>' + a.name + '</td><td class="num">' + a.damage + '</td>';
+        html += '<td class="num">' + a.price + '</td><td class="floor">' + a.minFloor + 'F~</td></tr>';
+      }
+      html += '</tbody></table>';
+      html += '<p>ダメージ計算: max(1, 矢ダメージ - 敵防御/2)。外れた矢は50%の確率で地面に残る。</p>';
+
+      document.getElementById('item-tables').innerHTML = html;
+    }
+
+    // =============================================
+    // Auto-generate Trap Table
+    // =============================================
+    function generateTrapTable() {
+      var html = '<table class="data-table"><thead><tr><th>名前</th><th>効果</th></tr></thead><tbody>';
+      for (var key in TRAP_DATA) {
+        var t = TRAP_DATA[key];
+        var desc = TRAP_EFFECT_DESC[t.effect] || t.effect;
+        html += '<tr><td>' + t.name + '</td><td>' + desc + '</td></tr>';
+      }
+      html += '</tbody></table>';
+      document.getElementById('trap-table').innerHTML = html;
+    }
+
+    // =============================================
+    // Auto-generate Seal Table
+    // =============================================
+    function generateSealTable() {
+      var html = '';
+
+      // Weapon seals
+      html += '<h3>武器の印</h3>';
+      html += '<table class="data-table"><thead><tr><th>印</th><th>効果</th><th>入手元</th></tr></thead><tbody>';
+      for (var key in SEAL_DATA) {
+        var s = SEAL_DATA[key];
+        if (s.type !== 'weapon') continue;
+        var source = s.source ? (ITEM_DATA[s.source] ? ITEM_DATA[s.source].name : s.source) : '—';
+        html += '<tr><td>[' + s.name + ']</td><td>' + s.desc + '</td><td>' + source + '</td></tr>';
+      }
+      html += '</tbody></table>';
+
+      // Shield seals
+      html += '<h3>盾の印</h3>';
+      html += '<table class="data-table"><thead><tr><th>印</th><th>効果</th><th>入手元</th></tr></thead><tbody>';
+      for (var key2 in SEAL_DATA) {
+        var s2 = SEAL_DATA[key2];
+        if (s2.type !== 'shield') continue;
+        var source2 = s2.source ? (ITEM_DATA[s2.source] ? ITEM_DATA[s2.source].name : s2.source) : '—';
+        html += '<tr><td>[' + s2.name + ']</td><td>' + s2.desc + '</td><td>' + source2 + '</td></tr>';
+      }
+      html += '</tbody></table>';
+
+      document.getElementById('seal-table').innerHTML = html;
+    }
+
+    // Run all generators on page load
+    generateEnemyTable();
+    generateItemTables();
+    generateTrapTable();
+    generateSealTable();
+  })();
+  </script>
 </body>
 </html>
