@@ -4,9 +4,16 @@ var Sound = (function() {
 
   var ctx = null;
   var muted = false;
+  var bgmMuted = false;
+
+  function _getCtx() {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
 
   function init() {
-    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    _getCtx();
   }
 
   function play(type) {
@@ -66,6 +73,7 @@ var Sound = (function() {
 
   function toggleMute() {
     muted = !muted;
+    if (muted && Sound.bgm) Sound.bgm.stop();
     return muted;
   }
 
@@ -73,5 +81,116 @@ var Sound = (function() {
     return muted;
   }
 
-  return { play: play, init: init, toggleMute: toggleMute, isMuted: isMuted };
+  return {
+    play: play,
+    init: init,
+    toggleMute: toggleMute,
+    isMuted: isMuted,
+    _getCtx: _getCtx,
+    get muted() { return muted; },
+    get bgmMuted() { return bgmMuted; },
+    set bgmMuted(v) { bgmMuted = v; }
+  };
 })();
+
+// BGM System - chiptune background music
+Sound.bgm = {
+  playing: false,
+  intervalId: null,
+  currentTrack: null,
+
+  // Dungeon: calm, atmospheric A minor pentatonic
+  dungeon: [
+    [220, 0.35], [262, 0.35], [294, 0.35], [330, 0.7],
+    [294, 0.35], [262, 0.35], [220, 0.35], [196, 0.7],
+    [220, 0.35], [294, 0.35], [330, 0.35], [392, 0.7],
+    [330, 0.35], [294, 0.35], [262, 0.35], [220, 0.7],
+    [196, 0.35], [220, 0.35], [262, 0.35], [294, 0.7],
+    [262, 0.35], [220, 0.35], [196, 0.35], [175, 0.7],
+    [196, 0.35], [220, 0.35], [262, 0.35], [220, 0.7],
+    [0, 0.7] // rest
+  ],
+
+  // Danger: faster, tense melody for deep floors / monster house
+  danger: [
+    [330, 0.2], [294, 0.2], [262, 0.2], [220, 0.2],
+    [262, 0.2], [294, 0.2], [330, 0.4],
+    [392, 0.2], [330, 0.2], [294, 0.2], [262, 0.2],
+    [294, 0.2], [330, 0.2], [392, 0.4],
+    [440, 0.2], [392, 0.2], [330, 0.2], [294, 0.2],
+    [262, 0.2], [220, 0.2], [196, 0.4],
+    [220, 0.2], [262, 0.2], [220, 0.2], [196, 0.4],
+    [0, 0.2]
+  ],
+
+  // Shop: cheerful major pentatonic
+  shop: [
+    [392, 0.25], [440, 0.25], [494, 0.25], [523, 0.5],
+    [494, 0.25], [440, 0.25], [392, 0.5],
+    [440, 0.25], [494, 0.25], [523, 0.25], [587, 0.5],
+    [523, 0.25], [494, 0.25], [440, 0.5],
+    [523, 0.25], [494, 0.25], [440, 0.25], [392, 0.5],
+    [440, 0.25], [392, 0.25], [349, 0.5],
+    [392, 0.25], [440, 0.25], [392, 0.5],
+    [0, 0.5]
+  ],
+
+  play: function(track) {
+    if (this.playing || Sound.muted || Sound.bgmMuted) return;
+    this.playing = true;
+    this.currentTrack = track || 'dungeon';
+    var notes = this[this.currentTrack] || this.dungeon;
+    var noteIndex = 0;
+    var ctx = Sound._getCtx();
+
+    var self = this;
+    var playNext = function() {
+      if (!self.playing || Sound.muted || Sound.bgmMuted) {
+        self.playing = false;
+        return;
+      }
+      var note = notes[noteIndex % notes.length];
+      if (note[0] > 0) { // skip rests (freq 0)
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = note[0];
+        osc.type = 'triangle';
+        gain.gain.setValueAtTime(0.05, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + note[1] * 0.85);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + note[1]);
+      }
+      noteIndex++;
+      self.intervalId = setTimeout(playNext, note[1] * 1000);
+    };
+    playNext();
+  },
+
+  stop: function() {
+    this.playing = false;
+    this.currentTrack = null;
+    if (this.intervalId) {
+      clearTimeout(this.intervalId);
+      this.intervalId = null;
+    }
+  },
+
+  switchTrack: function(track) {
+    if (this.currentTrack === track) return;
+    this.stop();
+    var self = this;
+    setTimeout(function() { self.play(track); }, 100);
+  },
+
+  toggleBgm: function() {
+    Sound.bgmMuted = !Sound.bgmMuted;
+    if (Sound.bgmMuted) {
+      this.stop();
+    } else if (!this.playing) {
+      this.play(this.currentTrack || 'dungeon');
+    }
+    return Sound.bgmMuted;
+  }
+};

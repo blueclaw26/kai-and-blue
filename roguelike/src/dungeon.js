@@ -373,9 +373,10 @@ var Dungeon = (function() {
     var stairsPos = getRoomCenter(stairsRoom);
     grid[stairsPos.y][stairsPos.x] = TILE.STAIRS_DOWN;
 
-    // Monster House: 10% chance from floor 3+, pick a non-start room
+    // Monster House: chance scales with depth
+    var mhChance = floorNum >= 60 ? 0.20 : floorNum >= 30 ? 0.15 : 0.10;
     var monsterHouseRoom = null;
-    if (floorNum >= 3 && Math.random() < 0.10 && rooms.length > 2) {
+    if (floorNum >= 3 && Math.random() < mhChance && rooms.length > 2) {
       // Pick a room that isn't the start room and isn't too small
       var mhCandidates = [];
       for (var mi = 1; mi < rooms.length; mi++) {

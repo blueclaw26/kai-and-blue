@@ -37,7 +37,13 @@ var Renderer = (function() {
     slug: 'slug',
     thief_pelican: 'thief_pelican',
     kengo: 'kengo',
-    curse_girl: 'curse_girl'
+    curse_girl: 'curse_girl',
+    big_chintala: 'big_chintala',
+    mega_dragon: 'mega_dragon',
+    death_reaper: 'death_reaper',
+    phantom: 'phantom',
+    hell_dragon: 'hell_dragon',
+    chaos_knight: 'chaos_knight'
   };
 
   // Map item types to sprite names

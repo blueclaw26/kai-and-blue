@@ -2,7 +2,7 @@
 var Game = (function() {
   'use strict';
 
-  var MAX_FLOOR = 20;
+  var MAX_FLOOR = 99;
   var MAX_ENEMIES_PER_FLOOR = 15;
 
   function Game() {
@@ -62,7 +62,7 @@ var Game = (function() {
     // Reset per-run state
     this.extinctEnemies = new Set();
     this.newFloor();
-    ui.addMessage('ダンジョンに足を踏み入れた...', 'system');
+    ui.addMessage('最果ての間へ... 冒険が始まる', 'system');
   };
 
   // Get room at position (for room-based FOV)
@@ -174,6 +174,15 @@ var Game = (function() {
       this.ui.addMessage('大部屋だ！', 'enemy_special');
     } else if (this.dungeon.floorType === 'maze') {
       this.ui.addMessage('迷路フロアだ...', 'enemy_special');
+    }
+
+    // World-building floor entry messages
+    if (this.floorNum >= 75) {
+      this.ui.addMessage('...空気が殺意に満ちている', 'damage');
+    } else if (this.floorNum >= 50) {
+      this.ui.addMessage('闇が深くなっていく...', 'enemy_special');
+    } else if (this.floorNum >= 30) {
+      this.ui.addMessage('ここからが本当の戦いだ...', 'system');
     }
 
     // Shop generation: 20% chance per floor (not floor 1, not special floors)
@@ -349,7 +358,9 @@ var Game = (function() {
     this.monsterHouseTriggered = true;
 
     Sound.play('thief');
-    this.ui.addMessage('モンスターハウスだ！', 'damage');
+    this.ui.addMessage('モンスターハウスだ！ 敵が一斉に目を覚ました！', 'damage');
+    // Switch to danger BGM
+    if (typeof Sound !== 'undefined' && Sound.bgm) Sound.bgm.switchTrack('danger');
 
     // Wake all sleeping enemies in the room
     for (var i = 0; i < this.enemies.length; i++) {
@@ -394,7 +405,7 @@ var Game = (function() {
     this.shopkeeperHostile = true;
 
     Sound.play('thief');
-    this.ui.addMessage('泥棒！！！', 'damage');
+    this.ui.addMessage('泥棒だ！！！ 許さんぞ！！！', 'damage');
 
     var sk = this.getShopkeeper();
     if (sk) {
@@ -637,7 +648,17 @@ var Game = (function() {
       this.player.moveTo(newX, newY);
 
       // Update inShop status
-      this.inShop = this.isInShop(newX, newY);
+      var nowInShop = this.isInShop(newX, newY);
+      if (nowInShop && !this.inShop && !this.shopkeeperHostile) {
+        // Entering shop
+        if (typeof Sound !== 'undefined' && Sound.bgm) Sound.bgm.switchTrack('shop');
+      } else if (!nowInShop && this.inShop && !this.shopkeeperHostile) {
+        // Leaving shop
+        if (typeof Sound !== 'undefined' && Sound.bgm) {
+          Sound.bgm.switchTrack(this.floorNum >= 50 ? 'danger' : 'dungeon');
+        }
+      }
+      this.inShop = nowInShop;
 
       // Check for trap
       this.checkPlayerTrap();
@@ -756,7 +777,7 @@ var Game = (function() {
         if (this._checkPlayerDeath()) break;
         if (this.floorNum >= MAX_FLOOR) {
           this.victory = true;
-          ui.addMessage('ダンジョンをクリアした！', 'levelup');
+          ui.addMessage('最果ての間を踏破した！ あなたは真の風来人だ！', 'levelup');
           ui.showVictory(player);
         } else {
           this.floorNum++;
@@ -888,7 +909,20 @@ var Game = (function() {
       this.player.hp = 0;
       this.gameOver = true;
       Sound.play('gameover');
-      this.ui.addMessage('倒れてしまった... ' + this.floorNum + 'Fで力尽きた', 'damage');
+      // Stop BGM on death
+      if (typeof Sound !== 'undefined' && Sound.bgm) Sound.bgm.stop();
+      // Floor-specific game over messages
+      var deathMsg;
+      if (this.floorNum <= 10) {
+        deathMsg = '序盤で倒れてしまった... まだ先は長い';
+      } else if (this.floorNum <= 30) {
+        deathMsg = '中層で力尽きた... あと少しだったのに';
+      } else if (this.floorNum <= 60) {
+        deathMsg = '深層で散った... 実力は確かだった';
+      } else {
+        deathMsg = '最果てを目前にして... 無念';
+      }
+      this.ui.addMessage(deathMsg, 'damage');
       this.ui.showGameOver(this.floorNum, this.player.level);
       return true;
     }
@@ -911,10 +945,10 @@ var Game = (function() {
           if (enemy.special) multiplier = 1.5;
           break;
         case 'ghost':
-          if (enemy.enemyId === 'midnighthat') multiplier = 1.5;
+          if (enemy.enemyId === 'midnighthat' || enemy.enemyId === 'phantom') multiplier = 1.5;
           break;
         case 'dragon':
-          if (enemy.enemyId === 'dragon' || enemy.enemyId === 'skull_mage') multiplier = 1.5;
+          if (enemy.enemyId === 'dragon' || enemy.enemyId === 'skull_mage' || enemy.enemyId === 'mega_dragon' || enemy.enemyId === 'hell_dragon') multiplier = 1.5;
           break;
       }
 
@@ -1022,7 +1056,7 @@ var Game = (function() {
       }
     }
 
-    // Minotaur critical
+    // Critical hit check
     var isCritical = false;
     if (enemy.special === 'critical' && Math.random() < 0.25) {
       isCritical = true;
@@ -1033,7 +1067,7 @@ var Game = (function() {
 
     if (isCritical) {
       damage *= 2;
-      this.ui.addMessage('タウロスの痛恨の一撃！ ' + damage + 'ダメージ！', 'enemy_special');
+      this.ui.addMessage(enemy.name + 'の痛恨の一撃！ ' + damage + 'ダメージ！', 'enemy_special');
     } else {
       this.ui.addMessage(enemy.name + 'の攻撃！ ' + damage + 'ダメージを受けた', 'damage');
     }
@@ -1142,11 +1176,7 @@ var Game = (function() {
     }
 
     if (player.hp <= 0) {
-      player.hp = 0;
-      this.gameOver = true;
-      Sound.play('gameover');
-      this.ui.addMessage('倒れてしまった... ' + this.floorNum + 'Fで力尽きた', 'damage');
-      this.ui.showGameOver(this.floorNum, player.level);
+      this._checkPlayerDeath();
     }
   };
 
@@ -1209,15 +1239,24 @@ var Game = (function() {
       }
       if (this.floorNum >= MAX_FLOOR) {
         this.victory = true;
+        if (typeof Sound !== 'undefined' && Sound.bgm) Sound.bgm.stop();
         Sound.play('victory');
-        this.ui.addMessage('ダンジョンをクリアした！', 'levelup');
+        this.ui.addMessage('最果ての間を踏破した！ あなたは真の風来人だ！', 'levelup');
         this.ui.showVictory(this.player);
         return true;
       }
       this.floorNum++;
       this.newFloor();
       Sound.play('stairs');
-      this.ui.addMessage(this.floorNum + 'Fに降りた', 'system');
+      this.ui.addMessage('地下' + this.floorNum + 'の間に降り立った...', 'system');
+      // Start danger BGM on deep floors
+      if (typeof Sound !== 'undefined' && Sound.bgm) {
+        if (this.floorNum >= 50) {
+          Sound.bgm.switchTrack('danger');
+        } else {
+          Sound.bgm.switchTrack('dungeon');
+        }
+      }
       return true;
     }
     return false;

@@ -192,5 +192,80 @@ var ENEMY_DATA = {
     minFloor: 7,
     maxFloor: 15,
     special: 'rust_equipment'
+  },
+  // Mid-game (F25-50)
+  big_chintala: {
+    name: 'ギガヘッド',
+    char: 'H',
+    color: '#ff5722',
+    hp: 80,
+    attack: 25,
+    defense: 12,
+    exp: 80,
+    minFloor: 25,
+    maxFloor: 50,
+    special: null
+  },
+  mega_dragon: {
+    name: 'アークドラゴン',
+    char: 'A',
+    color: '#d32f2f',
+    hp: 100,
+    attack: 30,
+    defense: 15,
+    exp: 120,
+    minFloor: 30,
+    maxFloor: 60,
+    special: 'floorfire'
+  },
+  // Late-game (F50-75)
+  death_reaper: {
+    name: 'しにがみ',
+    char: 'X',
+    color: '#212121',
+    hp: 120,
+    attack: 35,
+    defense: 18,
+    exp: 150,
+    minFloor: 50,
+    maxFloor: 80,
+    special: 'critical'
+  },
+  phantom: {
+    name: 'ファントムデビル',
+    char: 'V',
+    color: '#4a148c',
+    hp: 100,
+    attack: 30,
+    defense: 20,
+    exp: 130,
+    minFloor: 55,
+    maxFloor: 85,
+    special: 'wallpass'
+  },
+  // Nightmare (F75-99)
+  hell_dragon: {
+    name: 'ギガドラゴン',
+    char: 'G',
+    color: '#b71c1c',
+    hp: 200,
+    attack: 50,
+    defense: 25,
+    exp: 250,
+    minFloor: 75,
+    maxFloor: 99,
+    special: 'floorfire'
+  },
+  chaos_knight: {
+    name: '混沌の騎士',
+    char: 'Q',
+    color: '#880e4f',
+    hp: 180,
+    attack: 45,
+    defense: 30,
+    exp: 300,
+    minFloor: 80,
+    maxFloor: 99,
+    special: 'critical'
   }
 };

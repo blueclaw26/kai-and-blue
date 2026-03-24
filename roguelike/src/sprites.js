@@ -569,6 +569,126 @@ var Sprites = (function() {
     '________________',
   ];
 
+  // BIG_CHINTALA (ギガヘッド) - large orange brute
+  SPRITES.big_chintala = [
+    '________________',
+    '___OOOO__OOOO___',
+    '__OOOOOOOOOOOO__',
+    '__OOoKOOOOKoOO__',
+    '__OOOOOOOOOOOO__',
+    '__OOOOOOOOOOOO__',
+    '___OOOOOOOOOO___',
+    '____OOOOOOOO____',
+    '___OOOOOOOOOO___',
+    '__OOOOOOOOOOOO__',
+    '__OOOOOOOOOOOO__',
+    '__OO__OOOO__OO__',
+    '______OOOO______',
+    '________________',
+    '________________',
+    '________________',
+  ];
+
+  // MEGA_DRAGON (アークドラゴン) - dark red dragon
+  SPRITES.mega_dragon = [
+    '________________',
+    '___RR_____RR____',
+    '___RRR___RRR____',
+    '____RRRRRRR_____',
+    '____RYKRYRKR____',
+    '____RRRRRRR_____',
+    '__RRRRRRRRRRR___',
+    '_RRRRRRRRRRRRR__',
+    '_RR_RRRRRR_RR___',
+    '____RRRRRR______',
+    '___RRRRRRRR_____',
+    '______RR________',
+    '______RR________',
+    '________________',
+    '________________',
+    '________________',
+  ];
+
+  // DEATH_REAPER (しにがみ) - dark skeletal figure
+  SPRITES.death_reaper = [
+    '________________',
+    '______KKK_______',
+    '_____KKKKK______',
+    '_____KWKWK______',
+    '_____KKKKK______',
+    '______KKK_______',
+    '___s__KKK_______',
+    '___s_KKKKK______',
+    '___s_KKKKK______',
+    '___s__KKK_______',
+    '______K_K_______',
+    '_____KK_KK______',
+    '________________',
+    '________________',
+    '________________',
+    '________________',
+  ];
+
+  // PHANTOM (ファントムデビル) - deep purple ghost
+  SPRITES.phantom = [
+    '________________',
+    '_____PPPPP______',
+    '____PPPPPPP_____',
+    '____PPKPPKP_____',
+    '____PPPPPPP_____',
+    '____PPpPPPP_____',
+    '_____PPPPP______',
+    '___PPPPPPPPP____',
+    '__PPPPPPPPPPP___',
+    '__PP_PPP_PP_PP__',
+    '________________',
+    '________________',
+    '________________',
+    '________________',
+    '________________',
+    '________________',
+  ];
+
+  // HELL_DRAGON (ギガドラゴン) - massive crimson dragon
+  SPRITES.hell_dragon = [
+    '__RR_______RR___',
+    '__RRR_____RRR___',
+    '___RRRRRRRRR____',
+    '___RYKRRRYRKR___',
+    '___RRRRRRRRR____',
+    '____RRRRRRR_____',
+    '__RRRRRRRRRRRR__',
+    '_RRRRRRRRRRRRRR_',
+    '_RRR_RRRRRR_RRR_',
+    '_____RRRRRR_____',
+    '____RRRRRRRR____',
+    '_____RRRRRR_____',
+    '______RRRR______',
+    '______RR_RR_____',
+    '________________',
+    '________________',
+  ];
+
+  // CHAOS_KNIGHT (混沌の騎士) - dark magenta armored knight
+  SPRITES.chaos_knight = [
+    '________________',
+    '______PPP_______',
+    '_____PPPPP______',
+    '_____PKPPKP_____',
+    '_____PPPPP______',
+    '______PPP_______',
+    '___s_PPPPP______',
+    '___sPPPPPPP_____',
+    '___sPPPPPPP_____',
+    '____PPPPPPP_____',
+    '_____PP_PP______',
+    '____PPP_PPP_____',
+    '____SS___SS_____',
+    '________________',
+    '________________',
+    '________________',
+  ];
+
   // BRACELET - ring/circle
   SPRITES.bracelet = [
     '________________',

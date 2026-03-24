@@ -175,7 +175,7 @@ var Player = (function() {
       this._recalcStats();
       if (ui) {
         Sound.play('levelup');
-        ui.addMessage('レベルが上がった！ Lv.' + this.level + ' (HP+3, 攻撃+1)', 'levelup');
+        ui.addMessage('レベルが上がった！ Lv.' + this.level + ' シレンは強くなった気がする', 'levelup');
       }
     }
   };

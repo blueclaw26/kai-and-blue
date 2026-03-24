@@ -61,7 +61,8 @@
       <div class="panel-section">
         <div class="panel-title">サウンド</div>
         <div class="panel-content">
-          <button id="mute-btn" onclick="var m=Sound.toggleMute();this.textContent=m?'🔇 OFF':'🔊 ON';" style="background:#1a1e2e;border:1px solid #444;color:#ccc;padding:4px 12px;cursor:pointer;border-radius:4px;font-size:14px;">🔊 ON</button>
+          <button id="mute-btn" onclick="var m=Sound.toggleMute();this.textContent=m?'🔇 SE OFF':'🔊 SE ON';" style="background:#1a1e2e;border:1px solid #444;color:#ccc;padding:4px 12px;cursor:pointer;border-radius:4px;font-size:14px;">🔊 SE ON</button>
+          <button id="bgm-btn" onclick="var m=Sound.bgm.toggleBgm();this.textContent=m?'🎵 BGM OFF':'🎶 BGM ON';" style="background:#1a1e2e;border:1px solid #444;color:#ccc;padding:4px 12px;cursor:pointer;border-radius:4px;font-size:14px;margin-top:4px;">🎶 BGM ON</button>
         </div>
       </div>
       <div class="panel-section">
@@ -79,6 +80,25 @@
     </div>
   </div>
 
+  <!-- Title Screen -->
+  <div id="title-overlay" style="display:flex;position:fixed;top:0;left:0;width:100%;height:100%;background:#0a0a0a;z-index:99999;align-items:center;justify-content:center;flex-direction:column;cursor:pointer;">
+    <pre style="color:#4a6741;font-family:monospace;font-size:12px;line-height:1.2;margin-bottom:24px;">
+    ╔═══════════════════════════════╗
+    ║                               ║
+    ║   ░░░   ░░░   ░░░   ░░░      ║
+    ║   ░ ░   ░ ░   ░ ░   ░ ░      ║
+    ║   ░░░   ░░░   ░░░   ░░░      ║
+    ║     ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓          ║
+    ║     ▓   地 下 迷 宮  ▓          ║
+    ║     ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓          ║
+    ║                               ║
+    ╚═══════════════════════════════╝
+    </pre>
+    <div style="color:#e8a44a;font-size:36px;font-family:'Courier New',monospace;margin-bottom:16px;text-shadow:0 0 20px rgba(232,164,74,0.5);">最果ての間</div>
+    <div style="color:#666;font-size:14px;font-family:'Courier New',monospace;animation:blink 1.5s infinite;">Press any key to start</div>
+    <style>@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}</style>
+  </div>
+
   <div id="game-over-overlay" style="display:none;">
     <div class="game-over-box">
       <div class="game-over-title">倒れてしまった...</div>
@@ -91,7 +111,7 @@
 
   <div id="victory-overlay" style="display:none;">
     <div class="victory-box">
-      <div class="victory-title">🎉 ダンジョンをクリアした！ 🎉</div>
+      <div class="victory-title">🎉 最果ての間を踏破した！ 🎉</div>
       <div class="victory-stats">
         <div>ターン数: <span class="victory-turns">0</span></div>
         <div>倒した敵: <span class="victory-kills">0</span></div>
