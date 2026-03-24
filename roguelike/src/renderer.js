@@ -8,14 +8,51 @@ var Renderer = (function() {
   var COLORS = {
     wall: '#333',
     floor: '#1a1e2e',
-    corridor: '#1a1e2e',
+    corridor: '#22263a',
     stairs: '#90a4ae',
     player: '#4fc3f7',
     unexplored: '#000',
-    shopFloor: '#252a3e', // slightly lighter for shop room
-    monsterHouseFloor: '#2e1a1a', // reddish tint for monster house
-    sanctuaryTile: '#3a3020' // gold glow for sanctuary
+    shopFloor: '#252a3e',
+    monsterHouseFloor: '#2e1a1a',
+    sanctuaryTile: '#3a3020'
   };
+
+  // Room color variations (cycle through)
+  var ROOM_COLOR_VARIANTS = [
+    '#1a1e2e', // base (blue)
+    '#1e1a2e', // purple
+    '#1a2e1e', // green
+    '#2e1a1e', // red
+    '#1a2e2e', // teal
+    '#2e2e1a', // warm
+    '#1a1a2e', // deep blue
+    '#2e1e2a', // mauve
+  ];
+
+  // Floor zone palettes
+  function getFloorPalette(floorNum) {
+    if (floorNum <= 10) return { wall: '#2d1f1f', floor: '#1a1e2e', corridor: '#22263a', name: '洞窟', wallSprite: 'wall' };
+    if (floorNum <= 25) return { wall: '#1f2d2d', floor: '#1a2e2e', corridor: '#223a3a', name: '地底湖', wallSprite: 'wall_aqua' };
+    if (floorNum <= 50) return { wall: '#2d1f1a', floor: '#2e1a1a', corridor: '#3a2222', name: '溶岩洞', wallSprite: 'wall_lava' };
+    if (floorNum <= 75) return { wall: '#1f1f2d', floor: '#1a1a2e', corridor: '#22223a', name: '凍土', wallSprite: 'wall_ice' };
+    return { wall: '#15101a', floor: '#100a15', corridor: '#1a1020', name: '深淵', wallSprite: 'wall_abyss' };
+  }
+
+  // Get room floor color with room variation + zone palette
+  function getRoomFloorColor(palette, roomIndex) {
+    if (roomIndex < 0) return palette.corridor;
+    // Blend base palette floor with room variant
+    var variant = ROOM_COLOR_VARIANTS[roomIndex % ROOM_COLOR_VARIANTS.length];
+    // Simple blend: average palette.floor and variant
+    return blendColors(palette.floor, variant, 0.5);
+  }
+
+  function blendColors(c1, c2, t) {
+    var r1 = parseInt(c1.slice(1,3), 16), g1 = parseInt(c1.slice(3,5), 16), b1 = parseInt(c1.slice(5,7), 16);
+    var r2 = parseInt(c2.slice(1,3), 16), g2 = parseInt(c2.slice(3,5), 16), b2 = parseInt(c2.slice(5,7), 16);
+    var r = Math.round(r1 + (r2 - r1) * t), g = Math.round(g1 + (g2 - g1) * t), b = Math.round(b1 + (b2 - b1) * t);
+    return '#' + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+  }
 
   var WALL_CHAR = '#';
   var STAIRS_CHAR = '>';
@@ -72,8 +109,18 @@ var Renderer = (function() {
     // Crisp pixel art rendering
     this.ctx.imageSmoothingEnabled = false;
 
-    this.miniTile = 4;
+    this.miniTile = 6; // larger minimap tiles
+
+    // Smooth camera
+    this.cameraX = -1;
+    this.cameraY = -1;
+    this._animating = false;
   }
+
+  Renderer.prototype.resetCamera = function() {
+    this.cameraX = -1;
+    this.cameraY = -1;
+  };
 
   // computeFOV now returns the game.visible 2D array directly
   // Game.updateVisibility() must be called before render
@@ -261,10 +308,37 @@ var Renderer = (function() {
 
     var mapRevealed = game.mapRevealed;
 
-    var camX = player.x - Math.floor(this.viewW / 2);
-    var camY = player.y - Math.floor(this.viewH / 2);
-    camX = Math.max(0, Math.min(camX, dungeon.width - this.viewW));
-    camY = Math.max(0, Math.min(camY, dungeon.height - this.viewH));
+    // Floor palette
+    var palette = getFloorPalette(game.floorNum || 1);
+    var roomMap = dungeon.roomMap; // may be undefined for maze/big_room
+
+    var targetCamX = player.x - Math.floor(this.viewW / 2);
+    var targetCamY = player.y - Math.floor(this.viewH / 2);
+    targetCamX = Math.max(0, Math.min(targetCamX, dungeon.width - this.viewW));
+    targetCamY = Math.max(0, Math.min(targetCamY, dungeon.height - this.viewH));
+
+    // Smooth camera interpolation
+    if (this.cameraX < 0) {
+      this.cameraX = targetCamX;
+      this.cameraY = targetCamY;
+    } else {
+      this.cameraX += (targetCamX - this.cameraX) * 0.3;
+      this.cameraY += (targetCamY - this.cameraY) * 0.3;
+    }
+    var camX = Math.round(this.cameraX);
+    var camY = Math.round(this.cameraY);
+
+    // Request animation frame for smooth camera if still interpolating
+    if (Math.abs(this.cameraX - targetCamX) > 0.5 || Math.abs(this.cameraY - targetCamY) > 0.5) {
+      if (!this._animating) {
+        this._animating = true;
+        var self = this;
+        requestAnimationFrame(function() {
+          self._animating = false;
+          self.render(game);
+        });
+      }
+    }
 
     // Screen shake offset
     var shakeX = 0, shakeY = 0;
@@ -300,25 +374,27 @@ var Renderer = (function() {
         var drawY = vy * TILE_SIZE;
         var dimmed = !isVisible && !mapRevealed;
 
-        // Render tiles with sprites
+        // Render tiles with sprites and floor palette
+        var tileRoomIdx = (roomMap && roomMap[ty]) ? roomMap[ty][tx] : -1;
         switch (tile) {
           case Dungeon.TILE.WALL:
-            if (!drawSprite(ctx, 'wall', drawX, drawY, dimmed)) {
-              // Fallback
-              ctx.fillStyle = COLORS.wall;
-              ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
-              if (dimmed) { ctx.globalAlpha = 0.35; }
-              ctx.fillStyle = '#555';
-              ctx.fillText(WALL_CHAR, drawX + TILE_SIZE / 2, drawY + TILE_SIZE / 2);
-              ctx.globalAlpha = 1.0;
+            if (!drawSprite(ctx, palette.wallSprite, drawX, drawY, dimmed)) {
+              // Try default wall sprite fallback
+              if (palette.wallSprite !== 'wall' && !drawSprite(ctx, 'wall', drawX, drawY, dimmed)) {
+                // Text fallback
+                ctx.fillStyle = palette.wall;
+                ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+                if (dimmed) { ctx.globalAlpha = 0.35; }
+                ctx.fillStyle = '#555';
+                ctx.fillText(WALL_CHAR, drawX + TILE_SIZE / 2, drawY + TILE_SIZE / 2);
+                ctx.globalAlpha = 1.0;
+              }
             }
             break;
           case Dungeon.TILE.STAIRS_DOWN:
-            // Draw floor background first, then stairs sprite on top
-            ctx.fillStyle = COLORS.floor;
+            ctx.fillStyle = getRoomFloorColor(palette, tileRoomIdx);
             ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
             if (!drawSprite(ctx, 'stairs', drawX, drawY, dimmed)) {
-              // Fallback
               if (dimmed) { ctx.globalAlpha = 0.35; }
               ctx.fillStyle = COLORS.stairs;
               ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
@@ -328,17 +404,18 @@ var Renderer = (function() {
             }
             break;
           case Dungeon.TILE.FLOOR:
-            var floorColor = COLORS.floor;
+            var floorColor;
             if (game.sanctuaryTiles && game.sanctuaryTiles.has(tx + ',' + ty)) {
               floorColor = COLORS.sanctuaryTile;
             } else if (isShopTile(game, tx, ty)) {
               floorColor = COLORS.shopFloor;
             } else if (isMonsterHouseTile(game, tx, ty)) {
               floorColor = COLORS.monsterHouseFloor;
+            } else {
+              floorColor = getRoomFloorColor(palette, tileRoomIdx);
             }
             ctx.fillStyle = floorColor;
             ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
-            // Sanctuary golden glow overlay
             if (game.sanctuaryTiles && game.sanctuaryTiles.has(tx + ',' + ty)) {
               ctx.fillStyle = 'rgba(255, 215, 0, 0.15)';
               ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
@@ -349,7 +426,7 @@ var Renderer = (function() {
             }
             break;
           case Dungeon.TILE.CORRIDOR:
-            ctx.fillStyle = COLORS.corridor;
+            ctx.fillStyle = palette.corridor;
             ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
             if (dimmed) {
               ctx.fillStyle = 'rgba(0,0,0,0.5)';
@@ -528,24 +605,27 @@ var Renderer = (function() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, this.miniCanvas.width, this.miniCanvas.height);
 
+    var playerRoom = game.getPlayerRoom ? game.getPlayerRoom() : null;
+
     for (var y = 0; y < dungeon.height; y++) {
       for (var x = 0; x < dungeon.width; x++) {
         if (!exploredArr[y][x]) continue;
 
         var tile = dungeon.grid[y][x];
         var isVisible = visibleArr[y][x];
-
         var tileBright = isVisible || mapRevealed;
+
         if (tile === Dungeon.TILE.WALL) {
           ctx.fillStyle = tileBright ? '#3a3a3a' : '#1a1a1a';
         } else if (tile === Dungeon.TILE.STAIRS_DOWN) {
-          ctx.fillStyle = tileBright ? '#90a4ae' : '#4a5560';
+          ctx.fillStyle = tileBright ? '#ffffff' : '#7a8a9a';
         } else {
-          // Shop room is slightly different on minimap
           if (isShopTile(game, x, y)) {
-            ctx.fillStyle = tileBright ? '#3a4060' : '#1f2535';
+            ctx.fillStyle = tileBright ? '#4a4020' : '#2a2510';
+          } else if (isMonsterHouseTile(game, x, y)) {
+            ctx.fillStyle = tileBright ? '#3a1818' : '#201010';
           } else {
-            ctx.fillStyle = tileBright ? '#2a3050' : '#151825';
+            ctx.fillStyle = tileBright ? '#1a2030' : '#0f1520';
           }
         }
 
@@ -553,13 +633,24 @@ var Renderer = (function() {
       }
     }
 
-    // Stairs
-    for (var y = 0; y < dungeon.height; y++) {
-      for (var x = 0; x < dungeon.width; x++) {
-        if (dungeon.grid[y][x] === Dungeon.TILE.STAIRS_DOWN && exploredArr[y][x]) {
-          ctx.fillStyle = '#90a4ae';
-          ctx.fillRect(x * t, y * t, t, t);
+    // Room outlines
+    if (dungeon.rooms) {
+      for (var ri = 0; ri < dungeon.rooms.length; ri++) {
+        var rm = dungeon.rooms[ri];
+        if (!rm.x1 && rm.x1 !== 0) continue;
+        // Check if any tile in room is explored
+        var roomExplored = false;
+        for (var ry = rm.y1; ry <= rm.y2 && !roomExplored; ry++) {
+          for (var rx = rm.x1; rx <= rm.x2 && !roomExplored; rx++) {
+            if (exploredArr[ry] && exploredArr[ry][rx]) roomExplored = true;
+          }
         }
+        if (!roomExplored) continue;
+
+        var isPlayerRoom = (playerRoom === rm);
+        ctx.strokeStyle = isPlayerRoom ? '#4fc3f7' : '#333';
+        ctx.lineWidth = isPlayerRoom ? 2 : 1;
+        ctx.strokeRect(rm.x1 * t - 1, rm.y1 * t - 1, (rm.x2 - rm.x1 + 1) * t + 2, (rm.y2 - rm.y1 + 1) * t + 2);
       }
     }
 
@@ -573,30 +664,33 @@ var Renderer = (function() {
       ctx.fillRect(trap.x * t, trap.y * t, t, t);
     }
 
-    // Items on minimap
-    ctx.fillStyle = '#ffeb3b';
+    // Items on minimap (yellow, 3px dots centered)
     for (var i = 0; i < items.length; i++) {
       var item = items[i];
       if (!visibleArr[item.y][item.x] && !mapRevealed) continue;
-      ctx.fillRect(item.x * t, item.y * t, t, t);
+      ctx.fillStyle = '#ffeb3b';
+      var ix = item.x * t + Math.floor((t - 3) / 2);
+      var iy = item.y * t + Math.floor((t - 3) / 2);
+      ctx.fillRect(ix, iy, 3, 3);
     }
 
-    // Enemies on minimap
+    // Enemies on minimap (red, 4px dots centered)
     var seeAllMini = player.bracelet && player.bracelet.effect === 'see_all';
     for (var i = 0; i < enemies.length; i++) {
       var enemy = enemies[i];
       if (enemy.dead) continue;
       if (!visibleArr[enemy.y][enemy.x] && !mapRevealed && !seeAllMini) continue;
-      // Shopkeeper is gold on minimap
       ctx.fillStyle = enemy.isShopkeeper ? '#ffd700' : '#ff4444';
-      ctx.fillRect(enemy.x * t, enemy.y * t, t, t);
+      var ex = enemy.x * t + Math.floor((t - 4) / 2);
+      var ey = enemy.y * t + Math.floor((t - 4) / 2);
+      ctx.fillRect(ex, ey, 4, 4);
     }
 
-    // Player on minimap
+    // Player on minimap (cyan, 8px dot centered)
     ctx.fillStyle = '#00e5ff';
-    var px = player.x * t - 1;
-    var py = player.y * t - 1;
-    ctx.fillRect(px, py, 6, 6);
+    var px = player.x * t + Math.floor(t / 2) - 4;
+    var py = player.y * t + Math.floor(t / 2) - 4;
+    ctx.fillRect(px, py, 8, 8);
   };
 
   return Renderer;

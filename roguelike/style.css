@@ -59,7 +59,7 @@ body {
 
 #message-log {
   width: 600px;
-  height: 170px;
+  height: 200px;
   background: #0d1117;
   color: #b0b8c8;
   font-family: 'Courier New', monospace;
@@ -68,7 +68,30 @@ body {
   border-top: 1px solid #1a1e2e;
   white-space: pre-line;
   overflow-y: auto;
-  line-height: 1.5;
+  line-height: 1.6;
+  scrollbar-width: thin;
+  scrollbar-color: #2a3050 #0d1117;
+}
+
+#message-log::-webkit-scrollbar {
+  width: 4px;
+}
+
+#message-log::-webkit-scrollbar-track {
+  background: #0d1117;
+}
+
+#message-log::-webkit-scrollbar-thumb {
+  background: #2a3050;
+  border-radius: 2px;
+}
+
+.msg-line {
+  padding: 1px 0;
+}
+
+.msg-latest {
+  text-shadow: 0 0 6px rgba(255,255,255,0.15);
 }
 
 /* Game Over Overlay */

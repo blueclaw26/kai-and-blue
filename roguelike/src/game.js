@@ -307,6 +307,10 @@ var Game = (function() {
   // === Floor Generation ===
 
   Game.prototype.newFloor = function() {
+    // Reset smooth camera on floor change
+    if (window._renderer && window._renderer.resetCamera) {
+      window._renderer.resetCamera();
+    }
     this.dungeon = Dungeon.generateFloor(40, 30, this.floorNum);
     this.explored = [];
     this.visible = [];

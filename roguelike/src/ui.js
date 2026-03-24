@@ -2,10 +2,10 @@
 var UI = (function() {
   'use strict';
 
-  var MAX_MESSAGES = 8;
+  var MAX_MESSAGES = 10;
   var SLOT_LETTERS = 'abcdefghijklmnopqrst';
 
-  // Message type colors
+  // Message type colors + bullet colors
   var MSG_COLORS = {
     attack: '#ffffff',
     damage: '#ef5350',
@@ -15,6 +15,18 @@ var UI = (function() {
     enemy_special: '#ce93d8',
     system: '#8892b0',
     normal: '#b0b8c8',
+    debug: '#e040fb'
+  };
+
+  var MSG_BULLETS = {
+    attack: '#ffffff',
+    damage: '#ef5350',
+    heal: '#66bb6a',
+    levelup: '#e8a44a',
+    pickup: '#4fc3f7',
+    enemy_special: '#ce93d8',
+    system: '#666',
+    normal: '#888',
     debug: '#e040fb'
   };
 
@@ -46,7 +58,8 @@ var UI = (function() {
 
   UI.prototype.addMessage = function(text, type) {
     var color = MSG_COLORS[type] || MSG_COLORS.normal;
-    this.messages.push({ text: text, color: color });
+    var bullet = MSG_BULLETS[type] || MSG_BULLETS.normal;
+    this.messages.push({ text: text, color: color, bullet: bullet, type: type || 'normal' });
     if (this.messages.length > MAX_MESSAGES) {
       this.messages.shift();
     }
@@ -57,8 +70,12 @@ var UI = (function() {
     var html = '';
     for (var i = 0; i < this.messages.length; i++) {
       var msg = this.messages[i];
-      var opacity = 0.4 + 0.6 * ((i + 1) / this.messages.length);
-      html += '<div style="color:' + msg.color + ';opacity:' + opacity.toFixed(2) + ';">' + msg.text + '</div>';
+      var opacity = 0.35 + 0.65 * ((i + 1) / this.messages.length);
+      var isLatest = (i === this.messages.length - 1);
+      var weight = isLatest ? 'font-weight:bold;' : '';
+      html += '<div class="msg-line' + (isLatest ? ' msg-latest' : '') + '" style="color:' + msg.color + ';opacity:' + opacity.toFixed(2) + ';' + weight + '">';
+      html += '<span style="color:' + msg.bullet + ';">●</span> ' + msg.text;
+      html += '</div>';
     }
     this.logEl.innerHTML = html;
     this.logEl.scrollTop = this.logEl.scrollHeight;
@@ -97,7 +114,16 @@ var UI = (function() {
     var weaponName = player.weapon ? player.weapon.name : 'なし';
     var shieldName = player.shield ? player.shield.name : 'なし';
 
-    var statusText = player.floor + 'F | ';
+    // Zone name
+    var zoneName = '';
+    var fn = player.floor || 1;
+    if (fn <= 10) zoneName = '洞窟';
+    else if (fn <= 25) zoneName = '地底湖';
+    else if (fn <= 50) zoneName = '溶岩洞';
+    else if (fn <= 75) zoneName = '凍土';
+    else zoneName = '深淵';
+
+    var statusText = player.floor + 'F ' + zoneName + ' | ';
     var hpText = 'HP: ' + player.hp + '/' + player.maxHp;
     var levelText = ' | Lv.' + player.level + ' | ';
     var satietyText = '満腹度:' + satiety;
@@ -159,10 +185,7 @@ var UI = (function() {
       for (var i = 0; i < player.inventory.length; i++) {
         var item = player.inventory[i];
         var isSelected = (i === sel);
-        var equipped = '';
-        if (player.weapon === item) equipped = ' <span style="color:#e8a44a;">[装備中]</span>';
-        if (player.shield === item) equipped = ' <span style="color:#e8a44a;">[装備中]</span>';
-        if (player.bracelet === item) equipped = ' <span style="color:#e8a44a;">[装備中]</span>';
+        var equipped = (player.weapon === item || player.shield === item || player.bracelet === item);
 
         // Show unidentified indicator
         var idIndicator = '';
@@ -173,11 +196,19 @@ var UI = (function() {
         var bgColor = isSelected ? '#1a2a3a' : 'transparent';
         var borderLeft = isSelected ? '3px solid #4fc3f7' : '3px solid transparent';
 
+        // Color code by item type
+        var typeColors = {
+          weapon: '#ef5350', shield: '#42a5f5', grass: '#66bb6a',
+          scroll: '#ffd54f', staff: '#ab47bc', food: '#ffb74d',
+          pot: '#78909c', bracelet: '#4fc3f7', arrow: '#8d6e63'
+        };
+        var nameColor = typeColors[item.type] || '#e0e0e0';
+
         html += '<div style="padding:4px 8px;margin:2px 0;background:' + bgColor + ';border-left:' + borderLeft + ';cursor:pointer;">';
         html += '<span style="color:#888;">' + SLOT_LETTERS[i] + ')</span> ';
         html += '<span style="color:' + item.color + ';">' + item.char + '</span> ';
-        html += '<span style="color:#e0e0e0;">' + item.getDisplayName() + '</span>';
-        html += equipped;
+        html += '<span style="color:' + nameColor + ';">' + item.getDisplayName() + '</span>';
+        if (equipped) html += ' <span style="color:#ffd700;">[装備中]</span>';
         html += idIndicator;
         html += '</div>';
       }
@@ -195,7 +226,15 @@ var UI = (function() {
       // Show pot commands hint if pot is selected
       var selectedItem = player.inventory.length > 0 ? player.inventory[sel] : null;
       var potHint = (selectedItem && selectedItem.type === 'pot') ? ' [p]入れる [o]出す' : '';
-      html += '<div style="color:#888;font-size:12px;margin-top:16px;border-top:1px solid #333;padding-top:8px;">';
+
+      // Item description
+      if (selectedItem && selectedItem.description) {
+        html += '<div style="color:#8892b0;font-size:11px;margin-top:8px;border-top:1px solid #222;padding-top:6px;">';
+        html += selectedItem.description;
+        html += '</div>';
+      }
+
+      html += '<div style="color:#888;font-size:12px;margin-top:8px;border-top:1px solid #333;padding-top:8px;">';
       html += '[e]使う [E]装備 [d]置く [t]投げる [s]整理' + potHint + ' [↑↓]選択 [ESC]戻る';
       html += '</div>';
     }

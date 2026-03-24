@@ -90,13 +90,16 @@ var Dungeon = (function() {
     };
   }
 
-  function carveRoom(grid, room) {
+  function carveRoom(grid, room, roomIndex) {
     for (var y = room.y; y < room.y + room.h; y++) {
       for (var x = room.x; x < room.x + room.w; x++) {
         if (y >= 0 && y < grid.length && x >= 0 && x < grid[0].length) {
           grid[y][x] = TILE.FLOOR;
         }
       }
+    }
+    if (roomIndex !== undefined) {
+      room.roomIndex = roomIndex;
     }
   }
 
@@ -348,8 +351,8 @@ var Dungeon = (function() {
     // Carve rooms
     var rooms = [];
     collectRooms(root, rooms);
-    rooms.forEach(function(room) {
-      carveRoom(grid, room);
+    rooms.forEach(function(room, idx) {
+      carveRoom(grid, room, idx);
     });
 
     // Connect rooms
@@ -373,6 +376,25 @@ var Dungeon = (function() {
     var stairsPos = getRoomCenter(stairsRoom);
     grid[stairsPos.y][stairsPos.x] = TILE.STAIRS_DOWN;
 
+    // Build roomMap grid: maps each tile to its room index (-1 = not in a room)
+    var roomMap = [];
+    for (var rmy = 0; rmy < height; rmy++) {
+      roomMap[rmy] = [];
+      for (var rmx = 0; rmx < width; rmx++) {
+        roomMap[rmy][rmx] = -1;
+      }
+    }
+    for (var ri = 0; ri < rooms.length; ri++) {
+      var rm = rooms[ri];
+      for (var rry = rm.y; rry < rm.y + rm.h; rry++) {
+        for (var rrx = rm.x; rrx < rm.x + rm.w; rrx++) {
+          if (rry >= 0 && rry < height && rrx >= 0 && rrx < width) {
+            roomMap[rry][rrx] = ri;
+          }
+        }
+      }
+    }
+
     // Monster House: chance scales with depth
     var mhChance = floorNum >= 60 ? 0.20 : floorNum >= 30 ? 0.15 : 0.10;
     var monsterHouseRoom = null;
@@ -392,6 +414,7 @@ var Dungeon = (function() {
     return {
       grid: grid,
       rooms: rooms,
+      roomMap: roomMap,
       stairs: stairsPos,
       playerStart: startPos,
       width: width,
