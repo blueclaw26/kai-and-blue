@@ -156,12 +156,15 @@ var Item = (function() {
 
   Item.prototype._useScroll = function(game, player) {
     var ui = game.ui;
-    // Using scroll identifies it (except identify scroll which has special handling)
-    if (!this.identified && this.effect !== 'identify') {
-      var fakeName = this.getDisplayName();
-      this.identify();
-      ui.addMessage('それは' + this.name + 'だった！', 'pickup');
+    // Shiren-style: effect fires first, THEN scroll is identified
+    var wasIdentified = this.identified;
+    var scrollName = this.name; // real name for messages after identification
+
+    // Show generic "read a scroll" message if unidentified
+    if (!wasIdentified) {
+      ui.addMessage('巻物を読んだ...', 'system');
     }
+
     switch (this.effect) {
       case 'reveal_map':
         var dungeon = game.dungeon;
@@ -172,14 +175,10 @@ var Item = (function() {
             }
           }
         }
-        // Also reveal all traps on the floor
-        if (game.traps) {
-          for (var i = 0; i < game.traps.length; i++) {
-            game.traps[i].visible = true;
-          }
-        }
-        ui.addMessage(this.name + 'を読んだ。フロアの全体が明るくなった', 'system');
-        return true;
+        // Set mapRevealed flag: shows all tiles, enemies, items (but NOT traps)
+        game.mapRevealed = true;
+        ui.addMessage('フロアの全体が明るくなった！', 'system');
+        break;
       case 'confuse_enemies':
         var confused = 0;
         var visible = Renderer.computeFOV(player.x, player.y, game.dungeon);
@@ -191,31 +190,26 @@ var Item = (function() {
           }
         }
         if (confused > 0) {
-          ui.addMessage(this.name + 'を読んだ。周囲のモンスターが混乱した', 'attack');
+          ui.addMessage('周囲のモンスターが混乱した！', 'attack');
         } else {
-          ui.addMessage(this.name + 'を読んだ。しかし何も起きなかった', 'system');
+          ui.addMessage('しかし何も起きなかった', 'system');
         }
-        return true;
+        break;
       case 'powerup':
         if (player.weapon) {
           player.weapon.plus = (player.weapon.plus || 0) + 1;
           player._recalcStats();
-          ui.addMessage(this.name + 'を読んだ。' + player.weapon.name + 'が強化された！', 'heal');
+          ui.addMessage(player.weapon.name + 'が強化された！', 'heal');
         } else if (player.shield) {
           player.shield.plus = (player.shield.plus || 0) + 1;
           player._recalcStats();
-          ui.addMessage(this.name + 'を読んだ。' + player.shield.name + 'が強化された！', 'heal');
+          ui.addMessage(player.shield.name + 'が強化された！', 'heal');
         } else {
           player.powerupTurns = (player.powerupTurns || 0) + 20;
-          ui.addMessage(this.name + 'を読んだ。攻撃力が上がった', 'heal');
+          ui.addMessage('攻撃力が上がった！', 'heal');
         }
-        return true;
+        break;
       case 'identify':
-        // Identify scroll: enter identify_select mode
-        if (!this.identified) {
-          this.identify();
-          ui.addMessage('それは識別の巻物だった！', 'pickup');
-        }
         // Check if there are unidentified items in inventory
         var hasUnidentified = false;
         for (var i = 0; i < player.inventory.length; i++) {
@@ -224,11 +218,16 @@ var Item = (function() {
             break;
           }
         }
+        // Identify the scroll itself now (before prompting)
+        if (!wasIdentified) {
+          this.identify();
+          ui.addMessage('それは' + scrollName + 'だった！', 'pickup');
+        }
         if (!hasUnidentified) {
-          ui.addMessage('識別の巻物を読んだ。しかし未識別のアイテムがない', 'system');
+          ui.addMessage('しかし未識別のアイテムがない', 'system');
           return true;
         }
-        ui.addMessage('識別の巻物を読んだ。どのアイテムを識別する？', 'system');
+        ui.addMessage('どのアイテムを識別する？', 'system');
         game.identifyMode = true;
         game.inventoryOpen = true;
         game.inventorySelection = 0;
@@ -238,24 +237,33 @@ var Item = (function() {
         if (player.weapon) {
           player.weapon.plus = (player.weapon.plus || 0) + 1;
           player._recalcStats();
-          ui.addMessage(this.name + 'を読んだ。' + player.weapon.name + 'の攻撃力が上がった！(+' + player.weapon.plus + ')', 'heal');
+          ui.addMessage(player.weapon.name + 'の攻撃力が上がった！(+' + player.weapon.plus + ')', 'heal');
         } else {
-          ui.addMessage(this.name + 'を読んだ。しかし武器を装備していない', 'system');
+          ui.addMessage('しかし武器を装備していない', 'system');
         }
-        return true;
+        break;
       case 'shield_upgrade':
         if (player.shield) {
           player.shield.plus = (player.shield.plus || 0) + 1;
           player._recalcStats();
-          ui.addMessage(this.name + 'を読んだ。' + player.shield.name + 'の防御力が上がった！(+' + player.shield.plus + ')', 'heal');
+          ui.addMessage(player.shield.name + 'の防御力が上がった！(+' + player.shield.plus + ')', 'heal');
         } else {
-          ui.addMessage(this.name + 'を読んだ。しかし盾を装備していない', 'system');
+          ui.addMessage('しかし盾を装備していない', 'system');
         }
-        return true;
+        break;
       default:
-        ui.addMessage(this.name + 'を読んだ');
-        return true;
+        if (wasIdentified) {
+          ui.addMessage(scrollName + 'を読んだ', 'system');
+        }
+        break;
     }
+
+    // Now identify the scroll (after effect) — Shiren style
+    if (!wasIdentified && this.effect !== 'identify') {
+      this.identify();
+      ui.addMessage('それは' + scrollName + 'だった！', 'pickup');
+    }
+    return true;
   };
 
   Item.prototype._useFood = function(game, player) {

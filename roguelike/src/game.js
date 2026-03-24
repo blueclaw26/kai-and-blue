@@ -28,6 +28,8 @@ var Game = (function() {
     this.shopItems = new Set(); // track items that are shop merchandise
     // Sell confirmation mode
     this.sellConfirmMode = null; // { item: Item } when awaiting y/n
+    // Map revealed by あかりの巻物
+    this.mapRevealed = false;
   }
 
   Game.prototype.init = function(ui) {
@@ -45,6 +47,7 @@ var Game = (function() {
     this.shopkeeperHostile = false;
     this.shopItems = new Set();
     this.sellConfirmMode = null;
+    this.mapRevealed = false;
 
     if (!this.player) {
       this.player = new Player(this.dungeon.playerStart.x, this.dungeon.playerStart.y);
@@ -607,13 +610,48 @@ var Game = (function() {
       this.ui.addMessage(enemy.name + 'を倒した！ 経験値' + enemy.exp + '獲得', 'attack');
       this.player.gainExp(enemy.exp, this.ui);
 
-      // Drop gold when enemy dies
+      // Drop loot when enemy dies
       if (!enemy.isShopkeeper) {
-        var goldAmount = 10 + Math.floor(Math.random() * 91); // 10-100
-        var goldItem = this._createGoldItem(enemy.x, enemy.y, goldAmount);
-        this.items.push(goldItem);
+        var dropRoll = Math.random();
+        if (dropRoll < 0.60) {
+          // 60% chance: drop gold (scaled with floor)
+          var goldAmount = Math.floor(10 + Math.random() * (20 + this.floorNum * 10));
+          var goldItem = this._createGoldItem(enemy.x, enemy.y, goldAmount);
+          this.items.push(goldItem);
+        } else if (dropRoll < 0.90) {
+          // 30% chance: drop a random item appropriate to the floor
+          var droppedKey = this._pickItemForFloor(this.floorNum);
+          var droppedItem = new Item(enemy.x, enemy.y, droppedKey);
+          this.items.push(droppedItem);
+        }
+        // 10% chance: drop nothing
       }
     }
+  };
+
+  // Pick an item from FLOOR_TABLE weighted for given floor
+  Game.prototype._pickItemForFloor = function(floorNum) {
+    var table = FLOOR_TABLE.items;
+    var eligible = [];
+    var totalWeight = 0;
+
+    for (var i = 0; i < table.length; i++) {
+      var entry = table[i];
+      if (floorNum >= entry[0] && floorNum <= entry[1]) {
+        eligible.push({ id: entry[2], weight: entry[3] });
+        totalWeight += entry[3];
+      }
+    }
+
+    if (eligible.length === 0) return 'herb';
+
+    var roll = Math.random() * totalWeight;
+    var cumulative = 0;
+    for (var j = 0; j < eligible.length; j++) {
+      cumulative += eligible[j].weight;
+      if (roll < cumulative) return eligible[j].id;
+    }
+    return eligible[eligible.length - 1].id;
   };
 
   // Create a gold item on the floor

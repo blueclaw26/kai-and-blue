@@ -247,6 +247,42 @@ var Player = (function() {
     return false;
   };
 
+  Player.prototype.sortInventory = function() {
+    var self = this;
+    var typeOrder = {
+      'weapon': 0,
+      'shield': 1,
+      'staff': 2,
+      'grass': 3,
+      'scroll': 4,
+      'food': 5
+    };
+
+    this.inventory.sort(function(a, b) {
+      // Equipped weapon first
+      if (self.weapon === a) return -1;
+      if (self.weapon === b) return 1;
+      // Equipped shield second
+      if (self.shield === a) return -1;
+      if (self.shield === b) return 1;
+
+      var typeA = typeOrder[a.type] !== undefined ? typeOrder[a.type] : 6;
+      var typeB = typeOrder[b.type] !== undefined ? typeOrder[b.type] : 6;
+
+      if (typeA !== typeB) return typeA - typeB;
+
+      // Within same type, sort by relevant stat or name
+      if (a.type === 'weapon') {
+        return (b.getEffectiveAttack() || 0) - (a.getEffectiveAttack() || 0); // descending
+      }
+      if (a.type === 'shield') {
+        return (b.getEffectiveDefense() || 0) - (a.getEffectiveDefense() || 0); // descending
+      }
+      // Staff, grass, scroll, food: by name
+      return (a.name || '').localeCompare(b.name || '');
+    });
+  };
+
   Player.prototype.tickBuffs = function() {
     if (this.powerupTurns > 0) {
       this.powerupTurns--;

@@ -334,6 +334,19 @@ var Input = (function() {
       return;
     }
 
+    // Sort inventory
+    if (key === 's' && player.inventory.length > 0) {
+      var currentItem = player.inventory[game.inventorySelection];
+      player.sortInventory();
+      // Keep selection on same item
+      var newIdx = player.inventory.indexOf(currentItem);
+      if (newIdx !== -1) game.inventorySelection = newIdx;
+      else game.inventorySelection = 0;
+      ui.addMessage('持ち物を整理した', 'system');
+      ui.renderInventory(game);
+      return;
+    }
+
     // Action keys take priority over slot selection
     if ((key === 'e' || key === 'E' || key === 'd' || key === 't') && player.inventory.length > 0) {
       var selectedItem = player.inventory[game.inventorySelection];

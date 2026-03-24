@@ -172,7 +172,7 @@ var UI = (function() {
       html += '</div>';
     } else {
       html += '<div style="color:#888;font-size:12px;margin-top:16px;border-top:1px solid #333;padding-top:8px;">';
-      html += '[e]使う [E]装備 [d]置く [t]投げる [↑↓]選択 [ESC]戻る';
+      html += '[e]使う [E]装備 [d]置く [t]投げる [s]整理 [↑↓]選択 [ESC]戻る';
       html += '</div>';
     }
 

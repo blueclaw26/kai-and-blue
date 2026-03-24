@@ -9,7 +9,7 @@ var Renderer = (function() {
     wall: '#333',
     floor: '#1a1e2e',
     corridor: '#1a1e2e',
-    stairs: '#e8a44a',
+    stairs: '#90a4ae',
     player: '#4fc3f7',
     unexplored: '#000',
     shopFloor: '#252a3e' // slightly lighter for shop room
@@ -131,6 +131,7 @@ var Renderer = (function() {
     ctx.imageSmoothingEnabled = false;
 
     var visible = computeFOV(player.x, player.y, dungeon);
+    var mapRevealed = game.mapRevealed;
 
     for (var key in visible) {
       explored.add(key);
@@ -163,7 +164,7 @@ var Renderer = (function() {
         var tile = dungeon.grid[ty][tx];
         var drawX = vx * TILE_SIZE;
         var drawY = vy * TILE_SIZE;
-        var dimmed = !isVisible;
+        var dimmed = !isVisible && !mapRevealed;
 
         // Render tiles with sprites
         switch (tile) {
@@ -227,7 +228,7 @@ var Renderer = (function() {
 
       var tScreenX = (trap.x - camX) * TILE_SIZE;
       var tScreenY = (trap.y - camY) * TILE_SIZE;
-      var trapDimmed = !visible[tKey];
+      var trapDimmed = !visible[tKey] && !mapRevealed;
 
       if (!drawSprite(ctx, 'trap', tScreenX, tScreenY, trapDimmed)) {
         // Fallback to text
@@ -243,7 +244,7 @@ var Renderer = (function() {
     for (var i = 0; i < items.length; i++) {
       var item = items[i];
       var iKey = item.x + ',' + item.y;
-      if (!visible[iKey]) continue;
+      if (!visible[iKey] && !mapRevealed) continue;
 
       var iScreenX = (item.x - camX) * TILE_SIZE;
       var iScreenY = (item.y - camY) * TILE_SIZE;
@@ -274,7 +275,7 @@ var Renderer = (function() {
       if (enemy.dead) continue;
 
       var eKey = enemy.x + ',' + enemy.y;
-      if (!visible[eKey]) continue;
+      if (!visible[eKey] && !mapRevealed) continue;
 
       var eScreenX = (enemy.x - camX) * TILE_SIZE;
       var eScreenY = (enemy.y - camY) * TILE_SIZE;
@@ -302,10 +303,10 @@ var Renderer = (function() {
     }
 
     // Minimap
-    this.renderMinimap(game, dungeon, player, enemies, items, explored, visible);
+    this.renderMinimap(game, dungeon, player, enemies, items, explored, visible, mapRevealed);
   };
 
-  Renderer.prototype.renderMinimap = function(game, dungeon, player, enemies, items, explored, visible) {
+  Renderer.prototype.renderMinimap = function(game, dungeon, player, enemies, items, explored, visible, mapRevealed) {
     var ctx = this.miniCtx;
     var t = this.miniTile;
     this.miniCanvas.width = dungeon.width * t;
@@ -322,16 +323,17 @@ var Renderer = (function() {
         var tile = dungeon.grid[y][x];
         var isVisible = visible[key];
 
+        var tileBright = isVisible || mapRevealed;
         if (tile === Dungeon.TILE.WALL) {
-          ctx.fillStyle = isVisible ? '#3a3a3a' : '#1a1a1a';
+          ctx.fillStyle = tileBright ? '#3a3a3a' : '#1a1a1a';
         } else if (tile === Dungeon.TILE.STAIRS_DOWN) {
-          ctx.fillStyle = isVisible ? '#e8a44a' : '#7a5520';
+          ctx.fillStyle = tileBright ? '#90a4ae' : '#4a5560';
         } else {
           // Shop room is slightly different on minimap
           if (isShopTile(game, x, y)) {
-            ctx.fillStyle = isVisible ? '#3a4060' : '#1f2535';
+            ctx.fillStyle = tileBright ? '#3a4060' : '#1f2535';
           } else {
-            ctx.fillStyle = isVisible ? '#2a3050' : '#151825';
+            ctx.fillStyle = tileBright ? '#2a3050' : '#151825';
           }
         }
 
@@ -343,7 +345,7 @@ var Renderer = (function() {
     for (var y = 0; y < dungeon.height; y++) {
       for (var x = 0; x < dungeon.width; x++) {
         if (dungeon.grid[y][x] === Dungeon.TILE.STAIRS_DOWN && explored.has(x + ',' + y)) {
-          ctx.fillStyle = '#ffb300';
+          ctx.fillStyle = '#90a4ae';
           ctx.fillRect(x * t, y * t, t, t);
         }
       }
@@ -364,7 +366,7 @@ var Renderer = (function() {
     for (var i = 0; i < items.length; i++) {
       var item = items[i];
       var iKey = item.x + ',' + item.y;
-      if (!visible[iKey]) continue;
+      if (!visible[iKey] && !mapRevealed) continue;
       ctx.fillRect(item.x * t, item.y * t, t, t);
     }
 
@@ -373,7 +375,7 @@ var Renderer = (function() {
       var enemy = enemies[i];
       if (enemy.dead) continue;
       var eKey = enemy.x + ',' + enemy.y;
-      if (!visible[eKey]) continue;
+      if (!visible[eKey] && !mapRevealed) continue;
       // Shopkeeper is gold on minimap
       ctx.fillStyle = enemy.isShopkeeper ? '#ffd700' : '#ff4444';
       ctx.fillRect(enemy.x * t, enemy.y * t, t, t);
