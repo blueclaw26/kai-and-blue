@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roguelike Dungeon</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="game-container">
+    <div id="status-bar">Floor: 1F | HP: 15/15 | Lv.1</div>
+    <canvas id="game-canvas"></canvas>
+    <div id="minimap-container">
+      <canvas id="minimap-canvas"></canvas>
+    </div>
+    <div id="message-log"></div>
+  </div>
+
+  <script src="src/dungeon.js"></script>
+  <script src="src/entity.js"></script>
+  <script src="src/player.js"></script>
+  <script src="src/renderer.js"></script>
+  <script src="src/ui.js"></script>
+  <script src="src/turn.js"></script>
+  <script src="src/game.js"></script>
+  <script src="src/input.js"></script>
+  <script src="src/main.js"></script>
+
+  <a href="../roguelike-docs/" class="docs-link" title="制作記録">📖</a>
+</body>
+</html>

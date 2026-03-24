@@ -1,0 +1,114 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0a0e1a;
+  color: #ccc;
+  font-family: 'Courier New', monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+#game-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#status-bar {
+  width: 600px;
+  background: #0d1117;
+  color: #e8a44a;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  padding: 8px 16px;
+  border-bottom: 1px solid #1a1e2e;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+#game-canvas {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  border: 1px solid #1a2a3a;
+}
+
+#minimap-container {
+  position: absolute;
+  top: 40px;
+  right: -170px;
+  border: 1px solid rgba(74, 143, 127, 0.4);
+  background: rgba(0, 0, 0, 0.7);
+  padding: 2px;
+}
+
+#minimap-canvas {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+#message-log {
+  width: 600px;
+  height: 90px;
+  background: #0d1117;
+  color: #b0b8c8;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  padding: 8px 16px;
+  border-top: 1px solid #1a1e2e;
+  white-space: pre-line;
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+.docs-link {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.docs-link:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.docs-link::after {
+  content: "制作記録";
+  position: absolute;
+  right: 48px;
+  background: #333;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.docs-link:hover::after {
+  opacity: 1;
+}
