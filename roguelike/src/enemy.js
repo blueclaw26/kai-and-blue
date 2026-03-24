@@ -54,6 +54,13 @@ var Enemy = (function() {
     if (this.dead) return;
     this._turnCount++;
 
+    // Immune to status effects (shopkeeper when hostile)
+    if (this.immuneToStatus) {
+      this.paralyzed = 0;
+      this.slowed = 0;
+      this.confused = 0;
+    }
+
     // Paralyzed: can't act
     if (this.paralyzed && this.paralyzed > 0) {
       this.paralyzed--;

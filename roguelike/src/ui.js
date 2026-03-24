@@ -99,12 +99,18 @@ var UI = (function() {
     var effectText = player.getStatusEffectText ? player.getStatusEffectText() : '';
     var effectHtml = effectText ? ' <span style="color:#ff8a65;">' + effectText + '</span>' : '';
 
+    var debtText = '';
+    if (game.shopDebt > 0) {
+      debtText = ' | <span style="color:#ef5350;">未払い:' + game.shopDebt + 'ギタン</span>';
+    }
+
     this.statusEl.innerHTML = statusText +
       '<span style="color:' + hpColor + ';">' + hpText + '</span>' +
       levelText +
       '<span style="color:' + satietyColor + ';">' + satietyText + '</span>' +
       equipText +
       '<span style="color:#ffd700;">' + goldText + '</span>' +
+      debtText +
       effectHtml;
 
     this._updateSidePanel(game);

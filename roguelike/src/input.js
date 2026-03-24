@@ -163,7 +163,7 @@ var Input = (function() {
       return;
     }
 
-    // Pick up item / buy in shop
+    // Pick up item / take shop item / pay debt
     if (key === 'g' || key === ',') {
       e.preventDefault();
       var game = this.game;

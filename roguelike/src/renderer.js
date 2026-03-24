@@ -28,7 +28,8 @@ var Renderer = (function() {
     dragon: 'dragon',
     skull_mage: 'skull_mage',
     minotaur: 'minotaur',
-    shopkeeper: 'shopkeeper'
+    shopkeeper: 'shopkeeper',
+    guard_dog: 'guard_dog'
   };
 
   // Map item types to sprite names
@@ -261,9 +262,11 @@ var Renderer = (function() {
 
       // Draw price tag for shop items
       if (item.shopItem && !game.shopkeeperHostile) {
-        ctx.font = 'bold 8px monospace';
+        ctx.font = 'bold 9px monospace';
+        ctx.fillStyle = '#000';
+        ctx.fillRect(iScreenX, iScreenY - 2, TILE_SIZE, 10);
         ctx.fillStyle = '#ffd700';
-        ctx.fillText(item.getBuyPrice(), iScreenX + TILE_SIZE / 2, iScreenY + 4);
+        ctx.fillText(item.getBuyPrice() + 'G', iScreenX + TILE_SIZE / 2, iScreenY + 4);
         ctx.font = 'bold 16px monospace';
       }
     }
@@ -288,6 +291,14 @@ var Renderer = (function() {
         // Fallback to text
         ctx.fillStyle = enemy.color;
         ctx.fillText(enemy.char, eScreenX + TILE_SIZE / 2, eScreenY + TILE_SIZE / 2);
+      }
+
+      // Shopkeeper speech bubble
+      if (enemy.isShopkeeper && !game.shopkeeperHostile) {
+        ctx.font = 'bold 8px monospace';
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.fillText('店', eScreenX + TILE_SIZE / 2, eScreenY - 4);
+        ctx.font = 'bold 18px monospace';
       }
     }
 

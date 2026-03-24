@@ -184,7 +184,7 @@ var Item = (function() {
         var visible = Renderer.computeFOV(player.x, player.y, game.dungeon);
         for (var i = 0; i < game.enemies.length; i++) {
           var e = game.enemies[i];
-          if (!e.dead && visible[e.x + ',' + e.y]) {
+          if (!e.dead && visible[e.x + ',' + e.y] && !e.immuneToStatus) {
             e.confused = 10;
             confused++;
           }

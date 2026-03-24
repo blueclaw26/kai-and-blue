@@ -842,6 +842,11 @@ var Game = (function() {
     if (this.gameOver || this.victory) return false;
     var tile = this.dungeon.grid[this.player.y][this.player.x];
     if (tile === Dungeon.TILE.STAIRS_DOWN) {
+      // If player has shop debt and tries to descend, trigger theft
+      if (this.shopDebt > 0 && !this.shopkeeperHostile) {
+        this._triggerTheft();
+        return true; // consume turn but don't descend
+      }
       if (this.floorNum >= MAX_FLOOR) {
         this.victory = true;
         this.ui.addMessage('ダンジョンをクリアした！', 'levelup');
@@ -1046,13 +1051,21 @@ var Game = (function() {
         break;
 
       case 'paralyze':
-        hitEnemy.paralyzed = 10;
-        ui.addMessage(hitEnemy.name + 'は金縛りになった！', 'attack');
+        if (hitEnemy.immuneToStatus) {
+          ui.addMessage(hitEnemy.name + 'には効かなかった！', 'system');
+        } else {
+          hitEnemy.paralyzed = 10;
+          ui.addMessage(hitEnemy.name + 'は金縛りになった！', 'attack');
+        }
         break;
 
       case 'slow':
-        hitEnemy.slowed = 15;
-        ui.addMessage(hitEnemy.name + 'の足が鈍くなった！', 'attack');
+        if (hitEnemy.immuneToStatus) {
+          ui.addMessage(hitEnemy.name + 'には効かなかった！', 'system');
+        } else {
+          hitEnemy.slowed = 15;
+          ui.addMessage(hitEnemy.name + 'の足が鈍くなった！', 'attack');
+        }
         break;
 
       case 'lightning':
