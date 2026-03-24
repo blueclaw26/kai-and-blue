@@ -69,6 +69,11 @@ var FLOOR_TABLE = {
     // Arrows
     [1, 20, 'arrow_wood', 5],
     [4, 20, 'arrow_iron', 3],
-    [8, 20, 'arrow_silver', 2]
+    [8, 20, 'arrow_silver', 2],
+    // New scrolls
+    [6, 20, 'scroll_sanctuary', 1],
+    [10, 20, 'scroll_extinction', 1],
+    [5, 20, 'scroll_great_hall', 2],
+    [1, 20, 'scroll_escape', 2]
   ]
 };

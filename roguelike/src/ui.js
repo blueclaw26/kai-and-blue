@@ -200,6 +200,33 @@ var UI = (function() {
     this.inventoryEl.style.display = 'none';
   };
 
+  // Render extinction enemy selection (ねだやしの巻物)
+  UI.prototype.renderExtinctionSelect = function(game) {
+    var box = this.inventoryBox;
+    var sel = game.extinctionSelection;
+    var candidates = game.extinctionCandidates;
+
+    var html = '<div style="color:#f44336;font-size:18px;margin-bottom:12px;border-bottom:1px solid #333;padding-bottom:8px;">ねだやし - モンスターを選べ</div>';
+
+    for (var i = 0; i < candidates.length; i++) {
+      var c = candidates[i];
+      var isSelected = (i === sel);
+      var bgColor = isSelected ? '#2a1a1a' : 'transparent';
+      var borderLeft = isSelected ? '3px solid #f44336' : '3px solid transparent';
+      html += '<div style="padding:4px 8px;margin:2px 0;background:' + bgColor + ';border-left:' + borderLeft + ';">';
+      html += '<span style="color:#888;">' + SLOT_LETTERS[i] + ')</span> ';
+      html += '<span style="color:#e0e0e0;">' + c.name + '</span>';
+      html += '</div>';
+    }
+
+    html += '<div style="color:#888;font-size:12px;margin-top:16px;border-top:1px solid #333;padding-top:8px;">';
+    html += '[Enter/e]決定 [↑↓]選択 [ESC]キャンセル';
+    html += '</div>';
+
+    box.innerHTML = html;
+    this.inventoryEl.style.display = 'flex';
+  };
+
   UI.prototype.showGameOver = function(floor, level) {
     var overlay = document.getElementById('game-over-overlay');
     if (overlay) {

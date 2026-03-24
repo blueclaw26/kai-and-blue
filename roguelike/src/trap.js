@@ -1,13 +1,15 @@
 // Trap System
 var TRAP_DATA = {
-  landmine:     { name: '地雷',         color: '#f44336', effect: 'explosion' },
-  pitfall:      { name: '落とし穴',     color: '#795548', effect: 'pitfall' },
-  poison_arrow: { name: '毒矢の罠',    color: '#7e57c2', effect: 'poison' },
-  sleep:        { name: '睡眠ガス',     color: '#42a5f5', effect: 'sleep' },
-  spin:         { name: '回転盤',       color: '#ffa726', effect: 'confuse' },
-  hunger:       { name: 'デロデロの罠', color: '#66bb6a', effect: 'hunger' },
-  trip:         { name: '転び石',       color: '#bdbdbd', effect: 'trip' },
-  rust:         { name: 'サビの罠',     color: '#8d6e63', effect: 'rust' }
+  landmine:         { name: '地雷',         color: '#f44336', effect: 'explosion' },
+  pitfall:          { name: '落とし穴',     color: '#795548', effect: 'pitfall' },
+  poison_arrow:     { name: '毒矢の罠',    color: '#7e57c2', effect: 'poison' },
+  sleep:            { name: '睡眠ガス',     color: '#42a5f5', effect: 'sleep' },
+  spin:             { name: '回転盤',       color: '#ffa726', effect: 'confuse' },
+  hunger:           { name: 'デロデロの罠', color: '#66bb6a', effect: 'hunger' },
+  trip:             { name: '転び石',       color: '#bdbdbd', effect: 'trip' },
+  rust:             { name: 'サビの罠',     color: '#8d6e63', effect: 'rust' },
+  arrow_trap_wood:  { name: '木の矢の罠',  color: '#a1887f', effect: 'arrow_wood' },
+  arrow_trap_iron:  { name: '鉄の矢の罠',  color: '#78909c', effect: 'arrow_iron' }
 };
 
 var Trap = (function() {

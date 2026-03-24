@@ -23,6 +23,8 @@ var Enemy = (function() {
   // Override canMoveTo for wallpass enemies
   Enemy.prototype._canMoveToTileRaw = function(x, y, game) {
     if (x < 0 || x >= game.dungeon.width || y < 0 || y >= game.dungeon.height) return false;
+    // Sanctuary tiles block all enemies
+    if (game.isSanctuaryTile && game.isSanctuaryTile(x, y)) return false;
     // Wallpass enemies can move through walls
     if (this.special === 'wallpass') {
       // Can move anywhere that isn't out of bounds
@@ -52,6 +54,7 @@ var Enemy = (function() {
 
   Enemy.prototype.act = function(game) {
     if (this.dead) return;
+    if (this.sleeping) return; // Sleeping enemies don't act
     this._turnCount++;
 
     // Immune to status effects (shopkeeper when hostile)
@@ -421,6 +424,8 @@ var Enemy = (function() {
 
   Enemy.prototype._canMoveToTile = function(x, y, game) {
     if (!this.canMoveTo(x, y, game.dungeon)) return false;
+    // Sanctuary tiles block enemies
+    if (game.isSanctuaryTile && game.isSanctuaryTile(x, y)) return false;
     for (var i = 0; i < game.enemies.length; i++) {
       var e = game.enemies[i];
       if (e !== this && !e.dead && e.x === x && e.y === y) return false;
@@ -429,7 +434,7 @@ var Enemy = (function() {
   };
 
   // Pick an enemy from FLOOR_TABLE weighted for given floor
-  function pickEnemyForFloor(floorNum) {
+  function pickEnemyForFloor(floorNum, extinctEnemies) {
     var table = FLOOR_TABLE.enemies;
     var eligible = [];
     var totalWeight = 0;
@@ -437,6 +442,8 @@ var Enemy = (function() {
     for (var i = 0; i < table.length; i++) {
       var entry = table[i];
       if (floorNum >= entry[0] && floorNum <= entry[1]) {
+        // Skip extinct enemies
+        if (extinctEnemies && extinctEnemies.has(entry[2])) continue;
         eligible.push({ id: entry[2], weight: entry[3] });
         totalWeight += entry[3];
       }
@@ -458,7 +465,7 @@ var Enemy = (function() {
   }
 
   // Spawn enemies for a floor using FLOOR_TABLE
-  Enemy.spawnForFloor = function(dungeon, floorNum, playerStartRoom) {
+  Enemy.spawnForFloor = function(dungeon, floorNum, playerStartRoom, extinctEnemies) {
     var enemies = [];
 
     var minCount, maxCount;
@@ -490,6 +497,10 @@ var Enemy = (function() {
     if (availableRooms.length === 0) {
       availableRooms = dungeon.rooms.slice(1);
     }
+    // For single-room floors (big room), use the only room but avoid player position
+    if (availableRooms.length === 0 && dungeon.rooms.length > 0) {
+      availableRooms = dungeon.rooms.slice(0);
+    }
 
     for (var i = 0; i < count; i++) {
       var room = availableRooms[Math.floor(Math.random() * availableRooms.length)];
@@ -504,7 +515,7 @@ var Enemy = (function() {
       }
       if (occupied) continue;
 
-      var enemyId = pickEnemyForFloor(floorNum);
+      var enemyId = pickEnemyForFloor(floorNum, extinctEnemies);
       var template = ENEMY_DATA[enemyId];
       if (!template) continue;
 
@@ -560,7 +571,7 @@ var Enemy = (function() {
       if (!game.enemies[j].dead && game.enemies[j].x === ex && game.enemies[j].y === ey) return null;
     }
 
-    var enemyId = pickEnemyForFloor(floorNum);
+    var enemyId = pickEnemyForFloor(floorNum, game.extinctEnemies);
     var template = ENEMY_DATA[enemyId];
     if (!template) return null;
 

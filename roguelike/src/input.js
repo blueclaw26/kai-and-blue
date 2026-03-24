@@ -61,6 +61,12 @@ var Input = (function() {
       return;
     }
 
+    // Extinction mode (ねだやしの巻物)
+    if (this.game.extinctionMode) {
+      this._handleExtinctionKey(e);
+      return;
+    }
+
     // Inventory mode (including identify mode)
     if (this.game.inventoryOpen) {
       if (this.game.identifyMode) {
@@ -321,6 +327,67 @@ var Input = (function() {
         selectedItem.identify();
         ui.addMessage('それは' + selectedItem.getRealDisplayName() + 'だった！', 'pickup');
       }
+      this.turnManager.processTurn(function() { return true; });
+      return;
+    }
+  };
+
+  // Extinction mode: select enemy type to banish
+  Input.prototype._handleExtinctionKey = function(e) {
+    e.preventDefault();
+    var game = this.game;
+    var ui = game.ui;
+    var key = e.key;
+    var candidates = game.extinctionCandidates;
+
+    if (key === 'Escape') {
+      game.extinctionMode = false;
+      game.inventoryOpen = false;
+      ui.hideInventory();
+      ui.addMessage('ねだやしをやめた', 'system');
+      this.turnManager.processTurn(function() { return true; });
+      return;
+    }
+
+    if (key === 'ArrowUp' || key === 'k') {
+      game.extinctionSelection = Math.max(0, game.extinctionSelection - 1);
+      ui.renderExtinctionSelect(game);
+      return;
+    }
+    if (key === 'ArrowDown' || key === 'j') {
+      game.extinctionSelection = Math.min(candidates.length - 1, game.extinctionSelection + 1);
+      ui.renderExtinctionSelect(game);
+      return;
+    }
+
+    var SLOT_LETTERS = 'abcdefghijklmnopqrst';
+    var letterIdx = SLOT_LETTERS.indexOf(key);
+    if (letterIdx !== -1 && letterIdx < candidates.length) {
+      game.extinctionSelection = letterIdx;
+      ui.renderExtinctionSelect(game);
+      return;
+    }
+
+    if (key === 'Enter' || key === 'e') {
+      if (candidates.length === 0) return;
+      var selected = candidates[game.extinctionSelection];
+
+      game.extinctionMode = false;
+      game.inventoryOpen = false;
+      ui.hideInventory();
+
+      // Add to extinct set
+      game.extinctEnemies.add(selected.id);
+      ui.addMessage(selected.name + 'をねだやしにした！ もう出現しない！', 'heal');
+
+      // Kill all existing enemies of that type
+      for (var i = 0; i < game.enemies.length; i++) {
+        var en = game.enemies[i];
+        if (!en.dead && en.enemyId === selected.id) {
+          en.dead = true;
+        }
+      }
+
       this.turnManager.processTurn(function() { return true; });
       return;
     }

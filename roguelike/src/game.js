@@ -42,12 +42,25 @@ var Game = (function() {
     this.potTakeMode = null; // { pot: Item } when selecting item to take out
     // Throw animation state
     this.throwAnimating = false;
+    // Monster house
+    this.monsterHouseRoom = null;
+    this.monsterHouseTriggered = false;
+    // Sanctuary tiles (set of "x,y" strings)
+    this.sanctuaryTiles = new Set();
+    // Extinct enemy types (persists across floors for this run)
+    this.extinctEnemies = new Set();
+    // Extinction selection mode
+    this.extinctionMode = false;
+    this.extinctionCandidates = [];
+    this.extinctionSelection = 0;
   }
 
   Game.prototype.init = function(ui) {
     this.ui = ui;
     // Initialize identification system
     initIdentification();
+    // Reset per-run state
+    this.extinctEnemies = new Set();
     this.newFloor();
     ui.addMessage('ダンジョンに足を踏み入れた...', 'system');
   };
@@ -116,7 +129,7 @@ var Game = (function() {
   };
 
   Game.prototype.newFloor = function() {
-    this.dungeon = Dungeon.generateFloor(40, 30);
+    this.dungeon = Dungeon.generateFloor(40, 30, this.floorNum);
     this.explored = [];
     // Initialize 2D arrays for visibility
     this.visible = [];
@@ -135,6 +148,9 @@ var Game = (function() {
     this.inShop = false;
     this.sellConfirmMode = null;
     this.mapRevealed = false;
+    this.monsterHouseRoom = null;
+    this.monsterHouseTriggered = false;
+    this.sanctuaryTiles = new Set();
 
     if (!this.player) {
       this.player = new Player(this.dungeon.playerStart.x, this.dungeon.playerStart.y);
@@ -144,12 +160,24 @@ var Game = (function() {
     this.player.floor = this.floorNum;
 
     var startRoom = this.dungeon.rooms[0];
-    this.enemies = Enemy.spawnForFloor(this.dungeon, this.floorNum, startRoom);
+    this.enemies = Enemy.spawnForFloor(this.dungeon, this.floorNum, startRoom, this.extinctEnemies);
     this.items = Item.spawnForFloor(this.dungeon, this.floorNum, startRoom);
     this.traps = Trap.spawnForFloor(this.dungeon, this.floorNum, this.items);
 
-    // Shop generation: 20% chance per floor (not floor 1)
-    if (this.floorNum > 1 && Math.random() < 0.20) {
+    // Monster House setup
+    if (this.dungeon.monsterHouseRoom) {
+      this._generateMonsterHouse(this.dungeon.monsterHouseRoom);
+    }
+
+    // Special floor messages
+    if (this.dungeon.floorType === 'big_room') {
+      this.ui.addMessage('大部屋だ！', 'enemy_special');
+    } else if (this.dungeon.floorType === 'maze') {
+      this.ui.addMessage('迷路フロアだ...', 'enemy_special');
+    }
+
+    // Shop generation: 20% chance per floor (not floor 1, not special floors)
+    if (this.floorNum > 1 && this.dungeon.floorType === 'normal' && Math.random() < 0.20) {
       this._generateShop(startRoom);
     }
   };
@@ -228,6 +256,120 @@ var Game = (function() {
     var sk = new Enemy(skx, sky, skTemplate, 'shopkeeper');
     sk.isShopkeeper = true;
     this.enemies.push(sk);
+  };
+
+  // --- Monster House generation ---
+  Game.prototype._generateMonsterHouse = function(room) {
+    this.monsterHouseRoom = room;
+
+    // Place 8-15 enemies in the room (sleeping)
+    var mhEnemyCount = 8 + Math.floor(Math.random() * 8);
+    var placed = 0;
+    var attempts = 0;
+
+    while (placed < mhEnemyCount && attempts < 100) {
+      attempts++;
+      var ex = room.x + 1 + Math.floor(Math.random() * (room.w - 2));
+      var ey = room.y + 1 + Math.floor(Math.random() * (room.h - 2));
+
+      if (this.dungeon.grid[ey][ex] === Dungeon.TILE.STAIRS_DOWN) continue;
+
+      var occupied = false;
+      for (var j = 0; j < this.enemies.length; j++) {
+        if (this.enemies[j].x === ex && this.enemies[j].y === ey) { occupied = true; break; }
+      }
+      if (occupied) continue;
+
+      var enemyId = this._pickEnemyForFloor(this.floorNum);
+      var template = ENEMY_DATA[enemyId];
+      if (!template) continue;
+
+      var enemy = new Enemy(ex, ey, template, enemyId);
+      enemy.sleeping = true;
+      this.enemies.push(enemy);
+      placed++;
+    }
+
+    // Place 5-10 items in the room
+    var mhItemCount = 5 + Math.floor(Math.random() * 6);
+    var itemPlaced = 0;
+    attempts = 0;
+
+    while (itemPlaced < mhItemCount && attempts < 100) {
+      attempts++;
+      var ix = room.x + 1 + Math.floor(Math.random() * (room.w - 2));
+      var iy = room.y + 1 + Math.floor(Math.random() * (room.h - 2));
+
+      if (this.dungeon.grid[iy][ix] === Dungeon.TILE.STAIRS_DOWN) continue;
+
+      var itemOccupied = false;
+      for (var k = 0; k < this.items.length; k++) {
+        if (this.items[k].x === ix && this.items[k].y === iy) { itemOccupied = true; break; }
+      }
+      if (itemOccupied) continue;
+
+      var selectedKey = this._pickItemForFloor(this.floorNum);
+      var item = new Item(ix, iy, selectedKey);
+      this.items.push(item);
+      itemPlaced++;
+    }
+  };
+
+  // Pick enemy weighted by floor table (reusable)
+  Game.prototype._pickEnemyForFloor = function(floorNum) {
+    var table = FLOOR_TABLE.enemies;
+    var eligible = [];
+    var totalWeight = 0;
+    var self = this;
+
+    for (var i = 0; i < table.length; i++) {
+      var entry = table[i];
+      if (floorNum >= entry[0] && floorNum <= entry[1]) {
+        // Skip extinct enemies
+        if (self.extinctEnemies && self.extinctEnemies.has(entry[2])) continue;
+        eligible.push({ id: entry[2], weight: entry[3] });
+        totalWeight += entry[3];
+      }
+    }
+
+    if (eligible.length === 0) return 'mamel';
+
+    var roll = Math.random() * totalWeight;
+    var cumulative = 0;
+    for (var j = 0; j < eligible.length; j++) {
+      cumulative += eligible[j].weight;
+      if (roll < cumulative) return eligible[j].id;
+    }
+    return eligible[eligible.length - 1].id;
+  };
+
+  // Trigger monster house - all sleeping enemies wake up
+  Game.prototype.triggerMonsterHouse = function() {
+    if (this.monsterHouseTriggered) return;
+    this.monsterHouseTriggered = true;
+
+    Sound.play('thief');
+    this.ui.addMessage('モンスターハウスだ！', 'damage');
+
+    // Wake all sleeping enemies in the room
+    for (var i = 0; i < this.enemies.length; i++) {
+      var e = this.enemies[i];
+      if (!e.dead && e.sleeping) {
+        e.sleeping = false;
+      }
+    }
+  };
+
+  // Check if player is in monster house room
+  Game.prototype.isInMonsterHouse = function(x, y) {
+    if (!this.monsterHouseRoom) return false;
+    var r = this.monsterHouseRoom;
+    return x >= r.x1 && x <= r.x2 && y >= r.y1 && y <= r.y2;
+  };
+
+  // Check if position is a sanctuary tile
+  Game.prototype.isSanctuaryTile = function(x, y) {
+    return this.sanctuaryTiles.has(x + ',' + y);
   };
 
   // Check if a position is inside the shop room
@@ -474,6 +616,10 @@ var Game = (function() {
 
     var enemy = this.getEnemyAt(newX, newY);
     if (enemy) {
+      // Attacking a sleeping enemy wakes all monster house enemies
+      if (enemy.sleeping && !this.monsterHouseTriggered) {
+        this.triggerMonsterHouse();
+      }
       // Attacking shopkeeper triggers thief mode
       if (enemy.isShopkeeper && !this.shopkeeperHostile) {
         this.ui.addMessage('店主を攻撃した！', 'attack');
@@ -495,6 +641,11 @@ var Game = (function() {
 
       // Check for trap
       this.checkPlayerTrap();
+
+      // Check for monster house trigger
+      if (!this.monsterHouseTriggered && this.isInMonsterHouse(newX, newY)) {
+        this.triggerMonsterHouse();
+      }
 
       // Check if player left shop with debt (thief!)
       if (wasInShop && !this.inShop && !this.shopkeeperHostile && this.shopDebt > 0) {
@@ -678,6 +829,23 @@ var Game = (function() {
         } else {
           ui.addMessage('サビの罠を踏んだ！ しかし盾を装備していない', 'system');
         }
+        break;
+
+      case 'arrow_wood':
+      case 'arrow_iron':
+        var isIron = trap.effect === 'arrow_iron';
+        var arrowName = isIron ? '鉄の矢' : '木の矢';
+        var arrowDmg = isIron ? 7 : 3;
+        var arrowDataKey = isIron ? 'arrow_iron' : 'arrow_wood';
+        ui.addMessage(arrowName + 'が飛んできた！ ' + arrowDmg + 'ダメージ', 'damage');
+        if (!player.godMode) player.hp -= arrowDmg;
+        Sound.play('arrow');
+        // Drop arrow on player's tile
+        var droppedArrow = new Item(player.x, player.y, arrowDataKey);
+        droppedArrow.count = 1;
+        this.items.push(droppedArrow);
+        ui.addMessage('足元に' + arrowName + 'が落ちた', 'system');
+        this._checkPlayerDeath();
         break;
     }
   };
@@ -990,6 +1158,8 @@ var Game = (function() {
 
     for (var i = 0; i < this.enemies.length; i++) {
       if (!this.enemies[i].dead) {
+        // Sleeping enemies don't act
+        if (this.enemies[i].sleeping) continue;
         // Shopkeeper doesn't act unless hostile
         if (this.enemies[i].isShopkeeper && !this.shopkeeperHostile) continue;
 

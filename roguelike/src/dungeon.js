@@ -147,9 +147,196 @@ var Dungeon = (function() {
     if (node.right) collectRooms(node.right, rooms);
   }
 
-  function generateFloor(width, height) {
+  // --- Big Room generator (大部屋) ---
+  function generateBigRoom(width, height) {
+    var grid = createGrid(width, height);
+
+    // One giant room filling most of the map (leave 1-tile border)
+    var room = { x: 1, y: 1, w: width - 2, h: height - 2 };
+    carveRoom(grid, room);
+
+    // Add room bounds
+    room.x1 = room.x;
+    room.y1 = room.y;
+    room.x2 = room.x + room.w - 1;
+    room.y2 = room.y + room.h - 1;
+
+    var rooms = [room];
+
+    // Player start
+    var startPos = { x: randInt(2, 6), y: randInt(2, 6) };
+
+    // Stairs somewhere far from start
+    var stairsPos = { x: randInt(width - 8, width - 3), y: randInt(height - 8, height - 3) };
+    grid[stairsPos.y][stairsPos.x] = TILE.STAIRS_DOWN;
+
+    return {
+      grid: grid,
+      rooms: rooms,
+      stairs: stairsPos,
+      playerStart: startPos,
+      width: width,
+      height: height,
+      floorType: 'big_room'
+    };
+  }
+
+  // --- Maze generator (迷路フロア) ---
+  function generateMaze(width, height) {
+    var grid = createGrid(width, height);
+
+    // Use recursive backtracker on odd cells
+    // Work on a sub-grid of odd coordinates
+    var visited = {};
+    var stack = [];
+
+    // Start at (1,1)
+    var sx = 1, sy = 1;
+    grid[sy][sx] = TILE.CORRIDOR;
+    visited[sx + ',' + sy] = true;
+    stack.push({ x: sx, y: sy });
+
+    while (stack.length > 0) {
+      var curr = stack[stack.length - 1];
+      var neighbors = [];
+      var mazeDirs = [[0, -2], [0, 2], [-2, 0], [2, 0]];
+
+      for (var d = 0; d < mazeDirs.length; d++) {
+        var nx = curr.x + mazeDirs[d][0];
+        var ny = curr.y + mazeDirs[d][1];
+        if (nx > 0 && nx < width - 1 && ny > 0 && ny < height - 1 && !visited[nx + ',' + ny]) {
+          neighbors.push({ x: nx, y: ny, mx: curr.x + mazeDirs[d][0] / 2, my: curr.y + mazeDirs[d][1] / 2 });
+        }
+      }
+
+      if (neighbors.length > 0) {
+        var next = neighbors[Math.floor(Math.random() * neighbors.length)];
+        grid[next.my][next.mx] = TILE.CORRIDOR;
+        grid[next.y][next.x] = TILE.CORRIDOR;
+        visited[next.x + ',' + next.y] = true;
+        stack.push({ x: next.x, y: next.y });
+      } else {
+        stack.pop();
+      }
+    }
+
+    // Add a few tiny rooms (2x2) at random maze junctions
+    var rooms = [];
+    var roomCount = 3 + Math.floor(Math.random() * 3);
+    var attempts = 0;
+    while (rooms.length < roomCount && attempts < 100) {
+      attempts++;
+      var rx = randInt(2, width - 5);
+      var ry = randInt(2, height - 5);
+      // Check if near a corridor
+      var nearCorridor = false;
+      for (var dy = -1; dy <= 3; dy++) {
+        for (var dx = -1; dx <= 3; dx++) {
+          if (ry + dy >= 0 && ry + dy < height && rx + dx >= 0 && rx + dx < width) {
+            if (grid[ry + dy][rx + dx] === TILE.CORRIDOR) nearCorridor = true;
+          }
+        }
+      }
+      if (!nearCorridor) continue;
+
+      var room = { x: rx, y: ry, w: 3, h: 3 };
+      carveRoom(grid, room);
+      room.x1 = room.x;
+      room.y1 = room.y;
+      room.x2 = room.x + room.w - 1;
+      room.y2 = room.y + room.h - 1;
+      rooms.push(room);
+    }
+
+    // Ensure connectivity: connect first room to maze
+    if (rooms.length > 0) {
+      for (var ri = 0; ri < rooms.length; ri++) {
+        var rc = getRoomCenter(rooms[ri]);
+        // Find nearest corridor tile
+        var best = null;
+        var bestDist = 999;
+        for (var cy = 1; cy < height - 1; cy++) {
+          for (var cx = 1; cx < width - 1; cx++) {
+            if (grid[cy][cx] === TILE.CORRIDOR) {
+              var dist = Math.abs(cx - rc.x) + Math.abs(cy - rc.y);
+              if (dist < bestDist) {
+                bestDist = dist;
+                best = { x: cx, y: cy };
+              }
+            }
+          }
+        }
+        if (best) {
+          carveCorridor(grid, rc.x, rc.y, best.x, best.y);
+        }
+      }
+    }
+
+    // If no rooms were created, make a fake room at the start
+    if (rooms.length === 0) {
+      var fakeRoom = { x: 1, y: 1, w: 3, h: 3 };
+      carveRoom(grid, fakeRoom);
+      fakeRoom.x1 = 1; fakeRoom.y1 = 1; fakeRoom.x2 = 3; fakeRoom.y2 = 3;
+      rooms.push(fakeRoom);
+    }
+
+    // Player start
+    var startRoom = rooms[0];
+    var startPos = getRoomCenter(startRoom);
+
+    // Stairs: far from player
+    var stairsPlaced = false;
+    for (var tries = 0; tries < 200; tries++) {
+      var stx = randInt(1, width - 2);
+      var sty = randInt(1, height - 2);
+      if (grid[sty][stx] !== TILE.WALL && grid[sty][stx] !== TILE.STAIRS_DOWN) {
+        var sdist = Math.abs(stx - startPos.x) + Math.abs(sty - startPos.y);
+        if (sdist > 15 || tries > 150) {
+          grid[sty][stx] = TILE.STAIRS_DOWN;
+          stairsPlaced = true;
+          var stairsPos = { x: stx, y: sty };
+          break;
+        }
+      }
+    }
+    if (!stairsPlaced) {
+      // Fallback: put stairs at last corridor tile found
+      for (var fy = height - 2; fy > 0; fy--) {
+        for (var fx = width - 2; fx > 0; fx--) {
+          if (grid[fy][fx] === TILE.CORRIDOR || grid[fy][fx] === TILE.FLOOR) {
+            grid[fy][fx] = TILE.STAIRS_DOWN;
+            stairsPos = { x: fx, y: fy };
+            stairsPlaced = true;
+            break;
+          }
+        }
+        if (stairsPlaced) break;
+      }
+    }
+
+    return {
+      grid: grid,
+      rooms: rooms,
+      stairs: stairsPos || { x: 1, y: 1 },
+      playerStart: startPos,
+      width: width,
+      height: height,
+      floorType: 'maze'
+    };
+  }
+
+  function generateFloor(width, height, floorNum) {
     width = width || 40;
     height = height || 30;
+    floorNum = floorNum || 1;
+
+    // Special floor type rolls
+    if (floorNum >= 8 && Math.random() < 0.05) {
+      return generateMaze(width, height);
+    }
+    if (floorNum >= 5 && Math.random() < 0.05) {
+      return generateBigRoom(width, height);
+    }
 
     var grid = createGrid(width, height);
     var root = new BSPNode(0, 0, width, height);
@@ -186,18 +373,59 @@ var Dungeon = (function() {
     var stairsPos = getRoomCenter(stairsRoom);
     grid[stairsPos.y][stairsPos.x] = TILE.STAIRS_DOWN;
 
+    // Monster House: 10% chance from floor 3+, pick a non-start room
+    var monsterHouseRoom = null;
+    if (floorNum >= 3 && Math.random() < 0.10 && rooms.length > 2) {
+      // Pick a room that isn't the start room and isn't too small
+      var mhCandidates = [];
+      for (var mi = 1; mi < rooms.length; mi++) {
+        if (rooms[mi].w >= 5 && rooms[mi].h >= 4) {
+          mhCandidates.push(rooms[mi]);
+        }
+      }
+      if (mhCandidates.length > 0) {
+        monsterHouseRoom = mhCandidates[Math.floor(Math.random() * mhCandidates.length)];
+      }
+    }
+
     return {
       grid: grid,
       rooms: rooms,
       stairs: stairsPos,
       playerStart: startPos,
       width: width,
-      height: height
+      height: height,
+      floorType: 'normal',
+      monsterHouseRoom: monsterHouseRoom
     };
+  }
+
+  // Convert a floor to big room (for 大部屋の巻物)
+  function convertToBigRoom(dungeon) {
+    var grid = dungeon.grid;
+    var width = dungeon.width;
+    var height = dungeon.height;
+
+    for (var y = 1; y < height - 1; y++) {
+      for (var x = 1; x < width - 1; x++) {
+        if (grid[y][x] === TILE.WALL) {
+          grid[y][x] = TILE.FLOOR;
+        }
+      }
+    }
+
+    // Replace rooms with one big room
+    var bigRoom = { x: 1, y: 1, w: width - 2, h: height - 2 };
+    bigRoom.x1 = 1;
+    bigRoom.y1 = 1;
+    bigRoom.x2 = width - 3;
+    bigRoom.y2 = height - 3;
+    dungeon.rooms = [bigRoom];
   }
 
   return {
     TILE: TILE,
-    generateFloor: generateFloor
+    generateFloor: generateFloor,
+    convertToBigRoom: convertToBigRoom
   };
 })();

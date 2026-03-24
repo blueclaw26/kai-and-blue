@@ -307,6 +307,71 @@ var Item = (function() {
           ui.addMessage('しかし盾を装備していない', 'system');
         }
         break;
+
+      case 'sanctuary':
+        // Place a sanctuary tile at player position
+        game.sanctuaryTiles.add(player.x + ',' + player.y);
+        ui.addMessage('聖域の巻物を読んだ！ この場所にモンスターは入れない', 'heal');
+        break;
+
+      case 'extinction':
+        // Identify the scroll itself now (before prompting)
+        if (!wasIdentified) {
+          this.identify();
+          ui.addMessage('それは' + scrollName + 'だった！', 'pickup');
+        }
+        // Find visible enemy types
+        var visibleTypes = {};
+        for (var ei = 0; ei < game.enemies.length; ei++) {
+          var ve = game.enemies[ei];
+          if (!ve.dead && game.visible[ve.y][ve.x] && ve.enemyId && !ve.isShopkeeper) {
+            visibleTypes[ve.enemyId] = ve.name;
+          }
+        }
+        var candidates = [];
+        for (var eid in visibleTypes) {
+          candidates.push({ id: eid, name: visibleTypes[eid] });
+        }
+        if (candidates.length === 0) {
+          ui.addMessage('しかし対象となるモンスターが見えない', 'system');
+          return true;
+        }
+        // Enter extinction selection mode
+        game.extinctionMode = true;
+        game.extinctionCandidates = candidates;
+        game.extinctionSelection = 0;
+        game.inventoryOpen = true;
+        ui.addMessage('どのモンスターをねだやしにする？', 'system');
+        ui.renderExtinctionSelect(game);
+        return true;
+
+      case 'great_hall':
+        // Convert current floor to big room
+        Dungeon.convertToBigRoom(game.dungeon);
+        // Reveal everything
+        for (var ghy = 0; ghy < game.dungeon.height; ghy++) {
+          for (var ghx = 0; ghx < game.dungeon.width; ghx++) {
+            game.explored[ghy][ghx] = true;
+          }
+        }
+        game.mapRevealed = true;
+        ui.addMessage('大部屋の巻物を読んだ！ フロアの壁が崩れた！', 'heal');
+        break;
+
+      case 'escape':
+        if (game.floorNum >= 10) {
+          game.victory = true;
+          Sound.play('victory');
+          ui.addMessage('脱出の巻物でダンジョンから脱出した！', 'levelup');
+          ui.showVictory(player);
+        } else {
+          ui.addMessage('ダンジョンから脱出した...', 'system');
+          game.gameOver = true;
+          ui.addMessage(game.floorNum + 'Fで冒険を諦めた', 'damage');
+          ui.showGameOver(game.floorNum, player.level);
+        }
+        break;
+
       default:
         if (wasIdentified) {
           ui.addMessage(scrollName + 'を読んだ', 'system');
@@ -315,7 +380,7 @@ var Item = (function() {
     }
 
     // Now identify the scroll (after effect) — Shiren style
-    if (!wasIdentified && this.effect !== 'identify') {
+    if (!wasIdentified && this.effect !== 'identify' && this.effect !== 'extinction') {
       this.identify();
       ui.addMessage('それは' + scrollName + 'だった！', 'pickup');
     }

@@ -12,7 +12,9 @@ var Renderer = (function() {
     stairs: '#90a4ae',
     player: '#4fc3f7',
     unexplored: '#000',
-    shopFloor: '#252a3e' // slightly lighter for shop room
+    shopFloor: '#252a3e', // slightly lighter for shop room
+    monsterHouseFloor: '#2e1a1a', // reddish tint for monster house
+    sanctuaryTile: '#3a3020' // gold glow for sanctuary
   };
 
   var WALL_CHAR = '#';
@@ -95,6 +97,13 @@ var Renderer = (function() {
     if (!game.shopRoom) return false;
     var r = game.shopRoom;
     return tx >= r.x && tx < r.x + r.w && ty >= r.y && ty < r.y + r.h;
+  }
+
+  // Check if a tile is in the monster house room
+  function isMonsterHouseTile(game, tx, ty) {
+    if (!game.monsterHouseRoom) return false;
+    var r = game.monsterHouseRoom;
+    return tx >= r.x1 && tx <= r.x2 && ty >= r.y1 && ty <= r.y2;
   }
 
   // Draw a sprite at a position, with optional dimming for explored-but-not-visible tiles
@@ -184,8 +193,21 @@ var Renderer = (function() {
             }
             break;
           case Dungeon.TILE.FLOOR:
-            ctx.fillStyle = isShopTile(game, tx, ty) ? COLORS.shopFloor : COLORS.floor;
+            var floorColor = COLORS.floor;
+            if (game.sanctuaryTiles && game.sanctuaryTiles.has(tx + ',' + ty)) {
+              floorColor = COLORS.sanctuaryTile;
+            } else if (isShopTile(game, tx, ty)) {
+              floorColor = COLORS.shopFloor;
+            } else if (isMonsterHouseTile(game, tx, ty)) {
+              floorColor = COLORS.monsterHouseFloor;
+            }
+            ctx.fillStyle = floorColor;
             ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            // Sanctuary golden glow overlay
+            if (game.sanctuaryTiles && game.sanctuaryTiles.has(tx + ',' + ty)) {
+              ctx.fillStyle = 'rgba(255, 215, 0, 0.15)';
+              ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            }
             if (dimmed) {
               ctx.fillStyle = 'rgba(0,0,0,0.5)';
               ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
@@ -281,6 +303,18 @@ var Renderer = (function() {
         // Fallback to text
         ctx.fillStyle = enemy.color;
         ctx.fillText(enemy.char, eScreenX + TILE_SIZE / 2, eScreenY + TILE_SIZE / 2);
+      }
+
+      // Sleeping enemy overlay
+      if (enemy.sleeping) {
+        ctx.globalAlpha = 0.6;
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.fillRect(eScreenX, eScreenY, TILE_SIZE, TILE_SIZE);
+        ctx.globalAlpha = 1.0;
+        ctx.font = 'bold 10px monospace';
+        ctx.fillStyle = '#90caf9';
+        ctx.fillText('Z', eScreenX + TILE_SIZE - 4, eScreenY + 6);
+        ctx.font = 'bold 18px monospace';
       }
 
       // Shopkeeper speech bubble

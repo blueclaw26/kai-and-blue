@@ -32,6 +32,10 @@ var ITEM_DATA = {
   scroll_map: { type: 'scroll', name: 'あかりの巻物', char: '?', color: '#ffee58', effect: 'reveal_map', minFloor: 1, weight: 6, price: 400 },
   scroll_weapon_up: { type: 'scroll', name: '天の恵みの巻物', char: '?', color: '#ffab40', effect: 'weapon_upgrade', minFloor: 4, weight: 3, price: 1000 },
   scroll_shield_up: { type: 'scroll', name: '地の恵みの巻物', char: '?', color: '#a5d6a7', effect: 'shield_upgrade', minFloor: 4, weight: 3, price: 1000 },
+  scroll_sanctuary: { type: 'scroll', name: '聖域の巻物', char: '?', color: '#e1bee7', effect: 'sanctuary', minFloor: 6, weight: 1, price: 3000 },
+  scroll_extinction: { type: 'scroll', name: 'ねだやしの巻物', char: '?', color: '#f44336', effect: 'extinction', minFloor: 10, weight: 1, price: 5000 },
+  scroll_great_hall: { type: 'scroll', name: '大部屋の巻物', char: '?', color: '#ff9800', effect: 'great_hall', minFloor: 5, weight: 2, price: 2000 },
+  scroll_escape: { type: 'scroll', name: '脱出の巻物', char: '?', color: '#4caf50', effect: 'escape', minFloor: 1, weight: 2, price: 1000 },
 
   // Food
   onigiri: { type: 'food', name: 'おにぎり', char: '%', color: '#fff176', satiety: 50, minFloor: 1, weight: 12, price: 100 },
@@ -69,7 +73,7 @@ var ITEM_DATA = {
 // Unidentified name pools - shuffled per run
 var UNIDENTIFIED_NAMES = {
   grass: ['青い草', '赤い草', '黄色い草', '緑の草', '紫の草', '白い草', '黒い草', '橙の草'],
-  scroll: ['漢字の巻物', 'ひらがなの巻物', 'カタカナの巻物', '記号の巻物', '右上がりの巻物', '左下がりの巻物', '太字の巻物', '細字の巻物'],
+  scroll: ['漢字の巻物', 'ひらがなの巻物', 'カタカナの巻物', '記号の巻物', '右上がりの巻物', '左下がりの巻物', '太字の巻物', '細字の巻物', '丸文字の巻物', '達筆の巻物', '暗号の巻物', '古代文字の巻物'],
   staff: ['短い杖', '長い杖', '太い杖', '細い杖', '赤い杖', '青い杖'],
   pot: ['丸い壺', '四角い壺', '細長い壺', '平たい壺', '光る壺', '古びた壺']
 };
