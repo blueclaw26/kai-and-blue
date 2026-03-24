@@ -34,7 +34,7 @@ var FLOOR_TABLE = {
     [1, 20, 'scroll_map', 5],
     [1, 20, 'scroll_confusion', 4],
     [3, 20, 'scroll_powerup', 3],
-    [5, 20, 'scroll_identify', 4],
+    [1, 20, 'scroll_identify', 5],
     [4, 20, 'scroll_weapon_up', 2],
     [4, 20, 'scroll_shield_up', 2],
     [1, 20, 'power_grass', 3],

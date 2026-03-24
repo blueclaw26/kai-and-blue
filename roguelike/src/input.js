@@ -37,7 +37,6 @@ var Input = (function() {
     'Numpad6', 'Numpad7', 'Numpad8', 'Numpad9'
   ];
 
-  // Slot letters a-t for inventory selection
   var SLOT_LETTERS = 'abcdefghijklmnopqrst';
 
   function Input(turnManager, game) {
@@ -50,15 +49,25 @@ var Input = (function() {
   Input.prototype.handleKey = function(e) {
     if (this.game.gameOver || this.game.victory) return;
 
+    // Sell confirmation mode (y/n)
+    if (this.game.sellConfirmMode) {
+      this._handleSellConfirm(e);
+      return;
+    }
+
     // Direction selection mode (for staves/throw)
     if (this.game.directionMode) {
       this._handleDirectionKey(e);
       return;
     }
 
-    // Inventory mode
+    // Inventory mode (including identify mode)
     if (this.game.inventoryOpen) {
-      this._handleInventoryKey(e);
+      if (this.game.identifyMode) {
+        this._handleIdentifyKey(e);
+      } else {
+        this._handleInventoryKey(e);
+      }
       return;
     }
 
@@ -78,7 +87,7 @@ var Input = (function() {
       return;
     }
 
-    // Pick up item
+    // Pick up item / buy in shop
     if (key === 'g' || key === ',') {
       e.preventDefault();
       var game = this.game;
@@ -88,12 +97,11 @@ var Input = (function() {
       return;
     }
 
-    // Movement (removed WASD to avoid conflicts with inventory keys)
+    // Movement
     var dir = KEY_MAP[code] || KEY_MAP[key];
     if (dir) {
       e.preventDefault();
       var game = this.game;
-      // Confused: randomize movement direction
       var actualDir = dir;
       if (game.player.hasStatusEffect('confused')) {
         var allDirs = [[0, -1], [0, 1], [-1, 0], [1, 0], [-1, -1], [1, -1], [-1, 1], [1, 1]];
@@ -126,31 +134,100 @@ var Input = (function() {
     }
   };
 
+  Input.prototype._handleSellConfirm = function(e) {
+    e.preventDefault();
+    var key = e.key;
+    if (key === 'y' || key === 'Y') {
+      this.game.confirmSell(true);
+      // Re-render
+      this.turnManager.processTurn(function() { return true; });
+    } else if (key === 'n' || key === 'N' || key === 'Escape') {
+      this.game.confirmSell(false);
+      this.turnManager.processTurn(function() { return false; });
+    }
+  };
+
   Input.prototype._handleDirectionKey = function(e) {
     e.preventDefault();
     var game = this.game;
     var key = e.key;
     var code = e.code;
 
-    // Cancel
     if (key === 'Escape') {
       game.directionMode = null;
       game.ui.addMessage('キャンセルした', 'system');
       return;
     }
 
-    // Check for direction key
     var dir = KEY_MAP[code] || KEY_MAP[key];
     if (dir) {
       var callback = game.directionMode.callback;
       game.directionMode = null;
 
-      // Fire the callback, then process turn
       var dx = dir[0];
       var dy = dir[1];
       this.turnManager.processTurn(function() {
         return callback(dx, dy);
       });
+    }
+  };
+
+  // Identify mode: select an item to identify
+  Input.prototype._handleIdentifyKey = function(e) {
+    e.preventDefault();
+    var game = this.game;
+    var player = game.player;
+    var ui = game.ui;
+    var key = e.key;
+
+    // Cancel
+    if (key === 'Escape') {
+      game.identifyMode = false;
+      game.inventoryOpen = false;
+      ui.hideInventory();
+      this.turnManager.processTurn(function() { return false; });
+      return;
+    }
+
+    // Navigate
+    if (key === 'ArrowUp' || key === 'k') {
+      game.inventorySelection = Math.max(0, game.inventorySelection - 1);
+      ui.renderInventory(game);
+      return;
+    }
+    if (key === 'ArrowDown' || key === 'j') {
+      game.inventorySelection = Math.min(player.inventory.length - 1, game.inventorySelection + 1);
+      ui.renderInventory(game);
+      return;
+    }
+
+    // Select by letter
+    var letterIdx = SLOT_LETTERS.indexOf(key);
+    if (letterIdx !== -1 && letterIdx < player.inventory.length) {
+      game.inventorySelection = letterIdx;
+      ui.renderInventory(game);
+      return;
+    }
+
+    // Confirm identification with Enter or 'e'
+    if (key === 'Enter' || key === 'e') {
+      if (player.inventory.length === 0) return;
+      var selectedItem = player.inventory[game.inventorySelection];
+      if (!selectedItem) return;
+
+      game.identifyMode = false;
+      game.inventoryOpen = false;
+      ui.hideInventory();
+
+      if (selectedItem.identified) {
+        ui.addMessage(selectedItem.getDisplayName() + 'は既に識別済みだ', 'system');
+      } else {
+        var fakeName = selectedItem.getDisplayName();
+        selectedItem.identify();
+        ui.addMessage('それは' + selectedItem.getRealDisplayName() + 'だった！', 'pickup');
+      }
+      this.turnManager.processTurn(function() { return true; });
+      return;
     }
   };
 
@@ -165,7 +242,6 @@ var Input = (function() {
     if (key === 'Escape' || key === 'i' || key === 'I') {
       game.inventoryOpen = false;
       ui.hideInventory();
-      // Re-render game
       this.turnManager.processTurn(function() { return false; });
       return;
     }
@@ -265,7 +341,6 @@ var Input = (function() {
           return game.throwItem(item, dx, dy);
         }
       };
-      // Re-render to show the message
       this.turnManager.processTurn(function() { return false; });
       return;
     }

@@ -21,6 +21,9 @@ var Player = (function() {
     this._satietyAccum = 0;
     this._hungryWarned = false;
 
+    // Gold
+    this.gold = 0;
+
     // Stats tracking for victory screen
     this.totalTurns = 0;
     this.enemiesKilled = 0;

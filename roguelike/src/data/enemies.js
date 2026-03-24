@@ -95,5 +95,18 @@ var ENEMY_DATA = {
     minFloor: 15,
     maxFloor: 20,
     special: 'critical'
+  },
+  shopkeeper: {
+    name: '店主',
+    char: '$',
+    color: '#ffd700',
+    hp: 200,
+    attack: 50,
+    defense: 30,
+    exp: 0,
+    minFloor: 99,
+    maxFloor: 99,
+    special: null,
+    isShopkeeper: true
   }
 };

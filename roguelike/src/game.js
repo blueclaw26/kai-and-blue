@@ -19,11 +19,21 @@ var Game = (function() {
     this.inventoryOpen = false;
     this.inventorySelection = 0;
     // Direction selection mode for staves/throw
-    this.directionMode = null; // null or { callback: fn, cancelCallback: fn }
+    this.directionMode = null;
+    // Identification mode (after using 識別の巻物)
+    this.identifyMode = false;
+    // Shop state
+    this.shopRoom = null; // room object if this floor has a shop
+    this.shopkeeperHostile = false;
+    this.shopItems = new Set(); // track items that are shop merchandise
+    // Sell confirmation mode
+    this.sellConfirmMode = null; // { item: Item } when awaiting y/n
   }
 
   Game.prototype.init = function(ui) {
     this.ui = ui;
+    // Initialize identification system
+    initIdentification();
     this.newFloor();
     ui.addMessage('ダンジョンに足を踏み入れた...', 'system');
   };
@@ -31,6 +41,10 @@ var Game = (function() {
   Game.prototype.newFloor = function() {
     this.dungeon = Dungeon.generateFloor(40, 30);
     this.explored = new Set();
+    this.shopRoom = null;
+    this.shopkeeperHostile = false;
+    this.shopItems = new Set();
+    this.sellConfirmMode = null;
 
     if (!this.player) {
       this.player = new Player(this.dungeon.playerStart.x, this.dungeon.playerStart.y);
@@ -43,6 +57,127 @@ var Game = (function() {
     this.enemies = Enemy.spawnForFloor(this.dungeon, this.floorNum, startRoom);
     this.items = Item.spawnForFloor(this.dungeon, this.floorNum, startRoom);
     this.traps = Trap.spawnForFloor(this.dungeon, this.floorNum, this.items);
+
+    // Shop generation: 20% chance per floor (not floor 1)
+    if (this.floorNum > 1 && Math.random() < 0.20) {
+      this._generateShop(startRoom);
+    }
+  };
+
+  // --- Shop generation ---
+  Game.prototype._generateShop = function(playerStartRoom) {
+    // Pick a room that isn't the start room
+    var candidates = [];
+    for (var i = 1; i < this.dungeon.rooms.length; i++) {
+      var r = this.dungeon.rooms[i];
+      // Don't put shop in a tiny room
+      if (r.w >= 5 && r.h >= 4) {
+        candidates.push(r);
+      }
+    }
+    if (candidates.length === 0) return;
+
+    this.shopRoom = candidates[Math.floor(Math.random() * candidates.length)];
+
+    // Place 4-8 shop items
+    var shopCount = 4 + Math.floor(Math.random() * 5);
+    var placed = 0;
+    var attempts = 0;
+
+    while (placed < shopCount && attempts < 50) {
+      attempts++;
+      var ix = this.shopRoom.x + 1 + Math.floor(Math.random() * (this.shopRoom.w - 2));
+      var iy = this.shopRoom.y + 1 + Math.floor(Math.random() * (this.shopRoom.h - 2));
+
+      if (this.dungeon.grid[iy][ix] === Dungeon.TILE.STAIRS_DOWN) continue;
+
+      // Check no overlap
+      var occupied = false;
+      for (var j = 0; j < this.items.length; j++) {
+        if (this.items[j].x === ix && this.items[j].y === iy) { occupied = true; break; }
+      }
+      if (occupied) continue;
+
+      var selectedKey = Item.pickItemForFloor ? Item.pickItemForFloor(this.floorNum) : 'herb';
+      // Use floor table to pick item
+      var table = FLOOR_TABLE.items;
+      var eligible = [];
+      var totalWeight = 0;
+      for (var t = 0; t < table.length; t++) {
+        var entry = table[t];
+        if (this.floorNum >= entry[0] && this.floorNum <= entry[1]) {
+          eligible.push({ id: entry[2], weight: entry[3] });
+          totalWeight += entry[3];
+        }
+      }
+      if (eligible.length > 0) {
+        var roll = Math.random() * totalWeight;
+        var cumulative = 0;
+        for (var e = 0; e < eligible.length; e++) {
+          cumulative += eligible[e].weight;
+          if (roll < cumulative) {
+            selectedKey = eligible[e].id;
+            break;
+          }
+        }
+      }
+
+      var shopItem = new Item(ix, iy, selectedKey);
+      shopItem.identified = true; // shop items are always identified
+      shopItem.shopItem = true;
+      this.items.push(shopItem);
+      this.shopItems.add(shopItem);
+      placed++;
+    }
+
+    // Place shopkeeper in the room
+    var skx = Math.floor(this.shopRoom.x + this.shopRoom.w / 2);
+    var sky = this.shopRoom.y + 1; // top of room
+    // Make sure not on another entity
+    var skTemplate = ENEMY_DATA.shopkeeper;
+    var sk = new Enemy(skx, sky, skTemplate, 'shopkeeper');
+    sk.isShopkeeper = true;
+    this.enemies.push(sk);
+  };
+
+  // Check if a position is inside the shop room
+  Game.prototype.isInShop = function(x, y) {
+    if (!this.shopRoom) return false;
+    var r = this.shopRoom;
+    return x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h;
+  };
+
+  // Get shopkeeper enemy (alive)
+  Game.prototype.getShopkeeper = function() {
+    for (var i = 0; i < this.enemies.length; i++) {
+      var e = this.enemies[i];
+      if (!e.dead && e.isShopkeeper) return e;
+    }
+    return null;
+  };
+
+  // Trigger theft
+  Game.prototype._triggerTheft = function() {
+    if (this.shopkeeperHostile) return;
+    this.shopkeeperHostile = true;
+
+    var sk = this.getShopkeeper();
+    if (sk) {
+      this.ui.addMessage('店主「泥棒だ！」', 'enemy_special');
+      // Shopkeeper becomes hostile — it will now chase player via normal enemy AI
+      sk.isShopkeeper = false; // remove shopkeeper flag so it acts like a normal (very strong) enemy
+    }
+    // Spawn guard enemies near stairs
+    var stairsPos = this.dungeon.stairs;
+    var guardData = ENEMY_DATA.minotaur; // strong guards
+    for (var g = 0; g < 2; g++) {
+      var gx = stairsPos.x + (g === 0 ? -1 : 1);
+      var gy = stairsPos.y;
+      if (gx >= 0 && gx < this.dungeon.width && this.dungeon.grid[gy][gx] !== Dungeon.TILE.WALL) {
+        var guard = new Enemy(gx, gy, guardData, 'minotaur');
+        this.enemies.push(guard);
+      }
+    }
   };
 
   Game.prototype.getTrapAt = function(x, y) {
@@ -71,6 +206,7 @@ var Game = (function() {
   Game.prototype.removeItem = function(item) {
     var idx = this.items.indexOf(item);
     if (idx !== -1) this.items.splice(idx, 1);
+    this.shopItems.delete(item);
   };
 
   Game.prototype.pickUpItem = function() {
@@ -79,13 +215,46 @@ var Game = (function() {
       this.ui.addMessage('足元には何もない', 'system');
       return false;
     }
+
+    // Gold pickup
+    if (item.isGold) {
+      this.player.gold += item.goldAmount;
+      this.removeItem(item);
+      this.ui.addMessage(item.goldAmount + 'ギタンを拾った', 'pickup');
+      return true;
+    }
+
+    // Shop item: buy instead of pick up
+    if (item.shopItem && !this.shopkeeperHostile) {
+      return this._buyItem(item);
+    }
+
     if (!this.player.canPickUp()) {
       this.ui.addMessage('持ち物がいっぱいだ', 'system');
       return false;
     }
     this.player.pickUp(item);
     this.removeItem(item);
-    this.ui.addMessage(item.name + 'を拾った', 'pickup');
+    this.ui.addMessage(item.getDisplayName() + 'を拾った', 'pickup');
+    return true;
+  };
+
+  // Buy item from shop
+  Game.prototype._buyItem = function(item) {
+    var price = item.getBuyPrice();
+    if (this.player.gold < price) {
+      this.ui.addMessage(item.getDisplayName() + 'は' + price + 'ギタン。お金が足りない！', 'system');
+      return false;
+    }
+    if (!this.player.canPickUp()) {
+      this.ui.addMessage('持ち物がいっぱいだ', 'system');
+      return false;
+    }
+    this.player.gold -= price;
+    item.shopItem = false;
+    this.player.pickUp(item);
+    this.removeItem(item);
+    this.ui.addMessage(item.getDisplayName() + 'を' + price + 'ギタンで購入した', 'pickup');
     return true;
   };
 
@@ -106,8 +275,34 @@ var Game = (function() {
     item.x = this.player.x;
     item.y = this.player.y;
     this.items.push(item);
-    this.ui.addMessage(item.name + 'を足元に置いた', 'system');
+
+    // If dropping in shop room → sell offer
+    if (this.isInShop(this.player.x, this.player.y) && !this.shopkeeperHostile && this.getShopkeeper()) {
+      var sellPrice = item.getSellPrice();
+      this.ui.addMessage('店主「' + item.getDisplayName() + 'を' + sellPrice + 'ギタンで買い取るよ」(y/n)', 'system');
+      this.sellConfirmMode = { item: item, price: sellPrice };
+      return true;
+    }
+
+    this.ui.addMessage(item.getDisplayName() + 'を足元に置いた', 'system');
     return true;
+  };
+
+  // Confirm sell
+  Game.prototype.confirmSell = function(accept) {
+    if (!this.sellConfirmMode) return;
+    var item = this.sellConfirmMode.item;
+    var price = this.sellConfirmMode.price;
+    this.sellConfirmMode = null;
+
+    if (accept) {
+      // Remove item from floor
+      this.removeItem(item);
+      this.player.gold += price;
+      this.ui.addMessage(item.getDisplayName() + 'を' + price + 'ギタンで売った', 'pickup');
+    } else {
+      this.ui.addMessage('売るのをやめた', 'system');
+    }
   };
 
   Game.prototype.useItem = function(item) {
@@ -133,24 +328,56 @@ var Game = (function() {
       return true;
     }
 
+    // Track if player was in shop before moving
+    var wasInShop = this.isInShop(this.player.x, this.player.y);
+
     if (this.player.canMoveTo(newX, newY, this.dungeon)) {
       this.player.moveTo(newX, newY);
 
       // Check for trap
       this.checkPlayerTrap();
 
+      // Check if player left shop with unpaid items
+      if (wasInShop && !this.isInShop(newX, newY) && !this.shopkeeperHostile) {
+        // Check if player has any shop items (stolen)
+        var hasStolenItems = false;
+        for (var s = 0; s < this.player.inventory.length; s++) {
+          if (this.player.inventory[s].shopItem) {
+            hasStolenItems = true;
+            break;
+          }
+        }
+        if (hasStolenItems) {
+          this._triggerTheft();
+        }
+      }
+
       // Auto-pickup items
       var item = this.getItemAt(newX, newY);
       if (item) {
-        if (this.player.inventory.length < 20) {
-          var idx = this.items.indexOf(item);
-          if (idx !== -1) {
-            this.items.splice(idx, 1);
-            this.player.inventory.push(item);
-            this.ui.addMessage(item.name + 'を拾った', 'pickup');
+        // Gold: always auto-pickup
+        if (item.isGold) {
+          this.player.gold += item.goldAmount;
+          this.removeItem(item);
+          this.ui.addMessage(item.goldAmount + 'ギタンを拾った', 'pickup');
+        }
+        // Shop items: show price instead of auto-pickup
+        else if (item.shopItem && !this.shopkeeperHostile) {
+          this.ui.addMessage(item.getDisplayName() + 'は' + item.getBuyPrice() + 'ギタン（gキーで購入）', 'system');
+        }
+        // Normal items: auto-pickup
+        else {
+          if (this.player.inventory.length < 20) {
+            var idx = this.items.indexOf(item);
+            if (idx !== -1) {
+              this.items.splice(idx, 1);
+              this.shopItems.delete(item);
+              this.player.inventory.push(item);
+              this.ui.addMessage(item.getDisplayName() + 'を拾った', 'pickup');
+            }
+          } else {
+            this.ui.addMessage('持ち物がいっぱいで' + item.getDisplayName() + 'を拾えない', 'system');
           }
-        } else {
-          this.ui.addMessage('持ち物がいっぱいで' + item.name + 'を拾えない', 'system');
         }
       }
       return true;
@@ -172,7 +399,6 @@ var Game = (function() {
     var trap = this.getTrapAt(enemy.x, enemy.y);
     if (!trap) return;
 
-    // Enemies only trigger landmine and pitfall
     if (trap.effect !== 'explosion' && trap.effect !== 'pitfall') return;
 
     trap.visible = true;
@@ -183,9 +409,8 @@ var Game = (function() {
     var ui = this.ui;
 
     switch (trap.effect) {
-      case 'explosion': // 地雷
+      case 'explosion':
         var blastDmg = 20;
-        // Check blast_resist shield
         if (player.shield && player.shield.special === 'blast_resist') {
           blastDmg = Math.floor(blastDmg * 0.5);
           ui.addMessage('地雷が爆発した！ 盾が爆風を防いだ！ ' + blastDmg + 'ダメージ', 'damage');
@@ -193,7 +418,6 @@ var Game = (function() {
           ui.addMessage('地雷が爆発した！ ' + blastDmg + 'ダメージ', 'damage');
         }
         player.hp -= blastDmg;
-        // Damage adjacent enemies
         for (var i = 0; i < this.enemies.length; i++) {
           var e = this.enemies[i];
           if (!e.dead && Math.abs(e.x - trap.x) <= 1 && Math.abs(e.y - trap.y) <= 1) {
@@ -206,11 +430,11 @@ var Game = (function() {
             }
           }
         }
-        // Destroy items on ground in radius
         for (var j = this.items.length - 1; j >= 0; j--) {
           var it = this.items[j];
           if (Math.abs(it.x - trap.x) <= 1 && Math.abs(it.y - trap.y) <= 1) {
-            ui.addMessage(it.name + 'が爆発で消滅した', 'system');
+            ui.addMessage(it.getDisplayName() + 'が爆発で消滅した', 'system');
+            this.shopItems.delete(it);
             this.items.splice(j, 1);
           }
         }
@@ -218,11 +442,10 @@ var Game = (function() {
         this._checkPlayerDeath();
         break;
 
-      case 'pitfall': // 落とし穴
+      case 'pitfall':
         ui.addMessage('落とし穴に落ちた！', 'damage');
         player.hp -= 5;
         if (this._checkPlayerDeath()) break;
-        // Fall to next floor
         if (this.floorNum >= MAX_FLOOR) {
           this.victory = true;
           ui.addMessage('ダンジョンをクリアした！', 'levelup');
@@ -234,7 +457,7 @@ var Game = (function() {
         }
         break;
 
-      case 'poison': // 毒矢の罠
+      case 'poison':
         ui.addMessage('毒矢が飛んできた！ ちからが下がった', 'damage');
         player.hp -= 5;
         player.baseAttack = Math.max(1, player.baseAttack - 1);
@@ -242,20 +465,19 @@ var Game = (function() {
         this._checkPlayerDeath();
         break;
 
-      case 'sleep': // 睡眠ガス
+      case 'sleep':
         ui.addMessage('睡眠ガスを吸い込んだ！', 'damage');
         player.sleepTurns = 5;
         break;
 
-      case 'confuse': // 回転盤
+      case 'confuse':
         ui.addMessage('目が回った！', 'damage');
         player.addStatusEffect('confused', 10, ui);
         break;
 
-      case 'hunger': // デロデロの罠
+      case 'hunger':
         ui.addMessage('デロデロの罠！ 満腹度が下がった', 'damage');
         player.satiety = Math.max(0, player.satiety - 30);
-        // Turn onigiri in inventory rotten
         for (var k = 0; k < player.inventory.length; k++) {
           var inv = player.inventory[k];
           if (inv.type === 'food' && (inv.dataKey === 'onigiri' || inv.dataKey === 'big_onigiri')) {
@@ -267,9 +489,8 @@ var Game = (function() {
         }
         break;
 
-      case 'trip': // 転び石
+      case 'trip':
         ui.addMessage('転んで持ち物を落としてしまった！', 'damage');
-        // Drop 1 random non-equipped item
         var droppable = [];
         for (var m = 0; m < player.inventory.length; m++) {
           var item = player.inventory[m];
@@ -283,14 +504,13 @@ var Game = (function() {
           dropped.x = player.x;
           dropped.y = player.y;
           this.items.push(dropped);
-          ui.addMessage(dropped.name + 'を落とした', 'system');
+          ui.addMessage(dropped.getDisplayName() + 'を落とした', 'system');
         }
         break;
 
-      case 'rust': // サビの罠
+      case 'rust':
         if (player.shield) {
           var shield = player.shield;
-          // Reduce defense (base or plus) by 1
           if (shield.plus > 0) {
             shield.plus--;
           } else {
@@ -309,7 +529,7 @@ var Game = (function() {
     var ui = this.ui;
 
     switch (trap.effect) {
-      case 'explosion': // 地雷
+      case 'explosion':
         ui.addMessage(enemy.name + 'が地雷を踏んだ！', 'attack');
         var died = enemy.takeDamage(20);
         if (died) {
@@ -317,7 +537,6 @@ var Game = (function() {
           ui.addMessage(enemy.name + 'を倒した！ 経験値' + enemy.exp + '獲得', 'attack');
           this.player.gainExp(enemy.exp, ui);
         }
-        // Also damage player if adjacent
         var px = this.player.x;
         var py = this.player.y;
         if (Math.abs(px - trap.x) <= 1 && Math.abs(py - trap.y) <= 1) {
@@ -332,7 +551,7 @@ var Game = (function() {
         trap.consumed = true;
         break;
 
-      case 'pitfall': // 落とし穴 - enemy disappears
+      case 'pitfall':
         ui.addMessage(enemy.name + 'が落とし穴に落ちた！', 'attack');
         enemy.dead = true;
         break;
@@ -357,22 +576,18 @@ var Game = (function() {
     var rawDmg = player.attack - enemy.defense + Math.floor(Math.random() * 3) - 1;
     var damage = Math.max(1, rawDmg);
 
-    // Weapon special multipliers
     if (player.weapon && player.weapon.special) {
       var special = player.weapon.special;
       var multiplier = 1;
 
       switch (special) {
         case 'drain':
-          // 1.5x to enemies with special abilities
           if (enemy.special) multiplier = 1.5;
           break;
         case 'ghost':
-          // 1.5x to ぼうれい武者
           if (enemy.enemyId === 'midnighthat') multiplier = 1.5;
           break;
         case 'dragon':
-          // 1.5x to ドラゴン and スカルドラゴン
           if (enemy.enemyId === 'dragon' || enemy.enemyId === 'skull_mage') multiplier = 1.5;
           break;
       }
@@ -391,16 +606,37 @@ var Game = (function() {
       this.player.enemiesKilled++;
       this.ui.addMessage(enemy.name + 'を倒した！ 経験値' + enemy.exp + '獲得', 'attack');
       this.player.gainExp(enemy.exp, this.ui);
+
+      // Drop gold when enemy dies
+      if (!enemy.isShopkeeper) {
+        var goldAmount = 10 + Math.floor(Math.random() * 91); // 10-100
+        var goldItem = this._createGoldItem(enemy.x, enemy.y, goldAmount);
+        this.items.push(goldItem);
+      }
     }
+  };
+
+  // Create a gold item on the floor
+  Game.prototype._createGoldItem = function(x, y, amount) {
+    return {
+      x: x,
+      y: y,
+      isGold: true,
+      goldAmount: amount,
+      char: '¥',
+      color: '#ffd700',
+      type: 'gold',
+      name: amount + 'ギタン',
+      getDisplayName: function() { return this.name; }
+    };
   };
 
   Game.prototype.enemyAttack = function(enemy) {
     var player = this.player;
 
-    // Wake player from sleep if hit
     player.wakeUp(this.ui);
 
-    // --- Nigiri special: 10% chance to turn an inventory item into onigiri ---
+    // Nigiri special
     if (enemy.special === 'onigiri' && Math.random() < 0.1) {
       var nonEquipped = [];
       for (var i = 0; i < player.inventory.length; i++) {
@@ -412,7 +648,7 @@ var Game = (function() {
       if (nonEquipped.length > 0) {
         var targetIdx = nonEquipped[Math.floor(Math.random() * nonEquipped.length)];
         var targetItem = player.inventory[targetIdx];
-        var oldName = targetItem.name;
+        var oldName = targetItem.getDisplayName();
         var onigiri = new Item(0, 0, 'onigiri');
         player.inventory[targetIdx] = onigiri;
         this.ui.addMessage('にぎり見習いに' + oldName + 'をおにぎりにされた！', 'enemy_special');
@@ -420,7 +656,7 @@ var Game = (function() {
       }
     }
 
-    // --- Minotaur special: 25% chance critical hit (double damage) ---
+    // Minotaur critical
     var isCritical = false;
     if (enemy.special === 'critical' && Math.random() < 0.25) {
       isCritical = true;
@@ -438,7 +674,7 @@ var Game = (function() {
 
     player.hp -= damage;
 
-    // Counter shield: reflect 30% damage
+    // Counter shield
     if (player.shield && player.shield.special === 'counter' && !enemy.dead) {
       var counterDmg = Math.max(1, Math.floor(damage * 0.3));
       var died = enemy.takeDamage(counterDmg);
@@ -466,10 +702,12 @@ var Game = (function() {
 
     for (var i = 0; i < this.enemies.length; i++) {
       if (!this.enemies[i].dead) {
+        // Shopkeeper doesn't act unless hostile
+        if (this.enemies[i].isShopkeeper && !this.shopkeeperHostile) continue;
+
         var oldX = this.enemies[i].x;
         var oldY = this.enemies[i].y;
         this.enemies[i].act(this);
-        // Check if enemy moved onto a trap
         if (!this.enemies[i].dead && (this.enemies[i].x !== oldX || this.enemies[i].y !== oldY)) {
           this.checkEnemyTrap(this.enemies[i]);
         }
@@ -478,11 +716,9 @@ var Game = (function() {
     }
 
     this.enemies = this.enemies.filter(function(e) { return !e.dead; });
-
-    // Remove consumed traps
     this.traps = this.traps.filter(function(t) { return !t.consumed; });
 
-    // Enemy spawn chance: 5% per turn, max 15 enemies
+    // Enemy spawn chance
     if (!this.gameOver && !this.victory) {
       var livingCount = this.livingEnemyCount();
       if (livingCount < MAX_ENEMIES_PER_FLOOR && Math.random() < 0.05) {
@@ -529,7 +765,6 @@ var Game = (function() {
     var player = this.player;
     var ui = this.ui;
 
-    // Remove from inventory
     if (player.weapon === item) {
       player.weapon = null;
       player._recalcStats();
@@ -540,7 +775,6 @@ var Game = (function() {
     }
     player.removeFromInventory(item);
 
-    // Travel in direction until hitting enemy or wall
     var x = player.x + dx;
     var y = player.y + dy;
     var hitEnemy = null;
@@ -558,19 +792,16 @@ var Game = (function() {
     }
 
     if (hitEnemy) {
-      // Special effects for grass thrown at enemy
       if (item.type === 'grass') {
         switch (item.effect) {
           case 'heal':
-            // Herb heals enemy
             hitEnemy.hp = Math.min(hitEnemy.hp + (item.value || 25), hitEnemy.maxHp);
-            ui.addMessage(item.name + 'を投げた。' + hitEnemy.name + 'のHPが回復した', 'attack');
+            ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'のHPが回復した', 'attack');
             return true;
           case 'strength':
-            // Strength seed damages enemy slightly
             var dmg = 2 + Math.floor(Math.random() * 4);
             var died = hitEnemy.takeDamage(dmg);
-            ui.addMessage(item.name + 'を投げた。' + hitEnemy.name + 'に' + dmg + 'ダメージ', 'attack');
+            ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'に' + dmg + 'ダメージ', 'attack');
             if (died) {
               player.enemiesKilled++;
               ui.addMessage(hitEnemy.name + 'を倒した！ 経験値' + hitEnemy.exp + '獲得', 'attack');
@@ -578,10 +809,9 @@ var Game = (function() {
             }
             return true;
           case 'cure_poison':
-            // Poison grass damages
             var dmg = 5 + Math.floor(Math.random() * 5);
             var died = hitEnemy.takeDamage(dmg);
-            ui.addMessage(item.name + 'を投げた。' + hitEnemy.name + 'に' + dmg + 'ダメージ', 'attack');
+            ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'に' + dmg + 'ダメージ', 'attack');
             if (died) {
               player.enemiesKilled++;
               ui.addMessage(hitEnemy.name + 'を倒した！ 経験値' + hitEnemy.exp + '獲得', 'attack');
@@ -591,18 +821,16 @@ var Game = (function() {
         }
       }
 
-      // Default: physical damage 2-5
       var damage = 2 + Math.floor(Math.random() * 4);
       var died = hitEnemy.takeDamage(damage);
-      ui.addMessage(item.name + 'を投げた。' + hitEnemy.name + 'に' + damage + 'ダメージ', 'attack');
+      ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'に' + damage + 'ダメージ', 'attack');
       if (died) {
         player.enemiesKilled++;
         ui.addMessage(hitEnemy.name + 'を倒した！ 経験値' + hitEnemy.exp + '獲得', 'attack');
         player.gainExp(hitEnemy.exp, ui);
       }
     } else {
-      // Missed - item lands on ground or disappears against wall
-      ui.addMessage(item.name + 'を投げた。何にも当たらなかった', 'system');
+      ui.addMessage(item.getDisplayName() + 'を投げた。何にも当たらなかった', 'system');
     }
     return true;
   };
@@ -619,12 +847,7 @@ var Game = (function() {
 
     item.uses--;
 
-    // Fire bolt in direction
-    var x = player.x + dx;
-    var y = player.y + dy;
-    var hitEnemy = null;
-
-    // Tunnel staff doesn't need to hit enemy
+    // Tunnel staff
     if (item.effect === 'tunnel') {
       var dugCount = 0;
       var tx = player.x + dx;
@@ -644,12 +867,16 @@ var Game = (function() {
         ui.addMessage('杖を振ったが何も起きなかった', 'system');
       }
       if (item.uses === 0) {
-        ui.addMessage(item.name + 'は使い切った', 'system');
+        ui.addMessage(item.getDisplayName() + 'は使い切った', 'system');
       }
       return true;
     }
 
-    // Find target enemy in that direction
+    // Find target
+    var x = player.x + dx;
+    var y = player.y + dy;
+    var hitEnemy = null;
+
     while (x >= 0 && x < this.dungeon.width && y >= 0 && y < this.dungeon.height) {
       if (this.dungeon.grid[y][x] === Dungeon.TILE.WALL) break;
       var enemy = this.getEnemyAt(x, y);
@@ -664,15 +891,13 @@ var Game = (function() {
     if (!hitEnemy) {
       ui.addMessage('杖を振ったが何も当たらなかった', 'system');
       if (item.uses === 0) {
-        ui.addMessage(item.name + 'は使い切った', 'system');
+        ui.addMessage(item.getDisplayName() + 'は使い切った', 'system');
       }
       return true;
     }
 
-    // Apply effect
     switch (item.effect) {
       case 'knockback':
-        // Push enemy 5 tiles backward
         var pushed = 0;
         var ex = hitEnemy.x;
         var ey = hitEnemy.y;
@@ -681,12 +906,11 @@ var Game = (function() {
           var ny = ey + dy;
           if (nx < 0 || nx >= this.dungeon.width || ny < 0 || ny >= this.dungeon.height) break;
           if (this.dungeon.grid[ny][nx] === Dungeon.TILE.WALL) {
-            // Hit wall - deal 5 damage
             hitEnemy.takeDamage(5);
             ui.addMessage(hitEnemy.name + 'は壁に叩きつけられた！ 5ダメージ', 'attack');
             break;
           }
-          if (this.getEnemyAt(nx, ny)) break; // blocked by another enemy
+          if (this.getEnemyAt(nx, ny)) break;
           ex = nx;
           ey = ny;
           pushed++;
@@ -702,7 +926,6 @@ var Game = (function() {
         break;
 
       case 'swap':
-        // Swap position with enemy
         var oldPx = player.x;
         var oldPy = player.y;
         player.moveTo(hitEnemy.x, hitEnemy.y);
@@ -711,19 +934,16 @@ var Game = (function() {
         break;
 
       case 'paralyze':
-        // Paralyze enemy for 10 turns
         hitEnemy.paralyzed = 10;
         ui.addMessage(hitEnemy.name + 'は金縛りになった！', 'attack');
         break;
 
       case 'slow':
-        // Slow enemy for 15 turns
         hitEnemy.slowed = 15;
         ui.addMessage(hitEnemy.name + 'の足が鈍くなった！', 'attack');
         break;
 
       case 'lightning':
-        // 20 fixed damage
         var died = hitEnemy.takeDamage(20);
         ui.addMessage('いかずちが' + hitEnemy.name + 'を直撃！ 20ダメージ', 'attack');
         if (died) {
@@ -735,7 +955,7 @@ var Game = (function() {
     }
 
     if (item.uses === 0) {
-      ui.addMessage(item.name + 'は使い切った', 'system');
+      ui.addMessage(item.getDisplayName() + 'は使い切った', 'system');
     }
 
     return true;

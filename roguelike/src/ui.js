@@ -56,12 +56,10 @@ var UI = (function() {
     var html = '';
     for (var i = 0; i < this.messages.length; i++) {
       var msg = this.messages[i];
-      // Older messages are more transparent
       var opacity = 0.4 + 0.6 * ((i + 1) / this.messages.length);
       html += '<div style="color:' + msg.color + ';opacity:' + opacity.toFixed(2) + ';">' + msg.text + '</div>';
     }
     this.logEl.innerHTML = html;
-    // Auto-scroll to bottom
     this.logEl.scrollTop = this.logEl.scrollHeight;
   };
 
@@ -77,7 +75,6 @@ var UI = (function() {
       satietyColor = '#ef5350';
     }
 
-    // HP color based on percentage
     var hpPercent = player.hp / player.maxHp;
     var hpColor;
     if (hpPercent > 0.5) {
@@ -88,7 +85,6 @@ var UI = (function() {
       hpColor = '#ef5350';
     }
 
-    // Weapon/shield names
     var weaponName = player.weapon ? player.weapon.name : 'なし';
     var shieldName = player.shield ? player.shield.name : 'なし';
 
@@ -97,8 +93,8 @@ var UI = (function() {
     var levelText = ' | Lv.' + player.level + ' | ';
     var satietyText = '満腹度:' + satiety;
     var equipText = ' | 攻:' + player.attack + '(' + weaponName + ') 防:' + player.defense + '(' + shieldName + ')';
+    var goldText = ' | 所持金:' + player.gold + 'ギタン';
 
-    // Status effects display
     var effectText = player.getStatusEffectText ? player.getStatusEffectText() : '';
     var effectHtml = effectText ? ' <span style="color:#ff8a65;">' + effectText + '</span>' : '';
 
@@ -107,16 +103,15 @@ var UI = (function() {
       levelText +
       '<span style="color:' + satietyColor + ';">' + satietyText + '</span>' +
       equipText +
+      '<span style="color:#ffd700;">' + goldText + '</span>' +
       effectHtml;
 
-    // Update side panel info
     this._updateSidePanel(game);
   };
 
   UI.prototype._updateSidePanel = function(game) {
     var player = game.player;
 
-    // Update equipped items section
     var equipEl = document.getElementById('side-equip');
     if (equipEl) {
       var weaponText = player.weapon ? player.weapon.getDisplayName() : 'なし';
@@ -126,7 +121,6 @@ var UI = (function() {
         '<div class="key-group"><span class="key-label">盾</span><span class="key-value" style="color:' + (player.shield ? player.shield.color : '#666') + ';">' + shieldText + '</span></div>';
     }
 
-    // Update turn count
     var turnEl = document.getElementById('side-turns');
     if (turnEl) {
       turnEl.textContent = player.totalTurns;
@@ -137,7 +131,10 @@ var UI = (function() {
     var player = game.player;
     var sel = game.inventorySelection;
     var box = this.inventoryBox;
-    var html = '<div style="color:#e8a44a;font-size:18px;margin-bottom:12px;border-bottom:1px solid #333;padding-bottom:8px;">持ち物 (' + player.inventory.length + '/20)</div>';
+    var isIdentifyMode = game.identifyMode;
+
+    var titleText = isIdentifyMode ? '識別するアイテムを選べ' : '持ち物 (' + player.inventory.length + '/20)';
+    var html = '<div style="color:#e8a44a;font-size:18px;margin-bottom:12px;border-bottom:1px solid #333;padding-bottom:8px;">' + titleText + '</div>';
 
     if (player.inventory.length === 0) {
       html += '<div style="color:#666;padding:16px 0;">持ち物はない</div>';
@@ -149,6 +146,12 @@ var UI = (function() {
         if (player.weapon === item) equipped = ' <span style="color:#e8a44a;">[装備中]</span>';
         if (player.shield === item) equipped = ' <span style="color:#e8a44a;">[装備中]</span>';
 
+        // Show unidentified indicator
+        var idIndicator = '';
+        if (!item.identified) {
+          idIndicator = ' <span style="color:#ff8a65;">[未識別]</span>';
+        }
+
         var bgColor = isSelected ? '#1a2a3a' : 'transparent';
         var borderLeft = isSelected ? '3px solid #4fc3f7' : '3px solid transparent';
 
@@ -157,13 +160,20 @@ var UI = (function() {
         html += '<span style="color:' + item.color + ';">' + item.char + '</span> ';
         html += '<span style="color:#e0e0e0;">' + item.getDisplayName() + '</span>';
         html += equipped;
+        html += idIndicator;
         html += '</div>';
       }
     }
 
-    html += '<div style="color:#888;font-size:12px;margin-top:16px;border-top:1px solid #333;padding-top:8px;">';
-    html += '[e]使う [E]装備 [d]置く [t]投げる [↑↓]選択 [ESC]戻る';
-    html += '</div>';
+    if (isIdentifyMode) {
+      html += '<div style="color:#888;font-size:12px;margin-top:16px;border-top:1px solid #333;padding-top:8px;">';
+      html += '[Enter/e]識別 [↑↓]選択 [ESC]キャンセル';
+      html += '</div>';
+    } else {
+      html += '<div style="color:#888;font-size:12px;margin-top:16px;border-top:1px solid #333;padding-top:8px;">';
+      html += '[e]使う [E]装備 [d]置く [t]投げる [↑↓]選択 [ESC]戻る';
+      html += '</div>';
+    }
 
     box.innerHTML = html;
     this.inventoryEl.style.display = 'flex';

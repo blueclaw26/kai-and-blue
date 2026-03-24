@@ -11,7 +11,8 @@ var Renderer = (function() {
     corridor: '#1a1e2e',
     stairs: '#e8a44a',
     player: '#4fc3f7',
-    unexplored: '#000'
+    unexplored: '#000',
+    shopFloor: '#252a3e' // slightly lighter for shop room
   };
 
   var WALL_CHAR = '#';
@@ -68,8 +69,15 @@ var Renderer = (function() {
     }
   }
 
-  // Export computeFOV for external use (scrolls etc.)
+  // Export computeFOV for external use
   Renderer.computeFOV = computeFOV;
+
+  // Check if a tile is in the shop room
+  function isShopTile(game, tx, ty) {
+    if (!game.shopRoom) return false;
+    var r = game.shopRoom;
+    return tx >= r.x && tx < r.x + r.w && ty >= r.y && ty < r.y + r.h;
+  }
 
   Renderer.prototype.render = function(game) {
     var ctx = this.ctx;
@@ -79,25 +87,20 @@ var Renderer = (function() {
     var enemies = game.enemies;
     var items = game.items;
 
-    // Compute FOV
     var visible = computeFOV(player.x, player.y, dungeon);
 
-    // Mark visible tiles as explored
     for (var key in visible) {
       explored.add(key);
     }
 
-    // Camera: center on player
     var camX = player.x - Math.floor(this.viewW / 2);
     var camY = player.y - Math.floor(this.viewH / 2);
     camX = Math.max(0, Math.min(camX, dungeon.width - this.viewW));
     camY = Math.max(0, Math.min(camY, dungeon.height - this.viewH));
 
-    // Clear
     ctx.fillStyle = COLORS.unexplored;
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // Draw tiles
     ctx.font = 'bold 16px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -118,11 +121,12 @@ var Renderer = (function() {
         var drawX = vx * TILE_SIZE;
         var drawY = vy * TILE_SIZE;
 
-        // Background
         var bgColor;
         switch (tile) {
           case Dungeon.TILE.WALL: bgColor = COLORS.wall; break;
-          case Dungeon.TILE.FLOOR: bgColor = COLORS.floor; break;
+          case Dungeon.TILE.FLOOR:
+            bgColor = isShopTile(game, tx, ty) ? COLORS.shopFloor : COLORS.floor;
+            break;
           case Dungeon.TILE.CORRIDOR: bgColor = COLORS.corridor; break;
           case Dungeon.TILE.STAIRS_DOWN: bgColor = COLORS.stairs; break;
           default: bgColor = COLORS.unexplored;
@@ -135,7 +139,6 @@ var Renderer = (function() {
         ctx.fillStyle = bgColor;
         ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
 
-        // Draw chars for walls and stairs
         if (tile === Dungeon.TILE.WALL) {
           ctx.fillStyle = '#555';
           ctx.fillText(WALL_CHAR, drawX + TILE_SIZE / 2, drawY + TILE_SIZE / 2);
@@ -148,7 +151,7 @@ var Renderer = (function() {
       }
     }
 
-    // Draw visible traps (below items, above floor)
+    // Draw visible traps
     var traps = game.traps || [];
     ctx.font = 'bold 14px monospace';
     for (var i = 0; i < traps.length; i++) {
@@ -167,7 +170,7 @@ var Renderer = (function() {
       ctx.globalAlpha = 1.0;
     }
 
-    // Draw items (only visible, below enemies/player)
+    // Draw items
     ctx.font = 'bold 16px monospace';
     for (var i = 0; i < items.length; i++) {
       var item = items[i];
@@ -178,9 +181,17 @@ var Renderer = (function() {
       var iScreenY = (item.y - camY) * TILE_SIZE;
       ctx.fillStyle = item.color;
       ctx.fillText(item.char, iScreenX + TILE_SIZE / 2, iScreenY + TILE_SIZE / 2);
+
+      // Draw price tag for shop items
+      if (item.shopItem && !game.shopkeeperHostile) {
+        ctx.font = 'bold 8px monospace';
+        ctx.fillStyle = '#ffd700';
+        ctx.fillText(item.getBuyPrice(), iScreenX + TILE_SIZE / 2, iScreenY + 4);
+        ctx.font = 'bold 16px monospace';
+      }
     }
 
-    // Draw enemies (only visible ones)
+    // Draw enemies
     ctx.font = 'bold 18px monospace';
     for (var i = 0; i < enemies.length; i++) {
       var enemy = enemies[i];
@@ -228,14 +239,19 @@ var Renderer = (function() {
         } else if (tile === Dungeon.TILE.STAIRS_DOWN) {
           ctx.fillStyle = isVisible ? '#e8a44a' : '#7a5520';
         } else {
-          ctx.fillStyle = isVisible ? '#2a3050' : '#151825';
+          // Shop room is slightly different on minimap
+          if (isShopTile(game, x, y)) {
+            ctx.fillStyle = isVisible ? '#3a4060' : '#1f2535';
+          } else {
+            ctx.fillStyle = isVisible ? '#2a3050' : '#151825';
+          }
         }
 
         ctx.fillRect(x * t, y * t, t, t);
       }
     }
 
-    // Stairs as amber dot (draw on top for visibility)
+    // Stairs
     for (var y = 0; y < dungeon.height; y++) {
       for (var x = 0; x < dungeon.width; x++) {
         if (dungeon.grid[y][x] === Dungeon.TILE.STAIRS_DOWN && explored.has(x + ',' + y)) {
@@ -245,7 +261,7 @@ var Renderer = (function() {
       }
     }
 
-    // Traps on minimap (visible only)
+    // Traps on minimap
     var traps = game.traps || [];
     for (var i = 0; i < traps.length; i++) {
       var trap = traps[i];
@@ -255,7 +271,7 @@ var Renderer = (function() {
       ctx.fillRect(trap.x * t, trap.y * t, t, t);
     }
 
-    // Items on minimap (yellow dots, only visible)
+    // Items on minimap
     ctx.fillStyle = '#ffeb3b';
     for (var i = 0; i < items.length; i++) {
       var item = items[i];
@@ -264,17 +280,18 @@ var Renderer = (function() {
       ctx.fillRect(item.x * t, item.y * t, t, t);
     }
 
-    // Enemies on minimap (red dots, only visible)
-    ctx.fillStyle = '#ff4444';
+    // Enemies on minimap
     for (var i = 0; i < enemies.length; i++) {
       var enemy = enemies[i];
       if (enemy.dead) continue;
       var eKey = enemy.x + ',' + enemy.y;
       if (!visible[eKey]) continue;
+      // Shopkeeper is gold on minimap
+      ctx.fillStyle = enemy.isShopkeeper ? '#ffd700' : '#ff4444';
       ctx.fillRect(enemy.x * t, enemy.y * t, t, t);
     }
 
-    // Player on minimap (bright cyan, larger dot)
+    // Player on minimap
     ctx.fillStyle = '#00e5ff';
     var px = player.x * t - 1;
     var py = player.y * t - 1;

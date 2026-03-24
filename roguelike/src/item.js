@@ -11,8 +11,15 @@ var Item = (function() {
     this.name = data.name;
     this.char = data.char;
     this.color = data.color;
-    this.identified = true;
     this.cursed = false;
+
+    // Identification: weapons, shields, food are always identified
+    if (this.type === 'weapon' || this.type === 'shield' || this.type === 'food') {
+      this.identified = true;
+    } else {
+      // Check global identification table
+      this.identified = window.IDENTIFIED_TYPES.has(dataKey);
+    }
 
     if (data.attack !== undefined) this.attack = data.attack;
     if (data.defense !== undefined) this.defense = data.defense;
@@ -22,13 +29,29 @@ var Item = (function() {
     if (data.satiety !== undefined) this.satiety = data.satiety;
     if (data.uses !== undefined) this.uses = data.uses;
     if (data.special !== undefined) this.special = data.special;
+    if (data.price !== undefined) this.price = data.price;
 
     // Upgrade value for weapons/shields
     this.plus = 0;
+
+    // Shop tracking
+    this.shopItem = false; // true if this item is merchandise in a shop
   }
 
+  // Identify this item and register its type globally
+  Item.prototype.identify = function() {
+    this.identified = true;
+    window.IDENTIFIED_TYPES.add(this.dataKey);
+  };
+
   Item.prototype.getDisplayName = function() {
-    var name = this.name;
+    var name;
+    if (!this.identified && window.FAKE_NAME_MAP[this.dataKey]) {
+      name = window.FAKE_NAME_MAP[this.dataKey];
+    } else {
+      name = this.name;
+    }
+
     // Show +N for weapons/shields
     if ((this.type === 'weapon' || this.type === 'shield') && this.plus !== 0) {
       name += (this.plus > 0 ? '+' : '') + this.plus;
@@ -45,6 +68,22 @@ var Item = (function() {
     return name;
   };
 
+  // Get the real name (for identification reveal)
+  Item.prototype.getRealDisplayName = function() {
+    var name = this.name;
+    if ((this.type === 'weapon' || this.type === 'shield') && this.plus !== 0) {
+      name += (this.plus > 0 ? '+' : '') + this.plus;
+    }
+    if (this.type === 'weapon' && this.attack !== undefined) {
+      name += ' (攻撃+' + (this.attack + this.plus) + ')';
+    } else if (this.type === 'shield' && this.defense !== undefined) {
+      name += ' (防御+' + (this.defense + this.plus) + ')';
+    } else if (this.type === 'staff') {
+      name += '[' + this.uses + ']';
+    }
+    return name;
+  };
+
   // Get effective attack value (base + plus)
   Item.prototype.getEffectiveAttack = function() {
     return (this.attack || 0) + (this.plus || 0);
@@ -53,6 +92,16 @@ var Item = (function() {
   // Get effective defense value (base + plus)
   Item.prototype.getEffectiveDefense = function() {
     return (this.defense || 0) + (this.plus || 0);
+  };
+
+  // Get buy price
+  Item.prototype.getBuyPrice = function() {
+    return this.price || 100;
+  };
+
+  // Get sell price (50% of buy)
+  Item.prototype.getSellPrice = function() {
+    return Math.floor(this.getBuyPrice() / 2);
   };
 
   Item.prototype.use = function(game, player) {
@@ -79,6 +128,12 @@ var Item = (function() {
 
   Item.prototype._useGrass = function(game, player) {
     var ui = game.ui;
+    // Using grass identifies it
+    if (!this.identified) {
+      var fakeName = this.getDisplayName();
+      this.identify();
+      ui.addMessage('それは' + this.name + 'だった！', 'pickup');
+    }
     switch (this.effect) {
       case 'heal':
         var healed = Math.min(this.value, player.maxHp - player.hp);
@@ -101,6 +156,12 @@ var Item = (function() {
 
   Item.prototype._useScroll = function(game, player) {
     var ui = game.ui;
+    // Using scroll identifies it (except identify scroll which has special handling)
+    if (!this.identified && this.effect !== 'identify') {
+      var fakeName = this.getDisplayName();
+      this.identify();
+      ui.addMessage('それは' + this.name + 'だった！', 'pickup');
+    }
     switch (this.effect) {
       case 'reveal_map':
         var dungeon = game.dungeon;
@@ -136,7 +197,6 @@ var Item = (function() {
         }
         return true;
       case 'powerup':
-        // Upgrade equipped weapon or shield +1
         if (player.weapon) {
           player.weapon.plus = (player.weapon.plus || 0) + 1;
           player._recalcStats();
@@ -151,7 +211,28 @@ var Item = (function() {
         }
         return true;
       case 'identify':
-        ui.addMessage(this.name + 'を読んだ。持ち物を識別した', 'system');
+        // Identify scroll: enter identify_select mode
+        if (!this.identified) {
+          this.identify();
+          ui.addMessage('それは識別の巻物だった！', 'pickup');
+        }
+        // Check if there are unidentified items in inventory
+        var hasUnidentified = false;
+        for (var i = 0; i < player.inventory.length; i++) {
+          if (!player.inventory[i].identified) {
+            hasUnidentified = true;
+            break;
+          }
+        }
+        if (!hasUnidentified) {
+          ui.addMessage('識別の巻物を読んだ。しかし未識別のアイテムがない', 'system');
+          return true;
+        }
+        ui.addMessage('識別の巻物を読んだ。どのアイテムを識別する？', 'system');
+        game.identifyMode = true;
+        game.inventoryOpen = true;
+        game.inventorySelection = 0;
+        ui.renderInventory(game);
         return true;
       case 'weapon_upgrade':
         if (player.weapon) {
@@ -210,12 +291,16 @@ var Item = (function() {
     }
 
     // Enter direction selection mode - don't consume yet
-    // The actual use happens in the direction callback
     var self = this;
     ui.addMessage('どの方向に振る？（方向キーで選択、Escでキャンセル）', 'system');
     game.directionMode = {
       item: self,
       callback: function(dx, dy) {
+        // Using staff identifies it
+        if (!self.identified) {
+          self.identify();
+          ui.addMessage('それは' + self.name + 'だった！', 'pickup');
+        }
         game.useStaff(self, dx, dy);
       }
     };
@@ -276,7 +361,24 @@ var Item = (function() {
       if (occupied) continue;
 
       var selectedKey = pickItemForFloor(floorNum);
-      items.push(new Item(ix, iy, selectedKey));
+      var item = new Item(ix, iy, selectedKey);
+
+      // Floor-based identification chance
+      if (!item.identified) {
+        if (floorNum <= 3) {
+          // 70% chance identified on early floors
+          if (Math.random() < 0.7) {
+            item.identified = true;
+          }
+        } else {
+          // 20% chance identified on deeper floors
+          if (Math.random() < 0.2) {
+            item.identified = true;
+          }
+        }
+      }
+
+      items.push(item);
     }
 
     return items;
