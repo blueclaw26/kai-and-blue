@@ -417,7 +417,7 @@ var Game = (function() {
         } else {
           ui.addMessage('地雷が爆発した！ ' + blastDmg + 'ダメージ', 'damage');
         }
-        player.hp -= blastDmg;
+        if (!player.godMode) player.hp -= blastDmg;
         for (var i = 0; i < this.enemies.length; i++) {
           var e = this.enemies[i];
           if (!e.dead && Math.abs(e.x - trap.x) <= 1 && Math.abs(e.y - trap.y) <= 1) {
@@ -444,7 +444,7 @@ var Game = (function() {
 
       case 'pitfall':
         ui.addMessage('落とし穴に落ちた！', 'damage');
-        player.hp -= 5;
+        if (!player.godMode) player.hp -= 5;
         if (this._checkPlayerDeath()) break;
         if (this.floorNum >= MAX_FLOOR) {
           this.victory = true;
@@ -459,7 +459,7 @@ var Game = (function() {
 
       case 'poison':
         ui.addMessage('毒矢が飛んできた！ ちからが下がった', 'damage');
-        player.hp -= 5;
+        if (!player.godMode) player.hp -= 5;
         player.baseAttack = Math.max(1, player.baseAttack - 1);
         player._recalcStats();
         this._checkPlayerDeath();
@@ -544,7 +544,7 @@ var Game = (function() {
           if (this.player.shield && this.player.shield.special === 'blast_resist') {
             blastDmg = Math.floor(blastDmg * 0.5);
           }
-          this.player.hp -= blastDmg;
+          if (!this.player.godMode) this.player.hp -= blastDmg;
           ui.addMessage('爆風で' + blastDmg + 'ダメージを受けた！', 'damage');
           this._checkPlayerDeath();
         }
@@ -672,6 +672,7 @@ var Game = (function() {
       this.ui.addMessage(enemy.name + 'の攻撃！ ' + damage + 'ダメージを受けた', 'damage');
     }
 
+    if (player.godMode) damage = 0;
     player.hp -= damage;
 
     // Counter shield

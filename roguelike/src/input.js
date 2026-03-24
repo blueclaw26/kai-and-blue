@@ -78,6 +78,82 @@ var Input = (function() {
       e.preventDefault();
     }
 
+    // === Debug keys (F1-F8) ===
+    if (key === 'F1') {
+      e.preventDefault();
+      if (window._autoPlayer) {
+        window._autoPlayer.start(50);
+      }
+      return;
+    }
+    if (key === 'F2') {
+      e.preventDefault();
+      if (window._autoPlayer) {
+        window._autoPlayer.start(10);
+      }
+      return;
+    }
+    if (key === 'F3') {
+      e.preventDefault();
+      if (window._autoPlayer) {
+        window._autoPlayer.stop();
+      }
+      return;
+    }
+    if (key === 'F4') {
+      e.preventDefault();
+      var player = this.game.player;
+      player.godMode = !player.godMode;
+      var ui = this.game.ui;
+      ui.addMessage('DEBUG: 無敵モード ' + (player.godMode ? 'ON' : 'OFF'), 'debug');
+      this.turnManager.processTurn(function() { return false; });
+      return;
+    }
+    if (key === 'F5') {
+      e.preventDefault();
+      // Reveal entire floor
+      var dungeon = this.game.dungeon;
+      for (var ry = 0; ry < dungeon.height; ry++) {
+        for (var rx = 0; rx < dungeon.width; rx++) {
+          this.game.explored.add(rx + ',' + ry);
+        }
+      }
+      this.game.ui.addMessage('DEBUG: フロア全体を表示', 'debug');
+      this.turnManager.processTurn(function() { return false; });
+      return;
+    }
+    if (key === 'F6') {
+      e.preventDefault();
+      var p = this.game.player;
+      for (var li = 0; li < 10; li++) {
+        p.gainExp(9999, this.game.ui);
+      }
+      this.game.ui.addMessage('DEBUG: レベル+10', 'debug');
+      this.turnManager.processTurn(function() { return false; });
+      return;
+    }
+    if (key === 'F7') {
+      e.preventDefault();
+      var p = this.game.player;
+      var goodItems = ['dotanuki', 'kabura', 'dragon_sword', 'heavy_shield', 'dragon_shield', 'otogiriso', 'big_onigiri', 'scroll_powerup'];
+      for (var gi = 0; gi < goodItems.length && p.inventory.length < 20; gi++) {
+        var newItem = new Item(0, 0, goodItems[gi]);
+        newItem.identified = true;
+        p.inventory.push(newItem);
+      }
+      this.game.ui.addMessage('DEBUG: アイテム追加', 'debug');
+      this.turnManager.processTurn(function() { return false; });
+      return;
+    }
+    if (key === 'F8') {
+      e.preventDefault();
+      var stairs = this.game.dungeon.stairs;
+      this.game.player.moveTo(stairs.x, stairs.y);
+      this.game.ui.addMessage('DEBUG: 階段にテレポート', 'debug');
+      this.turnManager.processTurn(function() { return false; });
+      return;
+    }
+
     // Open inventory
     if (key === 'i' || key === 'I') {
       e.preventDefault();

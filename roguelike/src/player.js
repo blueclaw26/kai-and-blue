@@ -40,6 +40,9 @@ var Player = (function() {
     // Sleep state
     this.sleepTurns = 0;
 
+    // God mode (debug)
+    this.godMode = false;
+
     // Status effects: [{type: 'confused'|'slowed'|'strengthened', turnsLeft: N}]
     this.statusEffects = [];
     this._slowedSkip = false; // toggle for slowed: skip every other turn

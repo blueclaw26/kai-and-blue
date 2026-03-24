@@ -14,7 +14,8 @@ var UI = (function() {
     pickup: '#4fc3f7',
     enemy_special: '#ce93d8',
     system: '#8892b0',
-    normal: '#b0b8c8'
+    normal: '#b0b8c8',
+    debug: '#e040fb'
   };
 
   function UI(statusEl, logEl) {

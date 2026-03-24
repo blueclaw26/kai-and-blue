@@ -19,6 +19,13 @@
     renderer.render(game);
     ui.updateStatus(game);
 
+    // Expose globals for debug/autoplay
+    window._game = game;
+    window._renderer = renderer;
+    window._ui = ui;
+    window._turnManager = turnManager;
+    window._autoPlayer = new AutoPlayer(game, turnManager, ui, renderer);
+
     // Bind input
     new Input(turnManager, game);
 
