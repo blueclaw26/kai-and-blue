@@ -32,7 +32,7 @@
     </div>
 
     <div id="game-container">
-      <div id="status-bar">1F | HP: 15/15 | Lv.1 | Exp: 0 | 敵: 0</div>
+      <div id="status-bar">1F | HP: 20/20 | Lv.1 | 満腹度: 100/100 | 攻:2 防:1</div>
       <canvas id="game-canvas"></canvas>
       <div id="minimap-container">
         <canvas id="minimap-canvas"></canvas>
@@ -51,10 +51,24 @@
     </div>
   </div>
 
+  <div id="victory-overlay" style="display:none;">
+    <div class="victory-box">
+      <div class="victory-title">🎉 ダンジョンをクリアした！ 🎉</div>
+      <div class="victory-stats">
+        <div>ターン数: <span class="victory-turns">0</span></div>
+        <div>倒した敵: <span class="victory-kills">0</span></div>
+        <div>拾ったアイテム: <span class="victory-items">0</span></div>
+        <div>最終レベル: <span class="victory-level">Lv.1</span></div>
+      </div>
+      <button id="victory-restart-btn" class="restart-button">もう一度挑戦する</button>
+    </div>
+  </div>
+
   <script src="src/dungeon.js"></script>
   <script src="src/entity.js"></script>
   <script src="src/data/enemies.js"></script>
   <script src="src/data/items.js"></script>
+  <script src="src/data/floors.js"></script>
   <script src="src/item.js"></script>
   <script src="src/player.js"></script>
   <script src="src/enemy.js"></script>
