@@ -86,6 +86,10 @@ var FLOOR_TABLE = {
     [3, 99, 'staff_swap', 2],
     [3, 99, 'staff_tunnel', 2],
     [5, 99, 'staff_lightning', 3],
+    [3, 99, 'staff_heal', 3],
+    [8, 99, 'staff_clone', 1],
+    [5, 99, 'staff_seal', 2],
+    [7, 99, 'staff_invisible', 2],
     // Pots
     [1, 99, 'pot_storage', 3],
     [5, 99, 'pot_synthesis', 2],

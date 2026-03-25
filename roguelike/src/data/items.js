@@ -56,6 +56,10 @@ var ITEM_DATA = {
   staff_slow: { type: 'staff', name: '鈍足の杖', char: '/', color: '#78909c', effect: 'slow', uses: 5, minFloor: 1, price: 500 },
   staff_lightning: { type: 'staff', name: 'いかずちの杖', char: '/', color: '#ffeb3b', effect: 'lightning', uses: 3, minFloor: 5, price: 1500 },
   staff_tunnel: { type: 'staff', name: 'トンネルの杖', char: '/', color: '#795548', effect: 'tunnel', uses: 4, minFloor: 3, price: 700 },
+  staff_heal: { type: 'staff', name: '回復の杖', char: '/', color: '#66bb6a', effect: 'heal_target', uses: 4, minFloor: 3, weight: 3, price: 300 },
+  staff_clone: { type: 'staff', name: '身代わりの杖', char: '/', color: '#ffb74d', effect: 'decoy', uses: 2, minFloor: 8, weight: 1, price: 500 },
+  staff_seal: { type: 'staff', name: '封印の杖', char: '/', color: '#78909c', effect: 'seal', uses: 4, minFloor: 5, weight: 2, price: 300 },
+  staff_invisible: { type: 'staff', name: '透明の杖', char: '/', color: '#e0e0e0', effect: 'invisible', uses: 3, minFloor: 7, weight: 1, price: 400 },
 
   // Pots (壺)
   pot_storage: { type: 'pot', name: '保存の壺', char: '{', color: '#78909c', capacity: 5, effect: 'storage', minFloor: 1, weight: 4, price: 600 },
@@ -82,7 +86,7 @@ var ITEM_DATA = {
 var UNIDENTIFIED_NAMES = {
   grass: ['青い草', '赤い草', '黄色い草', '緑の草', '紫の草', '白い草', '黒い草', '橙の草', '金色の草', '銀の草', '茶色い草', '灰色の草'],
   scroll: ['漢字の巻物', 'ひらがなの巻物', 'カタカナの巻物', '記号の巻物', '右上がりの巻物', '左下がりの巻物', '太字の巻物', '細字の巻物', '丸文字の巻物', '達筆の巻物', '暗号の巻物', '古代文字の巻物'],
-  staff: ['短い杖', '長い杖', '太い杖', '細い杖', '赤い杖', '青い杖'],
+  staff: ['短い杖', '長い杖', '太い杖', '細い杖', '赤い杖', '青い杖', '白い杖', '黒い杖', '金の杖', '銀の杖'],
   pot: ['丸い壺', '四角い壺', '細長い壺', '平たい壺', '光る壺', '古びた壺']
 };
 

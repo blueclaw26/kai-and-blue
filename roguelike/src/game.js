@@ -57,6 +57,8 @@ var Game = (function() {
     this.screenFlashColor = 'rgba(255,0,0,0.3)';
     // Sight boost (from 目薬草)
     this.sightBoost = 0;
+    // Player invisible (from 透明の杖)
+    this.playerInvisible = 0;
     // Auto-explore
     this.autoExploring = false;
     // Scene
@@ -337,6 +339,7 @@ var Game = (function() {
     this.monsterHouseTriggered = false;
     this.sanctuaryTiles = new Set();
     this.sightBoost = 0;
+    this.playerInvisible = 0;
     this.autoExploring = false;
 
     if (!this.player) {
@@ -355,13 +358,35 @@ var Game = (function() {
       this._generateMonsterHouse(this.dungeon.monsterHouseRoom);
     }
 
+    // Treasure room (宝部屋): 5% chance from floor 5+
+    this.treasureRoom = null;
+    if (this.floorNum >= 5 && !this.dungeon.monsterHouseRoom && this.dungeon.rooms.length > 2 && Math.random() < 0.05) {
+      this._generateTreasureRoom(startRoom);
+    }
+
+    // Item island: items on water tiles
+    if (this.floorNum >= 3) {
+      this._generateItemIslands();
+    }
+
     if (this.dungeon.floorType === 'big_room') {
       this.ui.addMessage('大部屋だ！', 'enemy_special');
     } else if (this.dungeon.floorType === 'maze') {
       this.ui.addMessage('迷路フロアだ...', 'enemy_special');
     }
 
-    if (this.floorNum >= 75) {
+    // Zone-themed messages at key floors
+    var zoneMessages = {
+      1: '洞窟の入口に立つ... 冒険が始まる',
+      11: '空気が湿ってきた... 地底湖が近い',
+      26: '地面が熱い... 溶岩の気配がする',
+      51: '急に冷え込んできた... 凍てつく世界',
+      76: '闇が深い... ここは深淵',
+      99: '最果ての間... 最後の試練が待ち受ける'
+    };
+    if (zoneMessages[this.floorNum]) {
+      this.ui.addMessage(zoneMessages[this.floorNum], 'enemy_special');
+    } else if (this.floorNum >= 75) {
       this.ui.addMessage('...空気が殺意に満ちている', 'damage');
     } else if (this.floorNum >= 50) {
       this.ui.addMessage('闇が深くなっていく...', 'enemy_special');
@@ -461,7 +486,12 @@ var Game = (function() {
     this.monsterHouseTriggered = true;
 
     Sound.play('thief');
-    this.ui.addMessage('モンスターハウスだ！ 敵が一斉に目を覚ました！', 'damage');
+    var mhMessages = [
+      'モンスターハウスだ！ 敵の大群！',
+      'ここは...モンスターの巣窟だった！',
+      '嫌な予感がする...モンスターが一斉に動き出した！'
+    ];
+    this.ui.addMessage(mhMessages[Math.floor(Math.random() * mhMessages.length)], 'damage');
     this.screenFlashFrames = 3;
     this.screenFlashColor = 'rgba(255,0,0,0.3)';
     if (typeof Sound !== 'undefined' && Sound.bgm) Sound.bgm.switchTrack('danger');
@@ -471,6 +501,105 @@ var Game = (function() {
       if (!e.dead && e.sleeping) {
         e.sleeping = false;
       }
+    }
+  };
+
+  // === Treasure Room ===
+
+  Game.prototype._generateTreasureRoom = function(playerStartRoom) {
+    // Find a small room that isn't the start room
+    var candidates = [];
+    for (var i = 1; i < this.dungeon.rooms.length; i++) {
+      var r = this.dungeon.rooms[i];
+      if (r.w >= 4 && r.h >= 4) candidates.push(r);
+    }
+    if (candidates.length === 0) return;
+
+    var room = candidates[Math.floor(Math.random() * candidates.length)];
+    this.treasureRoom = room;
+
+    // Spawn 5-8 high-value items inside
+    var itemCount = 5 + Math.floor(Math.random() * 4);
+    var treasureItems = [
+      'kabura', 'dragon_sword', 'dragon_shield', 'grass_invincible',
+      'grass_happy', 'scroll_extinction', 'bracelet_see', 'bracelet_float',
+      'pot_synthesis', 'staff_clone', 'big_onigiri', 'otogiriso'
+    ];
+
+    for (var t = 0; t < itemCount; t++) {
+      var tx = room.x + 1 + Math.floor(Math.random() * Math.max(1, room.w - 2));
+      var ty = room.y + 1 + Math.floor(Math.random() * Math.max(1, room.h - 2));
+      if (this.dungeon.grid[ty][tx] === Dungeon.TILE.STAIRS_DOWN) continue;
+      var occupied = false;
+      for (var j = 0; j < this.items.length; j++) {
+        if (this.items[j].x === tx && this.items[j].y === ty) { occupied = true; break; }
+      }
+      if (occupied) continue;
+
+      var tKey = treasureItems[Math.floor(Math.random() * treasureItems.length)];
+      if (!ITEM_DATA[tKey]) continue;
+      var tItem = new Item(tx, ty, tKey);
+      this.items.push(tItem);
+    }
+
+    // Spawn a strong guard enemy at the room entrance area
+    var guardX = room.x;
+    var guardY = room.y + Math.floor(room.h / 2);
+    // Find a valid floor tile near the entrance
+    var guardPlaced = false;
+    for (var gdy = -1; gdy <= 1 && !guardPlaced; gdy++) {
+      for (var gdx = -1; gdx <= 1 && !guardPlaced; gdx++) {
+        var gx = guardX + gdx;
+        var gy = guardY + gdy;
+        if (gx >= 0 && gy >= 0 && gx < this.dungeon.width && gy < this.dungeon.height &&
+            this.dungeon.grid[gy][gx] !== Dungeon.TILE.WALL) {
+          var guardId = this.floorNum >= 30 ? 'mega_dragon' : this.floorNum >= 15 ? 'minotaur' : 'dragon';
+          var guardTemplate = ENEMY_DATA[guardId];
+          if (guardTemplate) {
+            var guard = new Enemy(gx, gy, guardTemplate, guardId);
+            guard.hp = Math.floor(guard.hp * 1.5);
+            guard.maxHp = guard.hp;
+            this.enemies.push(guard);
+            guardPlaced = true;
+          }
+        }
+      }
+    }
+  };
+
+  // === Item Islands ===
+
+  Game.prototype._generateItemIslands = function() {
+    // Find water tiles and occasionally place rare items on them
+    var waterTiles = [];
+    for (var y = 1; y < this.dungeon.height - 1; y++) {
+      for (var x = 1; x < this.dungeon.width - 1; x++) {
+        if (this.dungeon.grid[y][x] === Dungeon.TILE.WATER) {
+          waterTiles.push({ x: x, y: y });
+        }
+      }
+    }
+    if (waterTiles.length === 0) return;
+
+    // 15% chance to place 1-2 items on water
+    if (Math.random() > 0.15) return;
+
+    var rareItems = ['grass_invincible', 'grass_happy', 'bracelet_see', 'bracelet_float',
+                     'pot_synthesis', 'kabura', 'scroll_extinction'];
+    var count = 1 + Math.floor(Math.random() * 2);
+
+    for (var i = 0; i < count && i < waterTiles.length; i++) {
+      var wt = waterTiles[Math.floor(Math.random() * waterTiles.length)];
+      var occupied = false;
+      for (var j = 0; j < this.items.length; j++) {
+        if (this.items[j].x === wt.x && this.items[j].y === wt.y) { occupied = true; break; }
+      }
+      if (occupied) continue;
+
+      var rKey = rareItems[Math.floor(Math.random() * rareItems.length)];
+      if (!ITEM_DATA[rKey]) continue;
+      var rItem = new Item(wt.x, wt.y, rKey);
+      this.items.push(rItem);
     }
   };
 
@@ -696,6 +825,14 @@ var Game = (function() {
       this.sightBoost--;
       if (this.sightBoost === 0) {
         this.ui.addMessage('目薬草の効果が切れた', 'system');
+      }
+    }
+
+    // Invisible countdown
+    if (this.playerInvisible > 0) {
+      this.playerInvisible--;
+      if (this.playerInvisible === 0) {
+        this.ui.addMessage('透明の効果が切れた', 'system');
       }
     }
 

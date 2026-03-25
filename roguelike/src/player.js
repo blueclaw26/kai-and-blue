@@ -197,17 +197,32 @@ var Player = (function() {
       this.satiety = Math.max(0, this.satiety - 1);
     }
 
-    if (this.satiety <= 10 && this.satiety > 0 && !this._hungryWarned) {
-      this._hungryWarned = true;
+    // Hunger threshold messages
+    if (this.satiety === 50 && !this._hunger50Warned) {
+      this._hunger50Warned = true;
+      if (ui) ui.addMessage('少しお腹が空いてきた', 'system');
+    }
+    if (this.satiety <= 30 && this.satiety > 10 && !this._hunger30Warned) {
+      this._hunger30Warned = true;
       if (ui) ui.addMessage('お腹が減ってきた...', 'damage');
     }
+    if (this.satiety <= 10 && this.satiety > 0 && !this._hungryWarned) {
+      this._hungryWarned = true;
+      if (ui) ui.addMessage('お腹がペコペコだ！', 'damage');
+    }
 
+    if (this.satiety > 50) {
+      this._hunger50Warned = false;
+    }
+    if (this.satiety > 30) {
+      this._hunger30Warned = false;
+    }
     if (this.satiety > 10) {
       this._hungryWarned = false;
     }
 
     if (this.satiety <= 0) {
-      if (ui) ui.addMessage('お腹が空いて足元がふらつく...', 'damage');
+      if (ui) ui.addMessage('お腹が空いて力が出ない...', 'damage');
       if (!this.godMode) {
         this.hp -= 1;
         if (this.hp <= 0) {

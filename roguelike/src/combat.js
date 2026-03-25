@@ -110,7 +110,7 @@
     player.wakeUp(this.ui);
 
     // Nigiri special
-    if (enemy.special === 'onigiri' && Math.random() < 0.1) {
+    if (enemy.special === 'onigiri' && !enemy.sealed && Math.random() < 0.1) {
       var nonEquipped = [];
       for (var i = 0; i < player.inventory.length; i++) {
         var it = player.inventory[i];
@@ -176,7 +176,7 @@
     // --- Enemy specials on attack ---
 
     // Gamara: steal gold
-    if (enemy.special === 'steal_gold' && !player.godMode && damage > 0) {
+    if (enemy.special === 'steal_gold' && !enemy.sealed && !player.godMode && damage > 0) {
       var stealAmount = Math.min(player.gold, 10 + Math.floor(Math.random() * 41));
       if (stealAmount > 0) {
         player.gold -= stealAmount;
@@ -186,7 +186,7 @@
     }
 
     // Nusutto-todo: steal item
-    if (enemy.special === 'steal_item' && !player.godMode) {
+    if (enemy.special === 'steal_item' && !enemy.sealed && !player.godMode) {
       var nonEquipped2 = [];
       for (var si = 0; si < player.inventory.length; si++) {
         var sItem = player.inventory[si];
@@ -209,7 +209,7 @@
     }
 
     // Kengo: disarm
-    if (enemy.special === 'disarm' && !player.godMode && Math.random() < 0.2) {
+    if (enemy.special === 'disarm' && !enemy.sealed && !player.godMode && Math.random() < 0.2) {
       if (player.weapon && Math.random() < 0.5) {
         var disarmedItem = player.weapon;
         player.weapon = null;
@@ -249,7 +249,7 @@
     }
 
     // Midoro: rust equipment
-    if (enemy.special === 'rust_equipment' && !player.godMode && player.shield) {
+    if (enemy.special === 'rust_equipment' && !enemy.sealed && !player.godMode && player.shield) {
       var rustShield2 = player.shield;
       var hasRustProofMidoro = rustShield2.seals && rustShield2.seals.indexOf('rust_proof') !== -1;
       if (hasRustProofMidoro) {
@@ -652,6 +652,39 @@
     }
 
     if (!hitEnemy) {
+      // Self-targeting effects when staff hits nothing
+      if (item.effect === 'heal_target') {
+        var healed = Math.min(30, player.maxHp - player.hp);
+        player.hp = Math.min(player.hp + 30, player.maxHp);
+        ui.addMessage('回復の杖を自分に当てた！ HPが' + healed + '回復した', 'heal');
+        this.addFloatingText(player.x, player.y, '+' + healed, '#66bb6a');
+        if (item.uses === 0) ui.addMessage(item.getDisplayName() + 'は使い切った', 'system');
+        return true;
+      }
+      if (item.effect === 'invisible') {
+        this.playerInvisible = 20;
+        ui.addMessage('透明になった！ 敵から見つからない！', 'heal');
+        if (item.uses === 0) ui.addMessage(item.getDisplayName() + 'は使い切った', 'system');
+        return true;
+      }
+      if (item.effect === 'decoy') {
+        // Spawn decoy in front of player
+        var decoyFx = player.x + dx;
+        var decoyFy = player.y + dy;
+        if (decoyFx >= 0 && decoyFx < this.dungeon.width && decoyFy >= 0 && decoyFy < this.dungeon.height &&
+            this.dungeon.grid[decoyFy][decoyFx] !== Dungeon.TILE.WALL) {
+          var decoyData2 = { char: '@', color: '#ffb74d', name: '身代わり', hp: 1, attack: 0, defense: 0, exp: 0 };
+          var decoyEnemy2 = new Enemy(decoyFx, decoyFy, decoyData2, 'decoy');
+          decoyEnemy2.isDecoy = true;
+          decoyEnemy2._decoyTurns = 15;
+          this.enemies.push(decoyEnemy2);
+          ui.addMessage('身代わりの杖を振った！ 身代わりが現れた！', 'attack');
+        } else {
+          ui.addMessage('杖を振ったが何も起きなかった', 'system');
+        }
+        if (item.uses === 0) ui.addMessage(item.getDisplayName() + 'は使い切った', 'system');
+        return true;
+      }
       ui.addMessage('杖を振ったが何も当たらなかった', 'system');
       if (item.uses === 0) {
         ui.addMessage(item.getDisplayName() + 'は使い切った', 'system');
@@ -723,6 +756,50 @@
           player.enemiesKilled++;
           ui.addMessage(hitEnemy.name + 'を倒した！ 経験値' + hitEnemy.exp + '獲得', 'attack');
           player.gainExp(hitEnemy.exp, ui);
+        }
+        break;
+
+      case 'heal_target':
+        hitEnemy.hp = Math.min(hitEnemy.hp + 30, hitEnemy.maxHp);
+        ui.addMessage(hitEnemy.name + 'のHPが30回復した！', 'heal');
+        this.addFloatingText(hitEnemy.x, hitEnemy.y, '+30', '#66bb6a');
+        break;
+
+      case 'decoy':
+        // Spawn a decoy entity at the target location
+        var decoyX = hitEnemy.x;
+        var decoyY = hitEnemy.y;
+        // Push the hit enemy away one tile if possible
+        var pushX = decoyX + dx;
+        var pushY = decoyY + dy;
+        if (pushX >= 0 && pushX < this.dungeon.width && pushY >= 0 && pushY < this.dungeon.height &&
+            this.dungeon.grid[pushY][pushX] !== Dungeon.TILE.WALL && !this.getEnemyAt(pushX, pushY)) {
+          hitEnemy.moveTo(pushX, pushY);
+        }
+        // Create decoy as a special enemy
+        var decoyData = { char: '@', color: '#ffb74d', name: '身代わり', hp: 1, attack: 0, defense: 0, exp: 0 };
+        var decoyEnemy = new Enemy(decoyX, decoyY, decoyData, 'decoy');
+        decoyEnemy.isDecoy = true;
+        decoyEnemy._decoyTurns = 15;
+        this.enemies.push(decoyEnemy);
+        ui.addMessage('身代わりの杖を振った！ 身代わりが現れた！', 'attack');
+        break;
+
+      case 'seal':
+        if (hitEnemy.immuneToStatus) {
+          ui.addMessage(hitEnemy.name + 'には効かなかった！', 'system');
+        } else {
+          hitEnemy.sealed = true;
+          ui.addMessage(hitEnemy.name + 'の特殊能力を封印した！', 'attack');
+        }
+        break;
+
+      case 'invisible':
+        if (hitEnemy.immuneToStatus) {
+          ui.addMessage(hitEnemy.name + 'には効かなかった！', 'system');
+        } else {
+          hitEnemy.invisible = true;
+          ui.addMessage(hitEnemy.name + 'が透明になった！ 見えない！', 'enemy_special');
         }
         break;
     }

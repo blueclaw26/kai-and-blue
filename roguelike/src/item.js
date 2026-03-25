@@ -486,10 +486,13 @@ var Item = (function() {
 
     // Rotten onigiri gives bad effects
     if (this.cursed) {
-      player.satiety = Math.max(0, player.satiety - 20);
-      player.hp = Math.max(1, player.hp - 10);
-      player.addStatusEffect('confused', 5, ui);
-      ui.addMessage('腐ったおにぎりを食べた！ 気分が悪い...', 'damage');
+      ui.addMessage('うっ...腐ったおにぎりだった！', 'damage');
+      if (!player.godMode) player.hp = Math.max(1, player.hp - 5);
+      player.addStatusEffect('confused', 10, ui);
+      var maxSat = player.maxSatiety || 100;
+      player.satiety = Math.min(player.satiety + 20, maxSat);
+      ui.addMessage('満腹度が少し回復した（+20）', 'system');
+      game.addFloatingText(player.x, player.y, '-5', '#ef5350');
       return true;
     }
 
@@ -497,10 +500,16 @@ var Item = (function() {
     var oldSatiety = player.satiety;
     player.satiety = Math.min(player.satiety + this.satiety, maxSat);
     var restored = Math.floor(player.satiety - oldSatiety);
-    ui.addMessage(this.name + 'を食べた（満腹度+' + restored + '）', 'heal');
-    // Reset hungry warning
+    ui.addMessage('おにぎりを食べた。美味しい！（満腹度+' + restored + '）', 'heal');
+    // Reset hungry warnings
     if (player.satiety > 10) {
       player._hungryWarned = false;
+    }
+    if (player.satiety > 30) {
+      player._hunger30Warned = false;
+    }
+    if (player.satiety > 50) {
+      player._hunger50Warned = false;
     }
     return true;
   };

@@ -152,6 +152,13 @@ var Renderer = (function() {
     return tx >= r.x && tx < r.x + r.w && ty >= r.y && ty < r.y + r.h;
   }
 
+  // Check if a tile is in the treasure room
+  function isTreasureRoomTile(game, tx, ty) {
+    if (!game.treasureRoom) return false;
+    var r = game.treasureRoom;
+    return tx >= r.x1 && tx <= r.x2 && ty >= r.y1 && ty <= r.y2;
+  }
+
   // Check if a tile is in the monster house room
   function isMonsterHouseTile(game, tx, ty) {
     if (!game.monsterHouseRoom) return false;
@@ -411,6 +418,8 @@ var Renderer = (function() {
               floorColor = COLORS.shopFloor;
             } else if (isMonsterHouseTile(game, tx, ty)) {
               floorColor = COLORS.monsterHouseFloor;
+            } else if (isTreasureRoomTile(game, tx, ty)) {
+              floorColor = '#2e2a1a'; // golden tint
             } else {
               floorColor = getRoomFloorColor(palette, tileRoomIdx);
             }
@@ -418,6 +427,10 @@ var Renderer = (function() {
             ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
             if (game.sanctuaryTiles && game.sanctuaryTiles.has(tx + ',' + ty)) {
               ctx.fillStyle = 'rgba(255, 215, 0, 0.15)';
+              ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            }
+            if (isTreasureRoomTile(game, tx, ty)) {
+              ctx.fillStyle = 'rgba(255, 215, 0, 0.08)';
               ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
             }
             if (dimmed) {
@@ -539,6 +552,9 @@ var Renderer = (function() {
       if (enemy.dead) continue;
 
       if (!visibleArr[enemy.y][enemy.x] && !mapRevealed && !seeAllEnemies) continue;
+
+      // Don't render invisible enemies (unless player has see_all)
+      if (enemy.invisible && !seeAllEnemies) continue;
 
       var eScreenX = (enemy.x - camX) * TILE_SIZE;
       var eScreenY = (enemy.y - camY) * TILE_SIZE;

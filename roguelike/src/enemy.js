@@ -73,6 +73,19 @@ var Enemy = (function() {
     }
     this._turnCount++;
 
+    // Decoy countdown
+    if (this.isDecoy) {
+      if (this._decoyTurns !== undefined) {
+        this._decoyTurns--;
+        if (this._decoyTurns <= 0) {
+          this.dead = true;
+          if (game.ui) game.ui.addMessage('身代わりが消えた', 'system');
+          return;
+        }
+      }
+      return; // Decoys don't act
+    }
+
     // Immune to status effects (shopkeeper when hostile)
     if (this.immuneToStatus) {
       this.paralyzed = 0;
@@ -103,10 +116,10 @@ var Enemy = (function() {
     var dy = player.y - this.y;
     var dist = Math.abs(dx) + Math.abs(dy);
 
-    // --- Special abilities ---
+    // --- Special abilities (skip if sealed) ---
 
     // Skull Dragon: floor-wide fire every 3 turns
-    if (this.special === 'floorfire') {
+    if (this.special === 'floorfire' && !this.sealed) {
       if (this._turnCount % 3 === 0) {
         var fireDmg = 20;
         // Check for dragon_resist seal on shield
@@ -130,7 +143,7 @@ var Enemy = (function() {
     }
 
     // Dragon: fire breath if player in straight line and within 8 tiles, no wall blocking
-    if (this.special === 'firebreath' && dist <= 8) {
+    if (this.special === 'firebreath' && !this.sealed && dist <= 8) {
       if ((dx === 0 || dy === 0) && this._hasLineOfSight(game, this.x, this.y, player.x, player.y)) {
         var fireDmg = 15 + Math.floor(Math.random() * 6); // 15-20
         var hasDragonResistBreath = (player.shield && player.shield.seals && player.shield.seals.indexOf('dragon_resist') !== -1) ||
@@ -153,7 +166,7 @@ var Enemy = (function() {
     }
 
     // Boy Cart: shoots arrow if player in straight line within 5 tiles
-    if (this.special === 'arrow_shot' && dist <= 5) {
+    if (this.special === 'arrow_shot' && !this.sealed && dist <= 5) {
       if ((dx === 0 || dy === 0) && this._hasLineOfSight(game, this.x, this.y, player.x, player.y)) {
         var arrowDmg = 3;
         game.ui.addMessage('ボーイが矢を放った！ ' + arrowDmg + 'ダメージ', 'enemy_special');
@@ -171,7 +184,7 @@ var Enemy = (function() {
     }
 
     // Obake Daikon: throws poison from 3 tiles
-    if (this.special === 'poison_throw' && dist <= 3) {
+    if (this.special === 'poison_throw' && !this.sealed && dist <= 3) {
       if (this._inSameRoom(game)) {
         game.ui.addMessage('おばけ大根が毒草を投げてきた！ ちからが下がった', 'enemy_special');
         player.baseAttack = Math.max(1, player.baseAttack - 1);
@@ -181,7 +194,7 @@ var Enemy = (function() {
     }
 
     // Pa-ou (polygon): ranged magic attack
-    if (this.special === 'magic' && dist <= 5) {
+    if (this.special === 'magic' && !this.sealed && dist <= 5) {
       var inSameRoom = this._inSameRoom(game);
       if (inSameRoom) {
         // Cast spell instead of moving
@@ -213,6 +226,48 @@ var Enemy = (function() {
       return;
     }
 
+    // Player invisible: enemies wander randomly
+    if (game.playerInvisible && game.playerInvisible > 0 && dist > 1) {
+      if (Math.random() < 0.5) this._moveRandom(game);
+      return;
+    }
+
+    // Decoy targeting: prefer moving toward decoys
+    var decoyTarget = this._findDecoyTarget(game);
+    if (decoyTarget) {
+      var ddx = decoyTarget.x - this.x;
+      var ddy = decoyTarget.y - this.y;
+      var ddist = Math.abs(ddx) + Math.abs(ddy);
+      if (ddist === 1) {
+        // Attack decoy
+        decoyTarget.takeDamage(999);
+        if (decoyTarget.hp <= 0) {
+          decoyTarget.dead = true;
+          if (game.ui) game.ui.addMessage('身代わりが攻撃を受けて消えた！', 'system');
+        }
+        return;
+      }
+      // Move toward decoy using simple Manhattan
+      var dStepX = ddx === 0 ? 0 : (ddx > 0 ? 1 : -1);
+      var dStepY = ddy === 0 ? 0 : (ddy > 0 ? 1 : -1);
+      var dMoves = [];
+      if (Math.abs(ddx) >= Math.abs(ddy)) {
+        if (dStepX !== 0) dMoves.push([dStepX, 0]);
+        if (dStepY !== 0) dMoves.push([0, dStepY]);
+      } else {
+        if (dStepY !== 0) dMoves.push([0, dStepY]);
+        if (dStepX !== 0) dMoves.push([dStepX, 0]);
+      }
+      for (var dm = 0; dm < dMoves.length; dm++) {
+        var dnx = this.x + dMoves[dm][0];
+        var dny = this.y + dMoves[dm][1];
+        if (this._canMoveToTileRaw(dnx, dny, game) && !(dnx === game.player.x && dny === game.player.y)) {
+          this.moveTo(dnx, dny);
+          return;
+        }
+      }
+    }
+
     // Movement AI: BFS toward player if visible, else wander
     var canSee = this._canSeePlayer(game);
 
@@ -224,6 +279,23 @@ var Enemy = (function() {
         this._moveRandom(game);
       }
     }
+  };
+
+  // Find nearest decoy to target
+  Enemy.prototype._findDecoyTarget = function(game) {
+    var nearest = null;
+    var nearestDist = 999;
+    for (var i = 0; i < game.enemies.length; i++) {
+      var e = game.enemies[i];
+      if (!e.dead && e.isDecoy) {
+        var d = Math.abs(e.x - this.x) + Math.abs(e.y - this.y);
+        if (d < nearestDist) {
+          nearestDist = d;
+          nearest = e;
+        }
+      }
+    }
+    return nearest;
   };
 
   // Check if enemy is in the same room as the player
