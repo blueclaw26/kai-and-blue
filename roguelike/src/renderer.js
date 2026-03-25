@@ -433,6 +433,42 @@ var Renderer = (function() {
               ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
             }
             break;
+          case Dungeon.TILE.WATER:
+            // Animated water shimmer
+            var waterFrame = (Date.now() >> 9) & 1; // alternates ~every 500ms
+            ctx.fillStyle = waterFrame ? '#1a3a6a' : '#1a4a7a';
+            ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            if (!dimmed) {
+              ctx.globalAlpha = 0.3;
+              ctx.fillStyle = '#4fc3f7';
+              ctx.font = 'bold 14px monospace';
+              ctx.fillText('~', drawX + TILE_SIZE / 2, drawY + TILE_SIZE / 2);
+              ctx.globalAlpha = 1.0;
+              ctx.font = 'bold 16px monospace';
+            }
+            if (dimmed) {
+              ctx.fillStyle = 'rgba(0,0,0,0.5)';
+              ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            }
+            break;
+          case Dungeon.TILE.LAVA:
+            // Animated lava shimmer
+            var lavaFrame = (Date.now() >> 9) & 1;
+            ctx.fillStyle = lavaFrame ? '#5a1a0a' : '#7a2a0a';
+            ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            if (!dimmed) {
+              ctx.globalAlpha = 0.4;
+              ctx.fillStyle = '#ff6600';
+              ctx.font = 'bold 14px monospace';
+              ctx.fillText('~', drawX + TILE_SIZE / 2, drawY + TILE_SIZE / 2);
+              ctx.globalAlpha = 1.0;
+              ctx.font = 'bold 16px monospace';
+            }
+            if (dimmed) {
+              ctx.fillStyle = 'rgba(0,0,0,0.5)';
+              ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            }
+            break;
           default:
             ctx.fillStyle = COLORS.unexplored;
             ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
@@ -496,7 +532,7 @@ var Renderer = (function() {
 
     // Draw enemies (only visible in same room or adjacent in corridors)
     // Bracelet see_all: show all enemies on minimap and main view
-    var seeAllEnemies = player.bracelet && player.bracelet.effect === 'see_all';
+    var seeAllEnemies = (player.bracelet && player.bracelet.effect === 'see_all') || (game.sightBoost > 0);
     ctx.font = 'bold 18px monospace';
     for (var i = 0; i < enemies.length; i++) {
       var enemy = enemies[i];
@@ -619,6 +655,10 @@ var Renderer = (function() {
           ctx.fillStyle = tileBright ? '#3a3a3a' : '#1a1a1a';
         } else if (tile === Dungeon.TILE.STAIRS_DOWN) {
           ctx.fillStyle = tileBright ? '#ffffff' : '#7a8a9a';
+        } else if (tile === Dungeon.TILE.WATER) {
+          ctx.fillStyle = tileBright ? '#1a4a7a' : '#0a2a4a';
+        } else if (tile === Dungeon.TILE.LAVA) {
+          ctx.fillStyle = tileBright ? '#7a2a0a' : '#3a1505';
         } else {
           if (isShopTile(game, x, y)) {
             ctx.fillStyle = tileBright ? '#4a4020' : '#2a2510';
@@ -675,7 +715,7 @@ var Renderer = (function() {
     }
 
     // Enemies on minimap (red, 4px dots centered)
-    var seeAllMini = player.bracelet && player.bracelet.effect === 'see_all';
+    var seeAllMini = (player.bracelet && player.bracelet.effect === 'see_all') || (game.sightBoost > 0);
     for (var i = 0; i < enemies.length; i++) {
       var enemy = enemies[i];
       if (enemy.dead) continue;

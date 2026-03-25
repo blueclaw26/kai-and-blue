@@ -222,6 +222,81 @@ var Item = (function() {
       case 'cure_poison':
         ui.addMessage(this.name + 'を飲んだ。体が軽くなった', 'heal');
         return true;
+      case 'sleep_self':
+        player.sleepTurns = this.value || 5;
+        ui.addMessage(this.name + 'を飲んだ。眠くなった...', 'damage');
+        return true;
+      case 'confuse_self':
+        player.addStatusEffect('confused', this.value || 10, ui);
+        ui.addMessage(this.name + 'を飲んだ。目が回る...', 'damage');
+        return true;
+      case 'warp':
+        var rooms = game.dungeon.rooms;
+        var warpRoom = rooms[Math.floor(Math.random() * rooms.length)];
+        var wx = warpRoom.x + 1 + Math.floor(Math.random() * Math.max(1, warpRoom.w - 2));
+        var wy = warpRoom.y + 1 + Math.floor(Math.random() * Math.max(1, warpRoom.h - 2));
+        player.moveTo(wx, wy);
+        ui.addMessage(this.name + 'を飲んだ。どこかにワープした！', 'system');
+        return true;
+      case 'sight':
+        game.sightBoost = 50;
+        ui.addMessage(this.name + 'を飲んだ。フロアの敵が見えるようになった！', 'heal');
+        return true;
+      case 'levelup':
+        player.level++;
+        player.maxHp += 3;
+        player.hp = Math.min(player.hp + 3, player.maxHp);
+        player.baseAttack += 1;
+        player._recalcStats();
+        Sound.play('levelup');
+        ui.addMessage(this.name + 'を飲んだ。レベルが上がった！ Lv.' + player.level, 'levelup');
+        if (window._game) window._game.addFloatingText(player.x, player.y, 'Lv UP!', '#e8a44a');
+        return true;
+      case 'leveldown':
+        if (player.level > 1) {
+          player.level--;
+          player.maxHp = Math.max(10, player.maxHp - 3);
+          player.hp = Math.min(player.hp, player.maxHp);
+          player.baseAttack = Math.max(1, player.baseAttack - 1);
+          player._recalcStats();
+        }
+        ui.addMessage(this.name + 'を飲んだ。レベルが下がった... Lv.' + player.level, 'damage');
+        return true;
+      case 'invincible':
+        player.addStatusEffect('invincible', this.value || 20, ui);
+        ui.addMessage(this.name + 'を飲んだ。体が黄金に輝いている！', 'heal');
+        return true;
+      case 'fire_breath':
+        var fireDmg = this.value || 40;
+        // Determine direction: use player's last move direction or default forward
+        var fdx = player._lastDx || 0;
+        var fdy = player._lastDy || 1;
+        if (fdx === 0 && fdy === 0) fdy = 1;
+        var fx = player.x + fdx;
+        var fy = player.y + fdy;
+        var hitCount = 0;
+        while (fx >= 0 && fx < game.dungeon.width && fy >= 0 && fy < game.dungeon.height) {
+          if (game.dungeon.grid[fy][fx] === Dungeon.TILE.WALL) break;
+          var fireTarget = game.getEnemyAt(fx, fy);
+          if (fireTarget) {
+            var died = fireTarget.takeDamage(fireDmg);
+            game.addFloatingText(fx, fy, '-' + fireDmg, '#f44336');
+            hitCount++;
+            if (died) {
+              player.enemiesKilled++;
+              ui.addMessage(fireTarget.name + 'を倒した！ 経験値' + fireTarget.exp + '獲得', 'attack');
+              player.gainExp(fireTarget.exp, ui);
+            }
+          }
+          fx += fdx;
+          fy += fdy;
+        }
+        if (hitCount > 0) {
+          ui.addMessage(this.name + 'を飲んだ。炎を吐いた！ ' + hitCount + '体に命中！', 'attack');
+        } else {
+          ui.addMessage(this.name + 'を飲んだ。炎を吐いたが何にも当たらなかった', 'system');
+        }
+        return true;
       default:
         ui.addMessage(this.name + 'を飲んだ');
         return true;
@@ -519,6 +594,7 @@ var Item = (function() {
       var iy = room.y + 1 + Math.floor(Math.random() * (room.h - 2));
 
       if (dungeon.grid[iy] && dungeon.grid[iy][ix] === Dungeon.TILE.STAIRS_DOWN) continue;
+      if (dungeon.grid[iy] && (dungeon.grid[iy][ix] === Dungeon.TILE.WATER || dungeon.grid[iy][ix] === Dungeon.TILE.LAVA)) continue;
       if (ix === pCenter.x && iy === pCenter.y) continue;
 
       var occupied = false;

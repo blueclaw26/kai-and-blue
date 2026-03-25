@@ -55,6 +55,10 @@ var Game = (function() {
     this.flashTiles = [];
     this.screenFlashFrames = 0;
     this.screenFlashColor = 'rgba(255,0,0,0.3)';
+    // Sight boost (from 目薬草)
+    this.sightBoost = 0;
+    // Auto-explore
+    this.autoExploring = false;
     // Scene
     this.scene = 'village';
     // Village storage
@@ -332,6 +336,8 @@ var Game = (function() {
     this.monsterHouseRoom = null;
     this.monsterHouseTriggered = false;
     this.sanctuaryTiles = new Set();
+    this.sightBoost = 0;
+    this.autoExploring = false;
 
     if (!this.player) {
       this.player = new Player(this.dungeon.playerStart.x, this.dungeon.playerStart.y);
@@ -574,7 +580,31 @@ var Game = (function() {
     var wasInShop = this.isInShop(this.player.x, this.player.y);
 
     if (this.player.canMoveTo(newX, newY, this.dungeon)) {
+      this.player._lastDx = dx;
+      this.player._lastDy = dy;
       this.player.moveTo(newX, newY);
+
+      // Water tile: apply slowed status (2 turns)
+      var steppedTile = this.dungeon.grid[newY][newX];
+      if (steppedTile === Dungeon.TILE.WATER) {
+        if (!(this.player.bracelet && this.player.bracelet.effect === 'float')) {
+          if (!this.player.hasStatusEffect('slowed')) {
+            this.player.addStatusEffect('slowed', 2, this.ui);
+            this.ui.addMessage('水に足を取られた！', 'system');
+          }
+        }
+      }
+      // Lava tile: damage
+      if (steppedTile === Dungeon.TILE.LAVA) {
+        if (!(this.player.bracelet && this.player.bracelet.effect === 'float')) {
+          if (!this.player.godMode && !this.player.hasStatusEffect('invincible')) {
+            this.player.hp -= 5;
+            this.ui.addMessage('溶岩で5ダメージ！', 'damage');
+            this.addFloatingText(newX, newY, '-5', '#f44336');
+            if (this._checkPlayerDeath()) return true;
+          }
+        }
+      }
 
       var nowInShop = this.isInShop(newX, newY);
       if (nowInShop && !this.inShop && !this.shopkeeperHostile) {
@@ -587,6 +617,10 @@ var Game = (function() {
       this.inShop = nowInShop;
 
       this.checkPlayerTrap();
+      // Stop auto-explore if trap was triggered
+      if (this.getTrapAt(newX, newY) && this.autoExploring) {
+        this.autoExploring = false;
+      }
 
       if (!this.monsterHouseTriggered && this.isInMonsterHouse(newX, newY)) {
         this.triggerMonsterHouse();
@@ -656,6 +690,14 @@ var Game = (function() {
 
     this.player.tickBuffs();
     this.player.tickSleep(this.ui);
+
+    // Sight boost countdown
+    if (this.sightBoost > 0) {
+      this.sightBoost--;
+      if (this.sightBoost === 0) {
+        this.ui.addMessage('目薬草の効果が切れた', 'system');
+      }
+    }
 
     for (var i = 0; i < this.enemies.length; i++) {
       if (!this.enemies[i].dead) {

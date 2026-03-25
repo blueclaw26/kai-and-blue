@@ -45,7 +45,18 @@
       window._autoPlayer = new AutoPlayer(game, turnManager, ui, renderer);
 
       // Bind input
-      new Input(turnManager, game);
+      var inputHandler = new Input(turnManager, game);
+
+      // Animation loop for water/lava shimmer (re-renders every 500ms if dungeon has pools)
+      var lastAnimFrame = 0;
+      function animLoop(ts) {
+        if (ts - lastAnimFrame > 500 && game.scene === 'dungeon' && !game.gameOver && !game.victory) {
+          lastAnimFrame = ts;
+          renderer.render(game);
+        }
+        requestAnimationFrame(animLoop);
+      }
+      requestAnimationFrame(animLoop);
 
       // Restart button → return to village
       var restartBtn = document.getElementById('restart-btn');

@@ -24,6 +24,14 @@ var ITEM_DATA = {
   otogiriso: { type: 'grass', name: 'オトギリソウ', char: '!', color: '#43a047', effect: 'heal', value: 50, minFloor: 2, weight: 8, price: 200 },
   power_grass: { type: 'grass', name: 'ちからの種', char: '!', color: '#ef5350', effect: 'strength', value: 1, minFloor: 2, weight: 5, price: 500 },
   poison_grass: { type: 'grass', name: '毒消し草', char: '!', color: '#7e57c2', effect: 'cure_poison', value: 0, minFloor: 1, weight: 8, price: 150 },
+  grass_sleep: { type: 'grass', name: '睡眠草', char: '!', color: '#5c6bc0', effect: 'sleep_self', value: 5, minFloor: 3, weight: 3, price: 100 },
+  grass_confusion: { type: 'grass', name: '混乱草', char: '!', color: '#ff8a65', effect: 'confuse_self', value: 10, minFloor: 3, weight: 3, price: 100 },
+  grass_warp: { type: 'grass', name: 'ワープ草', char: '!', color: '#ba68c8', effect: 'warp', value: 0, minFloor: 2, weight: 4, price: 100 },
+  grass_sight: { type: 'grass', name: '目薬草', char: '!', color: '#4dd0e1', effect: 'sight', value: 0, minFloor: 4, weight: 3, price: 200 },
+  grass_happy: { type: 'grass', name: 'しあわせ草', char: '!', color: '#ffd54f', effect: 'levelup', value: 0, minFloor: 8, weight: 1, price: 500 },
+  grass_unlucky: { type: 'grass', name: '不幸の種', char: '!', color: '#757575', effect: 'leveldown', value: 0, minFloor: 5, weight: 2, price: 100 },
+  grass_invincible: { type: 'grass', name: '無敵草', char: '!', color: '#ffd700', effect: 'invincible', value: 20, minFloor: 15, weight: 1, price: 1000 },
+  grass_dragon: { type: 'grass', name: 'ドラゴン草', char: '!', color: '#f44336', effect: 'fire_breath', value: 40, minFloor: 10, weight: 1, price: 500 },
 
   // Scrolls
   scroll_identify: { type: 'scroll', name: '識別の巻物', char: '?', color: '#42a5f5', effect: 'identify', minFloor: 1, weight: 8, price: 300 },
@@ -72,7 +80,7 @@ var ITEM_DATA = {
 
 // Unidentified name pools - shuffled per run
 var UNIDENTIFIED_NAMES = {
-  grass: ['青い草', '赤い草', '黄色い草', '緑の草', '紫の草', '白い草', '黒い草', '橙の草'],
+  grass: ['青い草', '赤い草', '黄色い草', '緑の草', '紫の草', '白い草', '黒い草', '橙の草', '金色の草', '銀の草', '茶色い草', '灰色の草'],
   scroll: ['漢字の巻物', 'ひらがなの巻物', 'カタカナの巻物', '記号の巻物', '右上がりの巻物', '左下がりの巻物', '太字の巻物', '細字の巻物', '丸文字の巻物', '達筆の巻物', '暗号の巻物', '古代文字の巻物'],
   staff: ['短い杖', '長い杖', '太い杖', '細い杖', '赤い杖', '青い杖'],
   pot: ['丸い壺', '四角い壺', '細長い壺', '平たい壺', '光る壺', '古びた壺']

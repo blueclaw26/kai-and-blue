@@ -39,6 +39,9 @@ var Enemy = (function() {
   };
 
   Enemy.prototype.takeDamage = function(amount) {
+    if (this._invincibleTurns && this._invincibleTurns > 0) {
+      return false; // No damage while invincible
+    }
     this.hp -= amount;
     // Break paralysis when hit
     if (this.paralyzed && this.paralyzed > 0) {
@@ -54,7 +57,20 @@ var Enemy = (function() {
 
   Enemy.prototype.act = function(game) {
     if (this.dead) return;
-    if (this.sleeping) return; // Sleeping enemies don't act
+    if (this.sleeping) {
+      // Count down sleep turns for thrown sleep grass
+      if (this._sleepTurns !== undefined && this._sleepTurns > 0) {
+        this._sleepTurns--;
+        if (this._sleepTurns <= 0) {
+          this.sleeping = false;
+        }
+      }
+      return;
+    }
+    // Invincible countdown
+    if (this._invincibleTurns && this._invincibleTurns > 0) {
+      this._invincibleTurns--;
+    }
     this._turnCount++;
 
     // Immune to status effects (shopkeeper when hostile)

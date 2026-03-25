@@ -6,7 +6,9 @@ var Dungeon = (function() {
     WALL: 0,
     FLOOR: 1,
     CORRIDOR: 2,
-    STAIRS_DOWN: 3
+    STAIRS_DOWN: 3,
+    WATER: 4,
+    LAVA: 6
   };
 
   function createGrid(width, height) {
@@ -61,13 +63,25 @@ var Dungeon = (function() {
       return;
     }
 
-    // Leaf node - create a room
+    // Leaf node - create a room (10% chance L-shaped)
     var roomW = randInt(4, Math.min(10, node.w - 2));
     var roomH = randInt(4, Math.min(8, node.h - 2));
     var roomX = randInt(node.x + 1, node.x + node.w - roomW - 1);
     var roomY = randInt(node.y + 1, node.y + node.h - roomH - 1);
 
-    node.room = { x: roomX, y: roomY, w: roomW, h: roomH };
+    if (Math.random() < 0.10 && roomW >= 6 && roomH >= 6) {
+      // L-shaped room: combine two overlapping rectangles
+      var halfW = Math.floor(roomW / 2);
+      var halfH = Math.floor(roomH / 2);
+      node.room = {
+        x: roomX, y: roomY, w: roomW, h: roomH,
+        lShaped: true,
+        rect1: { x: roomX, y: roomY, w: roomW, h: halfH + 1 },
+        rect2: { x: roomX, y: roomY + halfH, w: halfW + 1, h: roomH - halfH }
+      };
+    } else {
+      node.room = { x: roomX, y: roomY, w: roomW, h: roomH };
+    }
   }
 
   function getRoom(node) {
@@ -91,10 +105,30 @@ var Dungeon = (function() {
   }
 
   function carveRoom(grid, room, roomIndex) {
-    for (var y = room.y; y < room.y + room.h; y++) {
-      for (var x = room.x; x < room.x + room.w; x++) {
-        if (y >= 0 && y < grid.length && x >= 0 && x < grid[0].length) {
-          grid[y][x] = TILE.FLOOR;
+    if (room.lShaped) {
+      // Carve two rectangles for L-shape
+      var r1 = room.rect1;
+      var r2 = room.rect2;
+      for (var y = r1.y; y < r1.y + r1.h; y++) {
+        for (var x = r1.x; x < r1.x + r1.w; x++) {
+          if (y >= 0 && y < grid.length && x >= 0 && x < grid[0].length) {
+            grid[y][x] = TILE.FLOOR;
+          }
+        }
+      }
+      for (var y = r2.y; y < r2.y + r2.h; y++) {
+        for (var x = r2.x; x < r2.x + r2.w; x++) {
+          if (y >= 0 && y < grid.length && x >= 0 && x < grid[0].length) {
+            grid[y][x] = TILE.FLOOR;
+          }
+        }
+      }
+    } else {
+      for (var y = room.y; y < room.y + room.h; y++) {
+        for (var x = room.x; x < room.x + room.w; x++) {
+          if (y >= 0 && y < grid.length && x >= 0 && x < grid[0].length) {
+            grid[y][x] = TILE.FLOOR;
+          }
         }
       }
     }
@@ -357,6 +391,44 @@ var Dungeon = (function() {
 
     // Connect rooms
     connectRooms(grid, root);
+
+    // Extra corridors: 20% chance for an additional loop-creating corridor
+    if (rooms.length >= 3 && Math.random() < 0.20) {
+      var rA = Math.floor(Math.random() * rooms.length);
+      var rB = Math.floor(Math.random() * rooms.length);
+      var maxAttempts = 10;
+      while (rB === rA && maxAttempts-- > 0) {
+        rB = Math.floor(Math.random() * rooms.length);
+      }
+      if (rA !== rB) {
+        var cA = getRoomCenter(rooms[rA]);
+        var cB = getRoomCenter(rooms[rB]);
+        carveCorridor(grid, cA.x, cA.y, cB.x, cB.y);
+      }
+    }
+
+    // Water/lava pools: 10% of rooms get a small pool in the center
+    for (var pi = 0; pi < rooms.length; pi++) {
+      if (rooms[pi].w >= 5 && rooms[pi].h >= 5 && Math.random() < 0.10) {
+        var pr = rooms[pi];
+        var poolType = (floorNum >= 20 && Math.random() < 0.4) ? TILE.LAVA : TILE.WATER;
+        var cx = Math.floor(pr.x + pr.w / 2);
+        var cy = Math.floor(pr.y + pr.h / 2);
+        // Small 2x2 pool
+        for (var pdy = 0; pdy <= 1; pdy++) {
+          for (var pdx = 0; pdx <= 1; pdx++) {
+            var ppx = cx + pdx;
+            var ppy = cy + pdy;
+            if (ppy > pr.y && ppy < pr.y + pr.h - 1 && ppx > pr.x && ppx < pr.x + pr.w - 1) {
+              if (grid[ppy][ppx] === TILE.FLOOR) {
+                grid[ppy][ppx] = poolType;
+              }
+            }
+          }
+        }
+        rooms[pi].hasPool = poolType;
+      }
+    }
 
     // Add room bounds for FOV system
     for (var r = 0; r < rooms.length; r++) {

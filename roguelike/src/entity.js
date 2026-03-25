@@ -21,5 +21,14 @@ var Entity = (function() {
     return tile !== Dungeon.TILE.WALL;
   };
 
+  // Check if a tile is a hazard tile (water/lava)
+  Entity.isWaterTile = function(tile) {
+    return tile === Dungeon.TILE.WATER;
+  };
+
+  Entity.isLavaTile = function(tile) {
+    return tile === Dungeon.TILE.LAVA;
+  };
+
   return Entity;
 })();

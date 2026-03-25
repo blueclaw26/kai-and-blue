@@ -178,6 +178,18 @@ var Input = (function() {
       return;
     }
 
+    // Auto-explore ('x' key)
+    if (key === 'x' || key === 'X') {
+      e.preventDefault();
+      if (this.game.autoExploring) {
+        this.game.autoExploring = false;
+        this.game.ui.addMessage('自動探索を中止した', 'system');
+        return;
+      }
+      this._startAutoExplore();
+      return;
+    }
+
     // Open inventory
     if (key === 'i' || key === 'I') {
       e.preventDefault();
@@ -1031,6 +1043,164 @@ var Input = (function() {
     html += '<div style="color:#888;font-size:12px;margin-top:16px;border-top:1px solid #333;padding-top:8px;">[Enter/e]預ける [↑↓]選択 [q]戻る [ESC]閉じる</div>';
     box.innerHTML = html;
     ui.inventoryEl.style.display = 'flex';
+  };
+
+  // --- Auto-explore ---
+  Input.prototype._startAutoExplore = function() {
+    var game = this.game;
+    var self = this;
+
+    game.autoExploring = true;
+    game.ui.addMessage('自動探索中... (xキーで停止)', 'system');
+
+    // Listen for any key to stop (add with delay so the initiating key doesn't trigger it)
+    var stopListener = function(e) {
+      if (game.autoExploring) {
+        game.autoExploring = false;
+        game.ui.addMessage('自動探索を中止した', 'system');
+      }
+      document.removeEventListener('keydown', stopListener);
+      document.addEventListener('keydown', self._bound);
+    };
+    // Remove existing handler temporarily, add stop listener after a tick
+    document.removeEventListener('keydown', self._bound);
+    setTimeout(function() {
+      if (game.autoExploring) {
+        document.addEventListener('keydown', stopListener);
+      }
+    }, 100);
+
+    function autoStep() {
+      function stopAutoExplore(msg, msgType) {
+        game.autoExploring = false;
+        document.removeEventListener('keydown', stopListener);
+        document.addEventListener('keydown', self._bound);
+        if (msg) game.ui.addMessage(msg, msgType || 'system');
+        if (window._renderer) window._renderer.render(game);
+      }
+
+      if (!game.autoExploring || game.gameOver || game.victory) {
+        stopAutoExplore();
+        return;
+      }
+
+      // Stop conditions
+      var player = game.player;
+
+      // Enemy in FOV
+      for (var ei = 0; ei < game.enemies.length; ei++) {
+        var en = game.enemies[ei];
+        if (!en.dead && game.visible[en.y] && game.visible[en.y][en.x]) {
+          stopAutoExplore('敵を発見！ 自動探索を中止した');
+          return;
+        }
+      }
+
+      // HP low
+      if (player.hp < player.maxHp * 0.3) {
+        stopAutoExplore('HPが低い！ 自動探索を中止した', 'damage');
+        return;
+      }
+
+      // Satiety low
+      if (player.satiety < 20) {
+        stopAutoExplore('お腹が空いてきた！ 自動探索を中止した', 'damage');
+        return;
+      }
+
+      // On stairs
+      if (game.isOnStairs()) {
+        stopAutoExplore('階段を発見！ 自動探索を中止した');
+        return;
+      }
+
+      // BFS to find nearest unexplored walkable tile
+      var target = self._findNearestUnexplored(game);
+      if (!target) {
+        stopAutoExplore('探索できる場所がない');
+        return;
+      }
+
+      // Move one step toward target
+      var dx = 0, dy = 0;
+      if (target.firstStep) {
+        dx = target.firstStep.x - player.x;
+        dy = target.firstStep.y - player.y;
+      }
+
+      if (dx === 0 && dy === 0) {
+        stopAutoExplore();
+        return;
+      }
+
+      self.turnManager.processTurn(function() {
+        return game.movePlayer(dx, dy);
+      });
+
+      // Check if we picked up an item (stop)
+      var itemOnTile = game.getItemAt(player.x, player.y);
+      if (itemOnTile) {
+        stopAutoExplore();
+        return;
+      }
+
+      // Check if trap triggered (stop)
+      if (game.gameOver || !game.autoExploring) {
+        stopAutoExplore();
+        return;
+      }
+
+      // Continue with delay
+      setTimeout(autoStep, 50);
+    }
+
+    setTimeout(autoStep, 50);
+  };
+
+  Input.prototype._findNearestUnexplored = function(game) {
+    var player = game.player;
+    var dungeon = game.dungeon;
+    var explored = game.explored;
+
+    var queue = [{ x: player.x, y: player.y, firstStep: null }];
+    var visited = {};
+    visited[player.x + ',' + player.y] = true;
+    var dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+
+    while (queue.length > 0) {
+      var current = queue.shift();
+
+      for (var d = 0; d < dirs.length; d++) {
+        var nx = current.x + dirs[d][0];
+        var ny = current.y + dirs[d][1];
+        var key = nx + ',' + ny;
+
+        if (visited[key]) continue;
+        visited[key] = true;
+
+        if (nx < 0 || nx >= dungeon.width || ny < 0 || ny >= dungeon.height) continue;
+        var tile = dungeon.grid[ny][nx];
+        if (tile === Dungeon.TILE.WALL) continue;
+
+        var firstStep = current.firstStep || { x: nx, y: ny };
+
+        // If this tile is unexplored, it's our target
+        if (!explored[ny][nx]) {
+          return { x: nx, y: ny, firstStep: firstStep };
+        }
+
+        // Check if first step is blocked by an enemy
+        if (!current.firstStep) {
+          // This is the immediate neighbor - check if enemy is there
+          var enemyBlocking = game.getEnemyAt(nx, ny);
+          if (enemyBlocking) continue;
+        }
+
+        queue.push({ x: nx, y: ny, firstStep: firstStep });
+      }
+    }
+
+    return null; // No unexplored tiles reachable
   };
 
   Input.prototype._renderStorageTakeUI = function() {

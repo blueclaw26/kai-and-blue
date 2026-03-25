@@ -162,7 +162,7 @@
       }
     }
 
-    if (player.godMode) damage = 0;
+    if (player.godMode || player.hasStatusEffect('invincible')) damage = 0;
     if (damage > 0) {
       Sound.play('damage');
       this.addFloatingText(player.x, player.y, '-' + damage, '#ef5350');
@@ -464,6 +464,69 @@
             var died = hitEnemy.takeDamage(dmg);
             ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'に' + dmg + 'ダメージ', 'attack');
             if (died) {
+              player.enemiesKilled++;
+              ui.addMessage(hitEnemy.name + 'を倒した！ 経験値' + hitEnemy.exp + '獲得', 'attack');
+              player.gainExp(hitEnemy.exp, ui);
+            }
+            return;
+          case 'sleep_self':
+            if (!hitEnemy.immuneToStatus) {
+              hitEnemy.sleeping = true;
+              hitEnemy._sleepTurns = 5;
+              ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'は眠ってしまった！', 'attack');
+            } else {
+              ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'には効かなかった', 'system');
+            }
+            return;
+          case 'confuse_self':
+            if (!hitEnemy.immuneToStatus) {
+              hitEnemy.confused = 10;
+              ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'は混乱した！', 'attack');
+            } else {
+              ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'には効かなかった', 'system');
+            }
+            return;
+          case 'warp':
+            var warpRooms = this.dungeon.rooms;
+            var wr = warpRooms[Math.floor(Math.random() * warpRooms.length)];
+            var ewx = wr.x + 1 + Math.floor(Math.random() * Math.max(1, wr.w - 2));
+            var ewy = wr.y + 1 + Math.floor(Math.random() * Math.max(1, wr.h - 2));
+            hitEnemy.moveTo(ewx, ewy);
+            ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'はどこかにワープした！', 'attack');
+            return;
+          case 'levelup':
+            hitEnemy.maxHp = Math.floor(hitEnemy.maxHp * 1.5);
+            hitEnemy.hp = hitEnemy.maxHp;
+            hitEnemy.attack = Math.floor(hitEnemy.attack * 1.5);
+            ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'が強くなった！', 'enemy_special');
+            return;
+          case 'leveldown':
+            hitEnemy.maxHp = Math.max(1, Math.floor(hitEnemy.maxHp * 0.5));
+            hitEnemy.hp = Math.min(hitEnemy.hp, hitEnemy.maxHp);
+            hitEnemy.attack = Math.max(1, Math.floor(hitEnemy.attack * 0.5));
+            ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'が弱くなった！', 'attack');
+            return;
+          case 'invincible':
+            if (!hitEnemy.immuneToStatus) {
+              hitEnemy._invincibleTurns = 10;
+              ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'が無敵になった！', 'enemy_special');
+            } else {
+              ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'には効かなかった', 'system');
+            }
+            return;
+          case 'fire_breath':
+            var fbDied = hitEnemy.takeDamage(2);
+            ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'に2ダメージ', 'attack');
+            if (fbDied) {
+              player.enemiesKilled++;
+              ui.addMessage(hitEnemy.name + 'を倒した！ 経験値' + hitEnemy.exp + '獲得', 'attack');
+              player.gainExp(hitEnemy.exp, ui);
+            }
+            return;
+          case 'sight':
+            var sgDied = hitEnemy.takeDamage(2);
+            ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'に2ダメージ', 'attack');
+            if (sgDied) {
               player.enemiesKilled++;
               ui.addMessage(hitEnemy.name + 'を倒した！ 経験値' + hitEnemy.exp + '獲得', 'attack');
               player.gainExp(hitEnemy.exp, ui);

@@ -71,6 +71,14 @@ var FLOOR_TABLE = {
     // Grass
     [1, 99, 'power_grass', 3],
     [1, 99, 'poison_grass', 3],
+    [3, 99, 'grass_sleep', 3],
+    [3, 99, 'grass_confusion', 3],
+    [2, 99, 'grass_warp', 3],
+    [4, 99, 'grass_sight', 2],
+    [8, 99, 'grass_happy', 1],
+    [5, 99, 'grass_unlucky', 2],
+    [15, 99, 'grass_invincible', 1],
+    [10, 99, 'grass_dragon', 1],
     // Staves
     [1, 99, 'staff_knockback', 3],
     [1, 99, 'staff_slow', 3],

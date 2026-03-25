@@ -108,6 +108,7 @@ var Player = (function() {
         case 'confused': msg = '混乱が解けた'; break;
         case 'slowed': msg = '鈍足が解けた'; break;
         case 'strengthened': msg = '力が元に戻った'; break;
+        case 'invincible': msg = '無敵状態が解けた'; break;
       }
       if (msg && ui) ui.addMessage(msg, 'system');
     }
@@ -133,6 +134,7 @@ var Player = (function() {
         case 'confused': parts.push('[混乱]'); break;
         case 'slowed': parts.push('[鈍足]'); break;
         case 'strengthened': parts.push('[強化]'); break;
+        case 'invincible': parts.push('[無敵]'); break;
       }
     }
     if (this.sleepTurns > 0) parts.push('[睡眠]');
