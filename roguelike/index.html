@@ -57,6 +57,7 @@
         <div class="panel-section panel-sound">
           <button id="mute-btn" onclick="var m=Sound.toggleMute();this.textContent=m?'🔇 OFF':'🔊 SE';" class="sound-btn">🔊 SE</button>
           <button id="bgm-btn" onclick="var m=Sound.bgm.toggleBgm();this.textContent=m?'🎵 OFF':'🎶 BGM';" class="sound-btn">🎶 BGM</button>
+          <button id="render-toggle-btn" class="sound-btn" style="margin-top:4px;">🎮 2D</button>
         </div>
         <div class="panel-section">
           <div class="panel-title collapsible collapsed" data-target="sec-debug">デバッグ <span class="collapse-icon">▸</span></div>
@@ -147,6 +148,7 @@
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="src/config.js"></script>
   <script src="src/sound.js"></script>
   <script src="src/dungeon.js"></script>
@@ -162,6 +164,8 @@
   <script src="src/sprite_loader.js"></script>
   <script src="src/sprites.js"></script>
   <script src="src/renderer.js"></script>
+  <script src="src/models.js"></script>
+  <script src="src/renderer3d.js"></script>
   <script src="src/ui.js"></script>
   <script src="src/turn.js"></script>
   <script src="src/game.js"></script>
