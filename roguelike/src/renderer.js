@@ -561,6 +561,14 @@ var Renderer = (function() {
 
       // Try sprite first (with animation)
       var enemySpriteName = enemy.enemyId ? ENEMY_SPRITE_MAP[enemy.enemyId] : null;
+      // Use hostile shopkeeper sprite when angry
+      if (enemySpriteName === 'shopkeeper' && game.shopkeeperHostile) {
+        enemySpriteName = 'shopkeeper_hostile';
+      }
+      // Use decoy sprite for decoys
+      if (enemy.isDecoy) {
+        enemySpriteName = 'decoy';
+      }
       if (enemySpriteName && drawSprite(ctx, enemySpriteName, eScreenX, eScreenY, false, true)) {
         // Sprite drawn successfully
       } else {
@@ -587,6 +595,33 @@ var Renderer = (function() {
         ctx.fillStyle = 'rgba(255,255,255,0.9)';
         ctx.fillText('店', eScreenX + TILE_SIZE / 2, eScreenY - 4);
         ctx.font = 'bold 18px monospace';
+      }
+    }
+
+    // Draw dungeon NPCs
+    if (game.dungeonNPCs) {
+      for (var ni = 0; ni < game.dungeonNPCs.length; ni++) {
+        var dnpc = game.dungeonNPCs[ni];
+        if (!visibleArr[dnpc.y] || !visibleArr[dnpc.y][dnpc.x]) continue;
+
+        var npcScreenX = (dnpc.x - camX) * TILE_SIZE;
+        var npcScreenY = (dnpc.y - camY) * TILE_SIZE;
+
+        // Try sprite first
+        if (!drawSprite(ctx, dnpc.sprite, npcScreenX, npcScreenY, false, false)) {
+          // Fallback to text
+          ctx.fillStyle = dnpc.color;
+          ctx.font = 'bold 18px monospace';
+          ctx.fillText(dnpc.char, npcScreenX + TILE_SIZE / 2, npcScreenY + TILE_SIZE / 2);
+        }
+
+        // Name tag above NPC
+        ctx.font = 'bold 9px monospace';
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.fillText(dnpc.name, npcScreenX + TILE_SIZE / 2, npcScreenY - 4);
+        ctx.font = 'bold 16px monospace';
+        ctx.textAlign = 'center';
       }
     }
 
@@ -640,6 +675,83 @@ var Renderer = (function() {
       }
       ctx.globalAlpha = 1.0;
       game.tickFloatingTexts();
+    }
+
+    // Combat animations
+    if (game.animations && game.animations.length > 0) {
+      for (var ai = game.animations.length - 1; ai >= 0; ai--) {
+        var anim = game.animations[ai];
+        var animDrawX = (anim.x - camX) * TILE_SIZE;
+        var animDrawY = (anim.y - camY) * TILE_SIZE;
+
+        switch (anim.type) {
+          case 'lunge':
+            // Player lunge toward enemy
+            // Handled via offset in player drawing above (not here)
+            break;
+          case 'white_flash':
+            var flashAlpha = Math.max(0, 1 - anim.frame / anim.maxFrames);
+            ctx.fillStyle = 'rgba(255,255,255,' + (flashAlpha * 0.7) + ')';
+            ctx.fillRect(animDrawX, animDrawY, TILE_SIZE, TILE_SIZE);
+            break;
+          case 'red_tint':
+            var redAlpha = Math.max(0, 1 - anim.frame / anim.maxFrames);
+            ctx.fillStyle = 'rgba(255,50,50,' + (redAlpha * 0.5) + ')';
+            ctx.fillRect(animDrawX, animDrawY, TILE_SIZE, TILE_SIZE);
+            break;
+          case 'death_fade':
+            var fadeAlpha = Math.max(0, 1 - anim.frame / anim.maxFrames);
+            // Draw the enemy sprite fading out
+            ctx.globalAlpha = fadeAlpha;
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(animDrawX, animDrawY, TILE_SIZE, TILE_SIZE);
+            ctx.globalAlpha = 1.0;
+            break;
+          case 'particles':
+            // Small dots scattering from position
+            var particles = anim.data.particles;
+            for (var pi = 0; pi < particles.length; pi++) {
+              var part = particles[pi];
+              var px = animDrawX + TILE_SIZE / 2 + part.vx * anim.frame;
+              var py = animDrawY + TILE_SIZE / 2 + part.vy * anim.frame;
+              var partAlpha = Math.max(0, 1 - anim.frame / anim.maxFrames);
+              ctx.fillStyle = 'rgba(' + part.r + ',' + part.g + ',' + part.b + ',' + partAlpha + ')';
+              ctx.fillRect(px, py, 2, 2);
+            }
+            break;
+          case 'critical_text':
+            var ctAlpha = Math.max(0, 1 - anim.frame / anim.maxFrames);
+            var ctY = animDrawY - anim.frame * 1.5;
+            ctx.globalAlpha = ctAlpha;
+            ctx.font = 'bold 16px monospace';
+            ctx.fillStyle = '#ffd700';
+            ctx.shadowColor = '#000';
+            ctx.shadowBlur = 4;
+            ctx.fillText('会心の一撃！', animDrawX + TILE_SIZE / 2, ctY);
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1.0;
+            ctx.font = 'bold 16px monospace';
+            break;
+        }
+
+        anim.frame++;
+        if (anim.frame >= anim.maxFrames) {
+          game.animations.splice(ai, 1);
+        }
+      }
+
+      // Request animation frame to continue animations
+      if (game.animations.length > 0) {
+        var self = this;
+        var animGame = game;
+        if (!this._combatAnimating) {
+          this._combatAnimating = true;
+          requestAnimationFrame(function() {
+            self._combatAnimating = false;
+            self.render(animGame);
+          });
+        }
+      }
     }
 
     ctx.restore(); // restore from shake translate
@@ -740,6 +852,18 @@ var Renderer = (function() {
       var ex = enemy.x * t + Math.floor((t - 4) / 2);
       var ey = enemy.y * t + Math.floor((t - 4) / 2);
       ctx.fillRect(ex, ey, 4, 4);
+    }
+
+    // Dungeon NPCs on minimap (green, 4px dots)
+    if (game.dungeonNPCs) {
+      for (var ni = 0; ni < game.dungeonNPCs.length; ni++) {
+        var dnpc = game.dungeonNPCs[ni];
+        if (!visibleArr[dnpc.y] || !visibleArr[dnpc.y][dnpc.x]) continue;
+        ctx.fillStyle = '#66bb6a';
+        var dnx = dnpc.x * t + Math.floor((t - 4) / 2);
+        var dny = dnpc.y * t + Math.floor((t - 4) / 2);
+        ctx.fillRect(dnx, dny, 4, 4);
+      }
     }
 
     // Player on minimap (cyan, 8px dot centered)

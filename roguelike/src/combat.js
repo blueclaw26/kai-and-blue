@@ -70,17 +70,51 @@
 
     var died = enemy.takeDamage(damage);
 
+    // Check for crit seal
+    var isCrit = false;
+    if (player.weapon && player.weapon.seals) {
+      for (var ci = 0; ci < player.weapon.seals.length; ci++) {
+        if (player.weapon.seals[ci] === 'crit' && sealMultiplier > 1) {
+          isCrit = true;
+          break;
+        }
+      }
+    }
+
     Sound.play('attack');
     this.ui.addMessage(enemy.name + 'に ' + damage + ' ダメージを与えた！', 'attack');
     // UI effects: damage popup and flash
     this.addFloatingText(enemy.x, enemy.y, '-' + damage, '#ef5350');
     this.flashTiles.push({ x: enemy.x, y: enemy.y });
 
+    // Combat animations: white flash on enemy
+    this.animations.push({ type: 'white_flash', x: enemy.x, y: enemy.y, frame: 0, maxFrames: 4, data: {} });
+
+    // Critical hit effects
+    if (isCrit) {
+      this.shakeFrames = 8;
+      this.animations.push({ type: 'critical_text', x: enemy.x, y: enemy.y, frame: 0, maxFrames: 20, data: {} });
+    }
+
     if (died) {
       this.player.enemiesKilled++;
       Sound.play('kill');
       this.ui.addMessage(enemy.name + 'を倒した！ 経験値' + enemy.exp + '獲得', 'attack');
       this.player.gainExp(enemy.exp, this.ui);
+
+      // Death animation: fade + particles
+      this.animations.push({ type: 'death_fade', x: enemy.x, y: enemy.y, frame: 0, maxFrames: 8, data: {} });
+      var particles = [];
+      for (var pi = 0; pi < 6; pi++) {
+        particles.push({
+          vx: (Math.random() - 0.5) * 4,
+          vy: (Math.random() - 0.5) * 4,
+          r: 200 + Math.floor(Math.random() * 55),
+          g: 200 + Math.floor(Math.random() * 55),
+          b: 200 + Math.floor(Math.random() * 55)
+        });
+      }
+      this.animations.push({ type: 'particles', x: enemy.x, y: enemy.y, frame: 0, maxFrames: 10, data: { particles: particles } });
 
       // Drop loot when enemy dies
       if (!enemy.isShopkeeper) {
@@ -166,9 +200,15 @@
     if (damage > 0) {
       Sound.play('damage');
       this.addFloatingText(player.x, player.y, '-' + damage, '#ef5350');
-      // Screen shake on heavy damage
-      if (damage > 10) {
+      // Red tint animation on player
+      this.animations.push({ type: 'red_tint', x: player.x, y: player.y, frame: 0, maxFrames: 4, data: {} });
+      // Screen shake on heavy damage or critical
+      if (isCritical) {
+        this.shakeFrames = 8;
+      } else if (damage > 10) {
         this.shakeFrames = 5;
+      } else {
+        this.shakeFrames = 2;
       }
     }
     player.hp -= damage;

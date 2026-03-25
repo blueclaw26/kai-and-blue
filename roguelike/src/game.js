@@ -49,12 +49,21 @@ var Game = (function() {
     this.extinctionMode = false;
     this.extinctionCandidates = [];
     this.extinctionSelection = 0;
+    // Dungeon NPCs
+    this.dungeonNPCs = [];
+    // Merchant/blacksmith modes
+    this.merchantMode = null;
+    this.merchantSelection = 0;
+    this.blacksmithMode = null;
+    this.blacksmithSelection = 0;
     // UI effects
     this.floatingTexts = [];
     this.shakeFrames = 0;
     this.flashTiles = [];
     this.screenFlashFrames = 0;
     this.screenFlashColor = 'rgba(255,0,0,0.3)';
+    // Combat animations
+    this.animations = []; // { type, x, y, frame, maxFrames, data }
     // Sight boost (from 目薬草)
     this.sightBoost = 0;
     // Player invisible (from 透明の杖)
@@ -353,6 +362,9 @@ var Game = (function() {
     this.enemies = Enemy.spawnForFloor(this.dungeon, this.floorNum, startRoom, this.extinctEnemies);
     this.items = Item.spawnForFloor(this.dungeon, this.floorNum, startRoom);
     this.traps = Trap.spawnForFloor(this.dungeon, this.floorNum, this.items);
+
+    // Dungeon NPCs (merchant, blacksmith, fortune teller)
+    this._generateDungeonNPCs(startRoom);
 
     if (this.dungeon.monsterHouseRoom) {
       this._generateMonsterHouse(this.dungeon.monsterHouseRoom);
@@ -704,6 +716,11 @@ var Game = (function() {
       }
       this.playerAttack(enemy);
       return true;
+    }
+
+    // Block movement into dungeon NPCs
+    if (this.getDungeonNPCAt && this.getDungeonNPCAt(newX, newY)) {
+      return false;
     }
 
     var wasInShop = this.isInShop(this.player.x, this.player.y);

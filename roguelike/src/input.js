@@ -61,6 +61,18 @@ var Input = (function() {
       return;
     }
 
+    // Merchant mode
+    if (this.game.merchantMode) {
+      this._handleMerchantKey(e);
+      return;
+    }
+
+    // Blacksmith mode
+    if (this.game.blacksmithMode) {
+      this._handleBlacksmithKey(e);
+      return;
+    }
+
     // Direction selection mode (for staves/throw)
     if (this.game.directionMode) {
       this._handleDirectionKey(e);
@@ -243,12 +255,137 @@ var Input = (function() {
       return;
     }
 
+    // Interact with dungeon NPC (Enter key, before descend)
+    if (key === 'Enter') {
+      var dnpc = this.game.getAdjacentDungeonNPC ? this.game.getAdjacentDungeonNPC() : null;
+      if (dnpc) {
+        var g2 = this.game;
+        this.turnManager.processTurn(function() {
+          return g2.interactDungeonNPC(dnpc);
+        });
+        return;
+      }
+    }
+
     // Descend
     if (DESCEND_KEYS.indexOf(key) !== -1) {
       var g = this.game;
       this.turnManager.processTurn(function() {
         return g.descend();
       });
+      return;
+    }
+  };
+
+  // --- Merchant mode ---
+  Input.prototype._handleMerchantKey = function(e) {
+    e.preventDefault();
+    var game = this.game;
+    var ui = game.ui;
+    var key = e.key;
+    var npc = game.merchantMode;
+    var SLOT_LETTERS = 'abcdefghijklmnopqrst';
+
+    if (key === 'Escape') {
+      game.merchantMode = null;
+      ui.inventoryEl.style.display = 'none';
+      return;
+    }
+
+    if (key === 'ArrowUp' || key === 'k') {
+      game.merchantSelection = Math.max(0, game.merchantSelection - 1);
+      game._renderMerchantUI();
+      return;
+    }
+    if (key === 'ArrowDown' || key === 'j') {
+      game.merchantSelection = Math.min(npc.stock.length - 1, game.merchantSelection + 1);
+      game._renderMerchantUI();
+      return;
+    }
+
+    var letterIdx = SLOT_LETTERS.indexOf(key);
+    if (letterIdx !== -1 && letterIdx < npc.stock.length) {
+      game.merchantSelection = letterIdx;
+      game._renderMerchantUI();
+      return;
+    }
+
+    if (key === 'Enter' || key === 'e') {
+      if (npc.stock.length === 0) return;
+      var entry = npc.stock[game.merchantSelection];
+      if (game.player.gold < entry.price) {
+        ui.addMessage('行商人「金が足りないよ。」', 'system');
+        return;
+      }
+      if (game.player.inventory.length >= 20) {
+        ui.addMessage('持ち物がいっぱいだ', 'system');
+        return;
+      }
+      game.player.gold -= entry.price;
+      game.player.inventory.push(entry.item);
+      ui.addMessage(entry.item.getDisplayName() + 'を' + entry.price + 'ギタンで購入した', 'pickup');
+      Sound.play('shop');
+      npc.stock.splice(game.merchantSelection, 1);
+      if (game.merchantSelection >= npc.stock.length) {
+        game.merchantSelection = Math.max(0, npc.stock.length - 1);
+      }
+      if (npc.stock.length === 0) {
+        game.merchantMode = null;
+        ui.inventoryEl.style.display = 'none';
+        ui.addMessage('行商人「まいどあり！ 全部売り切れだ！」', 'system');
+      } else {
+        game._renderMerchantUI();
+      }
+      this.turnManager.processTurn(function() { return true; });
+      return;
+    }
+  };
+
+  // --- Blacksmith mode ---
+  Input.prototype._handleBlacksmithKey = function(e) {
+    e.preventDefault();
+    var game = this.game;
+    var ui = game.ui;
+    var player = game.player;
+    var key = e.key;
+
+    var options = [];
+    if (player.weapon) options.push({ target: 'weapon', item: player.weapon });
+    if (player.shield) options.push({ target: 'shield', item: player.shield });
+
+    if (key === 'Escape') {
+      game.blacksmithMode = null;
+      ui.inventoryEl.style.display = 'none';
+      ui.addMessage('鍛冶屋「また来いよ。」', 'system');
+      return;
+    }
+
+    if (key === 'ArrowUp' || key === 'k') {
+      game.blacksmithSelection = Math.max(0, game.blacksmithSelection - 1);
+      game._renderBlacksmithUI();
+      return;
+    }
+    if (key === 'ArrowDown' || key === 'j') {
+      game.blacksmithSelection = Math.min(options.length - 1, game.blacksmithSelection + 1);
+      game._renderBlacksmithUI();
+      return;
+    }
+
+    if (key === 'Enter' || key === 'e') {
+      if (options.length === 0) return;
+      var selected = options[game.blacksmithSelection];
+      if (player.gold < 500) {
+        ui.addMessage('鍛冶屋「金が足りないぜ。」', 'system');
+        return;
+      }
+      player.gold -= 500;
+      selected.item.plus = (selected.item.plus || 0) + 1;
+      player._recalcStats();
+      Sound.play('equip');
+      ui.addMessage('鍛冶屋「よし、+1強化したぞ！ ' + selected.item.getDisplayName() + '」', 'heal');
+      game.blacksmithMode = null;
+      ui.inventoryEl.style.display = 'none';
+      this.turnManager.processTurn(function() { return true; });
       return;
     }
   };
