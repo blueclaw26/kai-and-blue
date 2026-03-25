@@ -5,6 +5,55 @@ var ParticleSystem3D = (function() {
 
   var _particles = [];
 
+  // Object pool for particle meshes (pre-allocated)
+  var POOL_SIZE = 200;
+  var _pool = [];
+  var _poolInitialized = false;
+  var _defaultGeo = null;
+
+  function _initPool() {
+    if (_poolInitialized) return;
+    _poolInitialized = true;
+    _defaultGeo = new THREE.SphereGeometry(0.05, 4, 4);
+    for (var i = 0; i < POOL_SIZE; i++) {
+      var m = new THREE.MeshBasicMaterial({
+        color: 0xffffff, transparent: true, opacity: 1
+      });
+      var mesh = new THREE.Mesh(_defaultGeo, m);
+      mesh.visible = false;
+      _pool.push(mesh);
+    }
+  }
+
+  function _acquireMesh(scene, color, size) {
+    _initPool();
+    // Try to get from pool
+    for (var i = 0; i < _pool.length; i++) {
+      if (!_pool[i].visible) {
+        var mesh = _pool[i];
+        mesh.material.color.setHex(color || 0xffffff);
+        mesh.material.opacity = 1;
+        mesh.scale.set(size / 0.05, size / 0.05, size / 0.05);
+        mesh.visible = true;
+        if (!mesh.parent) scene.add(mesh);
+        return mesh;
+      }
+    }
+    // Pool exhausted — create new (fallback)
+    var geo = getParticleGeo(size);
+    var mat = new THREE.MeshBasicMaterial({
+      color: color || 0xffffff, transparent: true, opacity: 1
+    });
+    var newMesh = new THREE.Mesh(geo, mat);
+    scene.add(newMesh);
+    return newMesh;
+  }
+
+  function _releaseMesh(mesh) {
+    mesh.visible = false;
+    // Pool meshes stay in scene but invisible
+  }
+
   function lerp(a, b, t) {
     return a + (b - a) * t;
   }
@@ -33,21 +82,17 @@ var ParticleSystem3D = (function() {
 
     emit: function(scene, config) {
       var count = config.count || 5;
+      // Halve particles when performance is degraded
+      if (window._3dPerformanceDegraded) count = Math.max(1, Math.ceil(count / 2));
       // Enforce max particle limit of 200
       if (_particles.length + count > 200) {
         count = Math.max(0, 200 - _particles.length);
         if (count === 0) return;
       }
       var size = config.size || 0.05;
-      var geo = getParticleGeo(size);
 
       for (var i = 0; i < count; i++) {
-        var mat = new THREE.MeshBasicMaterial({
-          color: config.color || 0xffffff,
-          transparent: true,
-          opacity: 1
-        });
-        var mesh = new THREE.Mesh(geo, mat);
+        var mesh = _acquireMesh(scene, config.color, size);
 
         var angle = Math.random() * Math.PI * 2;
         var speed = (config.speed || 2) * (0.5 + Math.random() * 0.5);
@@ -58,7 +103,6 @@ var ParticleSystem3D = (function() {
           config.z + (Math.random() - 0.5) * (config.spread || 0.3)
         );
 
-        scene.add(mesh);
         _particles.push({
           mesh: mesh,
           vx: Math.cos(angle) * speed,
@@ -90,8 +134,7 @@ var ParticleSystem3D = (function() {
         p.mesh.scale.set(scale, scale, scale);
 
         if (p.life >= p.maxLife) {
-          p.scene.remove(p.mesh);
-          p.mesh.material.dispose();
+          _releaseMesh(p.mesh);
           _particles.splice(i, 1);
         }
       }
@@ -99,9 +142,7 @@ var ParticleSystem3D = (function() {
 
     clear: function(scene) {
       for (var i = _particles.length - 1; i >= 0; i--) {
-        var p = _particles[i];
-        p.scene.remove(p.mesh);
-        p.mesh.material.dispose();
+        _releaseMesh(_particles[i].mesh);
       }
       _particles.length = 0;
     },

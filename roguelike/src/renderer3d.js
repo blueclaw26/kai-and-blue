@@ -160,6 +160,15 @@ var Renderer3D = (function() {
     this._damageFlashStart = null;
     this._lastTrackedHP = null;
     this._postProcessInited = false;
+
+    // Performance monitoring
+    this._fpsFrames = 0;
+    this._fpsLastCheck = 0;
+    this._fpsLowCount = 0;
+    this._performanceDegraded = false;
+
+    // Store game reference for room checks
+    this._currentGame = null;
   }
 
   // === Init ===
@@ -744,6 +753,13 @@ var Renderer3D = (function() {
       if (!isAnimating) {
         this._addAnimation(pe.mesh, prevPos.x, prevPos.y, player.x, player.y, 200, true, 0, null);
       }
+      // Face movement direction
+      var vpdx = player.x - prevPos.x;
+      var vpdz = player.y - prevPos.y;
+      if (vpdx > 0) pe.mesh.rotation.y = -Math.PI / 2;
+      else if (vpdx < 0) pe.mesh.rotation.y = Math.PI / 2;
+      else if (vpdz > 0) pe.mesh.rotation.y = Math.PI;
+      else if (vpdz < 0) pe.mesh.rotation.y = 0;
       pe.x = player.x;
       pe.y = player.y;
     }
@@ -862,11 +878,19 @@ var Renderer3D = (function() {
     var visible = game.visible;
     var explored = game.explored;
     var mapRevealed = game.mapRevealed;
+    var px = game.player.x;
+    var py = game.player.y;
+    var updateRadius = 18; // Only process tiles within this radius + explored margin
 
     for (var y = 0; y < this.tileMeshes.length; y++) {
       for (var x = 0; x < (this.tileMeshes[y] ? this.tileMeshes[y].length : 0); x++) {
         var mesh = this.tileMeshes[y][x];
         if (!mesh) continue;
+
+        // Skip tiles far from player (unless map revealed)
+        if (!mapRevealed && Math.abs(x - px) > updateRadius && Math.abs(y - py) > updateRadius) {
+          continue;
+        }
 
         var isVis = visible[y] && visible[y][x];
         var isExp = explored[y] && explored[y][x];
@@ -1102,6 +1126,13 @@ var Renderer3D = (function() {
       if (!isAnimating) {
         this._addAnimation(pe.mesh, prevPos.x, prevPos.y, player.x, player.y, 200, true, 0, null);
       }
+      // Face movement direction
+      var pdx = player.x - prevPos.x;
+      var pdz = player.y - prevPos.y;
+      if (pdx > 0) pe.mesh.rotation.y = -Math.PI / 2;
+      else if (pdx < 0) pe.mesh.rotation.y = Math.PI / 2;
+      else if (pdz > 0) pe.mesh.rotation.y = Math.PI;
+      else if (pdz < 0) pe.mesh.rotation.y = 0;
       pe.x = player.x;
       pe.y = player.y;
     }
@@ -1150,6 +1181,18 @@ var Renderer3D = (function() {
         var enemyModel = Models3D.createEnemy(family, color, rank);
         // Random idle phase for each enemy
         enemyModel.userData._idlePhase = Math.random() * Math.PI * 2;
+        // Rank visual effects
+        if (rank >= 2) enemyModel.scale.multiplyScalar(1.1);
+        if (rank >= 3) {
+          enemyModel.scale.multiplyScalar(1.1); // total 1.21x
+          enemyModel.traverse(function(child) {
+            if (child.isMesh && child.material) {
+              child.material = child.material.clone();
+              child.material.emissive = new THREE.Color(child.material.color);
+              child.material.emissiveIntensity = 0.15;
+            }
+          });
+        }
         this.entityGroup.add(enemyModel);
         this.entityMeshes[eKey] = { mesh: enemyModel, x: enemy.x, y: enemy.y };
         this._prevPositions[eKey] = { x: enemy.x, y: enemy.y };
@@ -1169,6 +1212,13 @@ var Renderer3D = (function() {
           // Enemies slide (no bounce)
           this._addAnimation(ee.mesh, ePrev.x, ePrev.y, enemy.x, enemy.y, 200, false, 0, null);
         }
+        // Face movement direction
+        var edx = enemy.x - ePrev.x;
+        var edz = enemy.y - ePrev.y;
+        if (edx > 0) ee.mesh.rotation.y = -Math.PI / 2;
+        else if (edx < 0) ee.mesh.rotation.y = Math.PI / 2;
+        else if (edz > 0) ee.mesh.rotation.y = Math.PI;
+        else if (edz < 0) ee.mesh.rotation.y = 0;
         ee.x = enemy.x;
         ee.y = enemy.y;
       }
@@ -1198,14 +1248,32 @@ var Renderer3D = (function() {
         ee.mesh.position.x = enemy.x;
         ee.mesh.position.z = enemy.y;
         // Idle bob (different phase per enemy)
-        ee.mesh.position.y = Math.sin(now * 0.002 + (ee.mesh.userData._idlePhase || 0)) * 0.04;
+        var idlePhase = ee.mesh.userData._idlePhase || 0;
+        ee.mesh.position.y = Math.sin(now * 0.002 + idlePhase) * 0.04;
+        // Reaper floating animation (higher bob)
+        if (ee.mesh.userData._isReaper) {
+          ee.mesh.position.y = 0.1 + Math.sin(now * 0.003 + idlePhase) * 0.08;
+        }
+        // Dragon wing flap animation
+        if (ee.mesh.userData._isDragon) {
+          ee.mesh.traverse(function(child) {
+            if (child.userData._isWing) {
+              var flapAngle = Math.sin(now * 0.004 + idlePhase) * 0.25;
+              child.rotation.x = flapAngle * child.userData._wingSide;
+            }
+          });
+        }
       }
 
-      // Sleeping overlay: scale down slightly
+      // Sleeping overlay: scale down slightly (preserve rank scale)
+      var baseScale = 1.0;
+      var rank = enemy.familyRank || 1;
+      if (rank >= 2) baseScale *= 1.1;
+      if (rank >= 3) baseScale *= 1.1;
       if (enemy.sleeping) {
-        ee.mesh.scale.setScalar(0.8);
+        ee.mesh.scale.setScalar(baseScale * 0.8);
       } else {
-        ee.mesh.scale.setScalar(1.0);
+        ee.mesh.scale.setScalar(baseScale);
       }
 
       ee.mesh.visible = true;
@@ -1375,8 +1443,16 @@ var Renderer3D = (function() {
 
     this.camera.lookAt(cx, 0, cz);
 
-    // Player torch
+    // Player torch — with flicker
+    var time = performance.now() * 0.001;
+    this.playerLight.intensity = 1.5 + Math.sin(time * 10) * 0.1 + Math.sin(time * 7.3) * 0.05;
     this.playerLight.position.set(cx, 3, cz);
+
+    // Room-based light distance (larger in rooms, smaller in corridors)
+    if (this._currentGame) {
+      var playerRoom = this._currentGame.getRoomAt ? this._currentGame.getRoomAt(this._currentGame.player.x, this._currentGame.player.y) : null;
+      this.playerLight.distance = playerRoom ? 15 : 6;
+    }
 
     // Move directional light to follow roughly
     this.directionalLight.position.set(cx + 10, 20, cz + 10);
@@ -1506,6 +1582,9 @@ var Renderer3D = (function() {
 
   Renderer3D.prototype.render = function(game) {
     if (!this.scene || !this.webglRenderer) return;
+
+    // Store game reference for camera/room checks
+    this._currentGame = game;
 
     // Ensure post-processing overlays are created
     this._initPostProcessing();
@@ -1638,6 +1717,31 @@ var Renderer3D = (function() {
     // Post-processing
     this._updatePostProcessing(game);
 
+    // Performance monitoring (every 2 seconds)
+    this._fpsFrames++;
+    if (now - this._fpsLastCheck > 2000) {
+      var fps = this._fpsFrames / ((now - this._fpsLastCheck) / 1000);
+      this._fpsFrames = 0;
+      this._fpsLastCheck = now;
+      if (fps < 30 && !this._performanceDegraded) {
+        this._fpsLowCount++;
+        if (this._fpsLowCount >= 2) {
+          this._performanceDegraded = true;
+          // Disable shadows for performance
+          this.webglRenderer.shadowMap.enabled = false;
+          this.directionalLight.castShadow = false;
+          // Set global flag for particle system to halve counts
+          window._3dPerformanceDegraded = true;
+          // Reduce fog
+          if (this.scene.fog && this.scene.fog.isFogExp2) {
+            this.scene.fog.density *= 0.7;
+          }
+        }
+      } else {
+        this._fpsLowCount = Math.max(0, this._fpsLowCount - 1);
+      }
+    }
+
     // Render 3D scene
     this.webglRenderer.render(this.scene, this.camera);
 
@@ -1648,6 +1752,13 @@ var Renderer3D = (function() {
 
     // Minimap (reuses 2D canvas)
     this._renderMinimap(game);
+
+    // BGM indicator
+    var bgmIndicator = document.getElementById('bgm-indicator');
+    if (bgmIndicator) {
+      var bgmPlaying = typeof Sound !== 'undefined' && Sound.bgm && !Sound.bgm._muted;
+      bgmIndicator.style.display = bgmPlaying ? '' : 'none';
+    }
   };
 
   // === Village Minimap ===

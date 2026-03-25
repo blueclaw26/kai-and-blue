@@ -35,6 +35,42 @@
       // Start in village
       game.initVillage(ui);
 
+      // Internal cross-module references (needed for gameplay)
+      window._game = game;
+      window._renderer = renderer;
+
+      // Auto-initialize 3D if default mode is 3D
+      if (RENDER_MODE === '3d') {
+        var canvasArea = document.getElementById('canvas-area');
+        var loadingEl = document.createElement('div');
+        loadingEl.id = 'loading-3d-overlay';
+        loadingEl.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;' +
+          'background:#1a1a2e;display:flex;align-items:center;justify-content:center;' +
+          'color:#ffd700;font-size:24px;font-family:"Noto Sans JP",sans-serif;z-index:200;' +
+          'transition:opacity 0.5s ease-out;';
+        loadingEl.textContent = 'Loading 3D...';
+        if (canvasArea) canvasArea.appendChild(loadingEl);
+
+        renderer3d = new Renderer3D(canvas, minimapCanvas);
+        renderer3d.init();
+        renderer3d._fallback2d = renderer2d;
+        renderer = renderer3d;
+        window._renderer = renderer;
+        turnManager.renderer = renderer;
+        renderer3d.startRenderLoop(game);
+
+        // Update toggle button
+        var toggleBtn = document.getElementById('render-toggle-btn');
+        if (toggleBtn) toggleBtn.textContent = '🎮 2D';
+
+        setTimeout(function() {
+          loadingEl.style.opacity = '0';
+          setTimeout(function() {
+            if (loadingEl.parentNode) loadingEl.parentNode.removeChild(loadingEl);
+          }, 500);
+        }, 100);
+      }
+
       // Initial render
       renderer.render(game);
       ui.updateStatus(game);
@@ -44,10 +80,6 @@
         Sound.bgm.play('village');
       }
 
-      // Internal cross-module references (needed for gameplay)
-      window._game = game;
-      window._renderer = renderer;
-
       // === 2D/3D Toggle ===
       var renderToggleBtn = document.getElementById('render-toggle-btn');
       if (renderToggleBtn) {
@@ -55,7 +87,7 @@
           if (RENDER_MODE === '2d') {
             // Switch to 3D
             RENDER_MODE = '3d';
-            renderToggleBtn.textContent = '🎮 3D';
+            renderToggleBtn.textContent = '🎮 2D';
 
             if (!renderer3d) {
               // Show loading overlay
@@ -91,7 +123,7 @@
           } else {
             // Switch to 2D
             RENDER_MODE = '2d';
-            renderToggleBtn.textContent = '🎮 2D';
+            renderToggleBtn.textContent = '🎮 3D';
 
             if (renderer3d) {
               renderer3d.stopRenderLoop();

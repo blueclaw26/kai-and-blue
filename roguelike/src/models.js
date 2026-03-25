@@ -129,7 +129,7 @@ var Models3D = (function() {
     return group;
   }
 
-  // Dragon: box body + wings + cone head
+  // Dragon: box body + large triangle wings + cone head
   function dragonShape(color) {
     var group = new THREE.Group();
     var body = new THREE.Mesh(
@@ -147,15 +147,34 @@ var Models3D = (function() {
     head.position.set(0.35, 0.65, 0);
     head.rotation.z = -Math.PI / 2;
     group.add(head);
-    // Wings
+    // Wings — large triangle shapes extending from sides
     var wingMat = mat(brighten(color, 0.8));
-    var wing1 = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.3), wingMat);
-    wing1.position.set(0, 0.7, 0.3);
-    wing1.rotation.x = -0.3;
+    wingMat.side = THREE.DoubleSide;
+    // Right wing (triangle geometry)
+    var wingGeo1 = new THREE.BufferGeometry();
+    wingGeo1.setAttribute('position', new THREE.Float32BufferAttribute([
+      0, 0, 0,      // base at body
+      -0.15, 0.3, 0.55,  // top tip
+      0.25, -0.1, 0.5   // bottom tip
+    ], 3));
+    wingGeo1.computeVertexNormals();
+    var wing1 = new THREE.Mesh(wingGeo1, wingMat);
+    wing1.position.set(0, 0.6, 0.2);
+    wing1.userData._isWing = true;
+    wing1.userData._wingSide = 1;
     group.add(wing1);
-    var wing2 = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.3), wingMat);
-    wing2.position.set(0, 0.7, -0.3);
-    wing2.rotation.x = 0.3;
+    // Left wing (triangle geometry)
+    var wingGeo2 = new THREE.BufferGeometry();
+    wingGeo2.setAttribute('position', new THREE.Float32BufferAttribute([
+      0, 0, 0,
+      -0.15, 0.3, -0.55,
+      0.25, -0.1, -0.5
+    ], 3));
+    wingGeo2.computeVertexNormals();
+    var wing2 = new THREE.Mesh(wingGeo2, wingMat);
+    wing2.position.set(0, 0.6, -0.2);
+    wing2.userData._isWing = true;
+    wing2.userData._wingSide = -1;
     group.add(wing2);
     // Tail
     var tail = new THREE.Mesh(
@@ -165,18 +184,29 @@ var Models3D = (function() {
     tail.position.set(-0.45, 0.35, 0);
     tail.rotation.z = Math.PI / 3;
     group.add(tail);
+    // Mark as dragon for wing animation
+    group.userData._isDragon = true;
     return group;
   }
 
-  // Reaper: tall thin + hood
+  // Reaper: tall thin + hood — floating above ground
   function reaperShape(color) {
     var group = new THREE.Group();
-    // Robe body (cone)
+    var floatOffset = 0.15;  // float above ground
+    // Shadow on ground (flat dark circle)
+    var shadowGeo = new THREE.CircleGeometry(0.25, 12);
+    shadowGeo.rotateX(-Math.PI / 2);
+    var shadow = new THREE.Mesh(shadowGeo, new THREE.MeshBasicMaterial({
+      color: 0x000000, transparent: true, opacity: 0.3
+    }));
+    shadow.position.y = 0.01;
+    group.add(shadow);
+    // Robe body (cone) — raised
     var robe = new THREE.Mesh(
       new THREE.ConeGeometry(0.3, 1.0, 8),
       mat(color)
     );
-    robe.position.y = 0.5;
+    robe.position.y = 0.5 + floatOffset;
     robe.castShadow = true;
     group.add(robe);
     // Hood (sphere)
@@ -184,14 +214,14 @@ var Models3D = (function() {
       new THREE.SphereGeometry(0.2, 8, 8),
       mat(brighten(color, 0.7))
     );
-    hood.position.y = 1.1;
+    hood.position.y = 1.1 + floatOffset;
     group.add(hood);
     // Scythe handle
     var handle = new THREE.Mesh(
       new THREE.CylinderGeometry(0.03, 0.03, 0.8, 4),
       mat(0x5d4037)
     );
-    handle.position.set(0.3, 0.7, 0);
+    handle.position.set(0.3, 0.7 + floatOffset, 0);
     handle.rotation.z = -0.2;
     group.add(handle);
     // Scythe blade
@@ -199,8 +229,10 @@ var Models3D = (function() {
       new THREE.PlaneGeometry(0.25, 0.15),
       mat(0xbdbdbd)
     );
-    blade.position.set(0.35, 1.15, 0);
+    blade.position.set(0.35, 1.15 + floatOffset, 0);
     group.add(blade);
+    // Mark as reaper for floating animation
+    group.userData._isReaper = true;
     return group;
   }
 
@@ -403,24 +435,32 @@ var Models3D = (function() {
     return group;
   }
 
-  // Mazerun: pot/jar shape
+  // Mazerun: rounded pot/jar shape using lathe geometry
   function mazerunShape(color) {
     var group = new THREE.Group();
-    // Body (cylinder)
-    var body = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.25, 0.2, 0.5, 8),
-      mat(color)
-    );
-    body.position.y = 0.35;
+    // Profile for lathe: rounded pot shape with wide opening at top
+    var points = [];
+    points.push(new THREE.Vector2(0.08, 0));       // narrow base
+    points.push(new THREE.Vector2(0.15, 0.05));     // base curve
+    points.push(new THREE.Vector2(0.25, 0.15));     // belly start
+    points.push(new THREE.Vector2(0.3, 0.3));       // widest belly
+    points.push(new THREE.Vector2(0.28, 0.42));     // narrowing
+    points.push(new THREE.Vector2(0.22, 0.48));     // neck
+    points.push(new THREE.Vector2(0.27, 0.52));     // lip flare
+    points.push(new THREE.Vector2(0.28, 0.55));     // rim top (wide opening)
+    var latheGeo = new THREE.LatheGeometry(points, 12);
+    var body = new THREE.Mesh(latheGeo, mat(color));
+    body.position.y = 0.05;
     body.castShadow = true;
     group.add(body);
-    // Wider top rim
-    var rim = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.28, 0.25, 0.08, 8),
-      mat(brighten(color, 1.2))
+    // Decorative band around belly
+    var band = new THREE.Mesh(
+      new THREE.TorusGeometry(0.29, 0.02, 6, 12),
+      mat(brighten(color, 1.3))
     );
-    rim.position.y = 0.62;
-    group.add(rim);
+    band.position.y = 0.35;
+    band.rotation.x = Math.PI / 2;
+    group.add(band);
     return group;
   }
 
