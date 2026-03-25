@@ -960,6 +960,18 @@ var Input = (function() {
       return;
     }
 
+    // Village shop mode
+    if (game.villageShopMode) {
+      this._handleVillageShopKey(e);
+      return;
+    }
+
+    // Village blacksmith mode
+    if (game.villageBlacksmithMode) {
+      this._handleVillageBlacksmithKey(e);
+      return;
+    }
+
     // Village dialog mode
     if (game.villageDialogMode) {
       e.preventDefault();
@@ -991,10 +1003,54 @@ var Input = (function() {
       e.preventDefault();
       var npc = game.getAdjacentNpc();
       if (npc) {
-        ui.addMessage(npc.name + '「' + npc.dialogue + '」', 'system');
-        if (npc.type === 'storage') {
-          ui.addMessage('倉庫を使いますか？ (y/n)', 'system');
-          game.villageDialogMode = npc;
+        switch (npc.type) {
+          case 'storage':
+            ui.addMessage(npc.name + '「' + npc.dialogue + '」', 'system');
+            ui.addMessage('倉庫を使いますか？ (y/n)', 'system');
+            game.villageDialogMode = npc;
+            break;
+          case 'shop':
+            ui.addMessage(npc.name + '「' + npc.dialogue + '」', 'system');
+            game._villageShopInteract();
+            break;
+          case 'blacksmith':
+            ui.addMessage(npc.name + '「' + npc.dialogue + '」', 'system');
+            game._villageBlacksmithInteract();
+            break;
+          case 'info':
+            var tips = [
+              '合成の壺に同じ種類の武器を入れると合成できるぞ',
+              'ドラゴンキラーはドラゴンに強いぞ',
+              '店で泥棒するとえらい目に遭うぞ',
+              '腹が減ると力が出ない。おにぎりを持っていけ',
+              'モンスターハウスに出くわしたら逃げるのも手だ',
+              '杖は敵に振ると効果があるぞ',
+              '鍛冶屋で武器を鍛えれば攻撃力が上がるぞ',
+              '盾も鍛えれば防御力が上がる。忘れるなよ',
+              '巻物は読むと効果を発揮するぞ',
+              '水路の上にレアなアイテムが落ちていることがあるぞ'
+            ];
+            var tip = tips[Math.floor(Math.random() * tips.length)];
+            ui.addMessage(npc.name + '「' + tip + '」', 'system');
+            break;
+          case 'child':
+            var childLines = [
+              'ねーねー、冒険者さん！ 強いモンスターいた？',
+              'ボクも大きくなったら冒険者になるんだ！',
+              '今日はいい天気だねー！',
+              'お兄ちゃん、お腹空いてない？',
+              'この前、変な巻物を拾ったんだ！ ...捨てちゃったけど',
+              '村長のおじいちゃんって昔は冒険者だったんだって！'
+            ];
+            var childLine = childLines[Math.floor(Math.random() * childLines.length)];
+            ui.addMessage(npc.name + '「' + childLine + '」', 'system');
+            break;
+          case 'cat':
+            ui.addMessage(npc.name + '「にゃー」', 'system');
+            break;
+          default:
+            ui.addMessage(npc.name + '「' + npc.dialogue + '」', 'system');
+            break;
         }
       }
       return;
@@ -1346,6 +1402,125 @@ var Input = (function() {
     }
 
     return null; // No unexplored tiles reachable
+  };
+
+  // === Village Shop key handler ===
+  Input.prototype._handleVillageShopKey = function(e) {
+    e.preventDefault();
+    var game = this.game;
+    var ui = game.ui;
+    var player = game.player;
+    var key = e.key;
+    var SLOT_LETTERS = 'abcdefghijklmnopqrst';
+    var stock = [
+      { key: 'onigiri', price: 100 },
+      { key: 'herb', price: 200 },
+      { key: 'scroll_map', price: 300 },
+      { key: 'arrow_wood', price: 150, count: 5 }
+    ];
+
+    if (key === 'Escape') {
+      game.villageShopMode = null;
+      ui.inventoryEl.style.display = 'none';
+      return;
+    }
+
+    if (key === 'ArrowUp' || key === 'k') {
+      game.villageShopSelection = Math.max(0, game.villageShopSelection - 1);
+      game._renderVillageShopUI();
+      return;
+    }
+    if (key === 'ArrowDown' || key === 'j') {
+      game.villageShopSelection = Math.min(stock.length - 1, game.villageShopSelection + 1);
+      game._renderVillageShopUI();
+      return;
+    }
+
+    var letterIdx = SLOT_LETTERS.indexOf(key);
+    if (letterIdx !== -1 && letterIdx < stock.length) {
+      game.villageShopSelection = letterIdx;
+      game._renderVillageShopUI();
+      return;
+    }
+
+    if (key === 'Enter' || key === 'e') {
+      var entry = stock[game.villageShopSelection];
+      if (!entry) return;
+      if (player.gold < entry.price) {
+        ui.addMessage('道具屋「ギタンが足りないな」', 'system');
+        return;
+      }
+      if (player.inventory.length >= 20) {
+        ui.addMessage('持ち物がいっぱいだ', 'system');
+        return;
+      }
+      player.gold -= entry.price;
+      var newItem = new Item(0, 0, entry.key);
+      newItem.identified = true;
+      if (entry.count) newItem.count = entry.count;
+      player.inventory.push(newItem);
+      Sound.play('shop');
+      ui.addMessage(newItem.getDisplayName() + 'を' + entry.price + 'ギタンで購入した', 'pickup');
+      game._renderVillageShopUI();
+      ui.updateStatus(game);
+      return;
+    }
+  };
+
+  // === Village Blacksmith key handler ===
+  Input.prototype._handleVillageBlacksmithKey = function(e) {
+    e.preventDefault();
+    var game = this.game;
+    var ui = game.ui;
+    var player = game.player;
+    var key = e.key;
+
+    var options = [];
+    if (player.weapon) options.push({ target: 'weapon', item: player.weapon });
+    if (player.shield) options.push({ target: 'shield', item: player.shield });
+    options.push({ target: 'cancel' });
+
+    if (key === 'Escape') {
+      game.villageBlacksmithMode = null;
+      ui.inventoryEl.style.display = 'none';
+      ui.addMessage('鍛冶屋「また来いよ。」', 'system');
+      return;
+    }
+
+    if (key === 'ArrowUp' || key === 'k') {
+      game.villageBlacksmithSelection = Math.max(0, game.villageBlacksmithSelection - 1);
+      game._renderVillageBlacksmithUI();
+      return;
+    }
+    if (key === 'ArrowDown' || key === 'j') {
+      game.villageBlacksmithSelection = Math.min(options.length - 1, game.villageBlacksmithSelection + 1);
+      game._renderVillageBlacksmithUI();
+      return;
+    }
+
+    if (key === 'Enter' || key === 'e') {
+      var selected = options[game.villageBlacksmithSelection];
+      if (!selected) return;
+      if (selected.target === 'cancel') {
+        game.villageBlacksmithMode = null;
+        ui.inventoryEl.style.display = 'none';
+        ui.addMessage('鍛冶屋「また来いよ。」', 'system');
+        return;
+      }
+      if (player.gold < 500) {
+        ui.addMessage('鍛冶屋「ギタンが足りないな。500ギタン必要だぜ。」', 'system');
+        return;
+      }
+      player.gold -= 500;
+      selected.item.plus = (selected.item.plus || 0) + 1;
+      player._recalcStats();
+      Sound.play('equip');
+      ui.addMessage('鍛冶屋「よし、+1強化したぞ！ ' + selected.item.getDisplayName() + '」', 'heal');
+      game.villageBlacksmithMode = null;
+      ui.inventoryEl.style.display = 'none';
+      ui.updateStatus(game);
+      return;
+    }
   };
 
   Input.prototype._renderStorageTakeUI = function() {

@@ -202,20 +202,29 @@ var Renderer = (function() {
     return false;
   }
 
-  // Village tile colors
+  // Village tile colors (new expanded tile types)
   var VILLAGE_COLORS = {
-    0: '#333',        // wall
-    1: '#2d5a27',     // grass
-    2: '#8b7355',     // path
-    3: '#2a4a8a',     // water
-    4: '#5a4a3a',     // building
-    5: '#1a1a2e'      // dungeon entrance
+    0: '#333',        // wall (legacy)
+    1: '#2d5a27',     // grass (legacy)
+    2: '#8b7355',     // path (legacy)
+    3: '#2a4a8a',     // water (legacy)
+    4: '#5a4a3a',     // building (legacy)
+    5: '#1a1a2e',     // dungeon entrance
+    10: '#2d5a27',    // GRASS
+    11: '#8b7355',    // PATH
+    12: '#1a3a6a',    // WATER
+    13: '#6b5030',    // BRIDGE
+    14: '#3a2a1a',    // WALL (building)
+    15: '#5a4a3a',    // FLOOR (building interior)
+    16: '#1a4a1a',    // TREE
+    17: '#2d5a27'     // FLOWER (same base as grass)
   };
 
   Renderer.prototype.renderVillage = function(game) {
     var ctx = this.ctx;
     var map = game.villageMap;
     var player = game.player;
+    var VT = Game.VILLAGE_TILE;
 
     ctx.imageSmoothingEnabled = false;
     ctx.fillStyle = '#000';
@@ -231,6 +240,8 @@ var Renderer = (function() {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
+    var waterFrame = (Date.now() >> 9) & 1;
+
     for (var vy = 0; vy < this.viewH; vy++) {
       for (var vx = 0; vx < this.viewW; vx++) {
         var tx = camX + vx;
@@ -240,25 +251,100 @@ var Renderer = (function() {
         var drawX = vx * TILE_SIZE;
         var drawY = vy * TILE_SIZE;
 
+        // Base color
         ctx.fillStyle = VILLAGE_COLORS[tile] || '#000';
         ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
 
-        // Draw icons
-        if (tile === 4) {
-          ctx.fillStyle = '#7a6a5a';
-          ctx.fillText('█', drawX + TILE_SIZE / 2, drawY + TILE_SIZE / 2);
-        } else if (tile === 5) {
-          ctx.fillStyle = '#666';
-          ctx.fillText('▼', drawX + TILE_SIZE / 2, drawY + TILE_SIZE / 2);
-        } else if (tile === 3) {
-          ctx.fillStyle = '#4a7aba';
-          ctx.fillText('~', drawX + TILE_SIZE / 2, drawY + TILE_SIZE / 2);
+        // Decorations per tile type
+        switch (tile) {
+          case VT.WATER:
+          case 3: // legacy water
+            ctx.fillStyle = waterFrame ? '#1a3a6a' : '#1a4a7a';
+            ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = '#4fc3f7';
+            ctx.font = 'bold 14px monospace';
+            ctx.fillText('~', drawX + TILE_SIZE / 2, drawY + TILE_SIZE / 2);
+            ctx.globalAlpha = 1.0;
+            ctx.font = 'bold 16px monospace';
+            break;
+          case VT.BRIDGE:
+            // Brown bridge planks
+            ctx.fillStyle = '#6b5030';
+            ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            ctx.fillStyle = '#55401a';
+            ctx.fillRect(drawX, drawY + 2, TILE_SIZE, 2);
+            ctx.fillRect(drawX, drawY + TILE_SIZE - 4, TILE_SIZE, 2);
+            break;
+          case VT.WALL:
+          case 4: // legacy building
+            ctx.fillStyle = '#3a2a1a';
+            ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            // Brick pattern
+            ctx.fillStyle = '#2a1a0a';
+            ctx.fillRect(drawX, drawY + TILE_SIZE / 2, TILE_SIZE, 1);
+            break;
+          case VT.FLOOR:
+            // Building interior - use PNG floor if available
+            var intFloorPng = SpriteLoader.get('floor_' + (((tx + ty) % 4) + 1));
+            if (intFloorPng) {
+              ctx.drawImage(intFloorPng, drawX, drawY, TILE_SIZE, TILE_SIZE);
+              ctx.fillStyle = 'rgba(80,60,30,0.15)';
+              ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            } else {
+              ctx.fillStyle = '#5a4a3a';
+              ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            }
+            break;
+          case VT.TREE:
+            // Dark green tree block
+            ctx.fillStyle = '#1a4a1a';
+            ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            ctx.fillStyle = '#0d3a0d';
+            ctx.font = 'bold 18px monospace';
+            ctx.fillText('♣', drawX + TILE_SIZE / 2, drawY + TILE_SIZE / 2);
+            ctx.font = 'bold 16px monospace';
+            break;
+          case VT.FLOWER:
+            // Grass with flower
+            ctx.fillStyle = '#2d5a27';
+            ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            ctx.fillStyle = ((tx + ty) % 3 === 0) ? '#ff6b9d' : ((tx + ty) % 3 === 1) ? '#ffeb3b' : '#ab47bc';
+            ctx.font = 'bold 10px monospace';
+            ctx.fillText('✿', drawX + TILE_SIZE / 2, drawY + TILE_SIZE / 2);
+            ctx.font = 'bold 16px monospace';
+            break;
+          case VT.PATH:
+          case 2: // legacy path
+            // Use floor PNG if available for paths
+            var pathFloorPng = SpriteLoader.get('floor_' + (((tx + ty) % 8) + 1));
+            if (pathFloorPng) {
+              ctx.drawImage(pathFloorPng, drawX, drawY, TILE_SIZE, TILE_SIZE);
+            }
+            break;
+          case VT.ENTRANCE:
+          case 5: // dungeon entrance
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            ctx.fillStyle = '#666';
+            ctx.fillText('▼', drawX + TILE_SIZE / 2, drawY + TILE_SIZE / 2);
+            break;
+          case VT.GRASS:
+          case 1: // legacy grass
+            // Subtle grass variation
+            if ((tx + ty) % 7 === 0) {
+              ctx.fillStyle = '#2a5525';
+              ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            }
+            break;
         }
       }
     }
 
     // Draw NPCs
     ctx.font = 'bold 18px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     for (var i = 0; i < game.villageNpcs.length; i++) {
       var npc = game.villageNpcs[i];
       var nScreenX = (npc.x - camX) * TILE_SIZE;
@@ -313,7 +399,9 @@ var Renderer = (function() {
     }
     // Player
     ctx.fillStyle = '#00e5ff';
-    ctx.fillRect(player.x * t - 1, player.y * t - 1, 6, 6);
+    var px = player.x * t + Math.floor(t / 2) - 3;
+    var py = player.y * t + Math.floor(t / 2) - 3;
+    ctx.fillRect(px, py, 6, 6);
   };
 
   Renderer.prototype.render = function(game) {

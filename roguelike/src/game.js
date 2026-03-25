@@ -191,43 +191,80 @@ var Game = (function() {
     this.scene = 'village';
     this._buildVillageMap();
     if (!this.player) {
-      this.player = new Player(10, 10);
+      this.player = new Player(14, 13);
     } else {
-      this.player.moveTo(10, 10);
+      this.player.moveTo(14, 13);
     }
     ui.addMessage('拠点の村に戻った', 'system');
   };
 
   // === Village ===
 
+  // Village tile constants
+  var VT = {
+    GRASS: 10,
+    PATH: 11,
+    WATER: 12,
+    BRIDGE: 13,
+    WALL: 14,
+    FLOOR: 15,
+    TREE: 16,
+    FLOWER: 17,
+    ENTRANCE: 5
+  };
+  Game.VILLAGE_TILE = VT;
+
   Game.prototype._buildVillageMap = function() {
-    var W = 20, H = 15;
+    var W = 30, H = 20;
+    var G = VT.GRASS, P = VT.PATH, Wa = VT.WATER, B = VT.BRIDGE, Wl = VT.WALL, F = VT.FLOOR, T = VT.TREE, Fl = VT.FLOWER, E = VT.ENTRANCE;
+    // 30x20 Shiren 2 style Natane Village
     var layout = [
-      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-      [0,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
-      [0,1,4,4,4,2,1,1,1,1,1,4,4,4,1,1,1,1,1,0],
-      [0,1,4,4,4,2,1,1,1,1,1,4,4,4,1,1,3,3,1,0],
-      [0,1,4,4,4,2,1,1,1,1,1,4,4,4,1,1,3,3,1,0],
-      [0,1,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,1,0],
-      [0,1,1,1,1,2,1,1,1,1,1,1,2,1,1,1,1,1,1,0],
-      [0,1,1,1,1,2,1,1,1,1,1,1,2,1,4,4,4,1,1,0],
-      [0,1,1,1,1,2,1,1,1,1,1,1,2,1,4,4,4,1,1,0],
-      [0,1,1,1,1,2,2,2,2,2,2,2,2,1,4,4,4,1,1,0],
-      [0,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,0],
-      [0,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,0],
-      [0,1,1,1,1,1,1,1,5,1,1,1,1,1,1,1,1,1,1,0],
-      [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
-      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    //0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29
+      [T, T, G, Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,G, T, T],  // 0: river top
+      [T, G, G, Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,B, B, B, B, Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,Wa,G, G, T],  // 1: bridge
+      [G, G, Fl,G, G, G, G, G, G, G, G, G, G, P, P, P, P, G, G, G, G, G, G, G, G, G, Fl,G, G, G],  // 2: north path
+      [G, G, G, Wl,Wl,Wl,Wl,Wl,G, G, G, G, G, P, P, G, G, G, G, G, Wl,Wl,Wl,Wl,G, G, G, G, G, G],  // 3: blacksmith/info walls
+      [G, G, G, Wl,F, F, F, Wl,G, G, G, G, G, P, P, G, G, G, G, G, Wl,F, F, Wl,G, G, G, G, G, G],  // 4: blacksmith/info interior
+      [G, G, G, Wl,F, F, F, Wl,G, G, G, G, G, P, P, G, G, G, G, G, Wl,F, F, Wl,G, G, G, G, G, G],  // 5: blacksmith/info interior
+      [G, G, G, Wl,Wl,F, Wl,Wl,G, G, G, G, G, P, P, G, G, G, G, G, Wl,F, Wl,Wl,G, G, G, G, G, G],  // 6: doorways
+      [G, G, G, G, G, P, G, G, G, G, G, G, G, P, P, G, G, G, G, G, G, P, G, G, G, G, G, Fl,G, G],  // 7: paths
+      [G, Wl,Wl,Wl,Wl,Wl,Wl,G, G, G, G, G, G, P, P, G, G, G, Wl,Wl,Wl,Wl,Wl,Wl,G, G, G, G, G, G],  // 8: storage/shop walls
+      [G, Wl,F, F, F, F, Wl,G, G, G, G, G, G, P, P, G, G, G, Wl,F, F, F, F, Wl,G, G, G, G, T, G],  // 9: storage/shop interior
+      [G, Wl,F, F, F, F, Wl,G, G, G, G, G, G, P, P, G, G, G, Wl,F, F, F, F, Wl,G, G, G, G, G, G],  // 10: storage/shop interior
+      [G, Wl,Wl,Wl,F, Wl,Wl,G, G, G, G, G, P, P, P, P, G, G, Wl,Wl,Wl,F, Wl,Wl,G, G, G, G, G, G],  // 11: doorways
+      [G, G, G, G, P, G, G, G, G, G, G, Fl,P, P, P, P, Fl,G, G, G, G, P, G, G, G, G, G, G, G, G],  // 12: center plaza
+      [G, G, G, G, P, P, P, P, P, P, P, P, P, P, P, P, P, P, P, P, P, P, G, G, G, G, G, G, G, T],  // 13: main road
+      [G, G, G, G, G, G, G, G, G, G, G, G, P, P, P, P, G, G, G, G, G, G, G, G, G, G, G, G, G, G],  // 14: south
+      [G, T, G, Wl,Wl,Wl,Wl,Wl,G, G, G, G, P, P, P, P, G, G, G, Wl,Wl,Wl,Wl,Wl,G, G, G, T, G, G],  // 15: houses walls
+      [G, G, G, Wl,F, F, F, Wl,G, G, G, G, P, P, P, P, G, G, G, Wl,F, F, F, Wl,G, G, G, G, G, G],  // 16: houses interior
+      [G, G, G, Wl,Wl,F, Wl,Wl,G, G, G, G, P, E, E, P, G, G, G, Wl,Wl,F, Wl,Wl,G, G, G, G, G, G],  // 17: dungeon entrance
+      [G, G, Fl,G, G, P, G, G, G, Fl,G, G, P, P, P, P, G, G, Fl,G, G, P, G, G, G, Fl,G, G, G, G],  // 18: south meadow
+      [T, G, G, G, G, G, G, T, G, G, G, Wa,Wa,Wa,Wa,Wa,Wa,Wa,G, G, G, G, G, T, G, G, G, G, T, T],  // 19: stream + trees
     ];
     this.villageMap = { width: W, height: H, grid: layout };
     this.villageNpcs = [
-      { x: 3, y: 3, name: '倉庫番', char: '倉', color: '#e8a44a', type: 'storage',
-        dialogue: '倉庫を使うかい？ アイテムを預けたり引き出したりできるよ。' },
-      { x: 12, y: 3, name: '老人', char: '老', color: '#90caf9', type: 'talk',
-        dialogue: '強い武器を見つけたら倉庫に預けておくといいぞ。' },
-      { x: 15, y: 8, name: '村人', char: '人', color: '#a5d6a7', type: 'talk',
-        dialogue: '気をつけてな！ 無理せず戻ってこいよ。' }
+      // Inside buildings
+      { x: 5, y: 5, name: '鍛冶屋', char: '鍛', color: '#e07050', type: 'blacksmith',
+        dialogue: '鍛えてやろうか？' },
+      { x: 22, y: 5, name: '情報屋', char: '情', color: '#b388ff', type: 'info',
+        dialogue: '' }, // random tips set on talk
+      { x: 4, y: 10, name: '倉庫番', char: '倉', color: '#e8a44a', type: 'storage',
+        dialogue: '預かり所へようこそ。アイテムを預けたり引き出したりできるよ。' },
+      { x: 21, y: 10, name: '道具屋', char: '道', color: '#66bb6a', type: 'shop',
+        dialogue: 'いらっしゃい！' },
+      // Outdoor NPCs
+      { x: 14, y: 12, name: '村長', char: '長', color: '#ffd54f', type: 'talk',
+        dialogue: 'この村を頼んだぞ。気をつけて行ってこい。' },
+      { x: 10, y: 7, name: '子供', char: '子', color: '#81d4fa', type: 'child',
+        dialogue: '' }, // random fun dialogue
+      { x: 16, y: 13, name: '猫', char: '猫', color: '#ffab91', type: 'cat',
+        dialogue: 'にゃー' }
     ];
+    // Village shop/blacksmith state
+    this.villageShopMode = null;
+    this.villageShopSelection = 0;
+    this.villageBlacksmithMode = null;
+    this.villageBlacksmithSelection = 0;
   };
 
   Game.prototype.villageMove = function(dx, dy) {
@@ -237,7 +274,8 @@ var Game = (function() {
     var map = this.villageMap;
     if (nx < 0 || nx >= map.width || ny < 0 || ny >= map.height) return false;
     var tile = map.grid[ny][nx];
-    if (tile === 0 || tile === 4 || tile === 3) return false;
+    // Blocking tiles: water, wall, tree
+    if (tile === VT.WATER || tile === VT.WALL || tile === VT.TREE) return false;
 
     for (var i = 0; i < this.villageNpcs.length; i++) {
       var npc = this.villageNpcs[i];
@@ -246,7 +284,7 @@ var Game = (function() {
 
     p.moveTo(nx, ny);
 
-    if (tile === 5) {
+    if (tile === VT.ENTRANCE) {
       this.dungeonConfirm = true;
       this.ui.addMessage('最果ての間に挑みますか？ (y/n)', 'system');
     }
@@ -264,6 +302,125 @@ var Game = (function() {
     return null;
   };
 
+  // Village info tips
+  var VILLAGE_INFO_TIPS = [
+    '合成の壺に同じ種類の武器を入れると合成できるぞ',
+    'ドラゴンキラーはドラゴンに強いぞ',
+    '店で泥棒するとえらい目に遭うぞ',
+    '腹が減ると力が出ない。おにぎりを持っていけ',
+    'モンスターハウスに出くわしたら逃げるのも手だ',
+    '杖は敵に振ると効果があるぞ',
+    '鍛冶屋で武器を鍛えれば攻撃力が上がるぞ',
+    '盾も鍛えれば防御力が上がる。忘れるなよ',
+    '巻物は読むと効果を発揮するぞ',
+    '水路の上にレアなアイテムが落ちていることがあるぞ'
+  ];
+
+  // Village child dialogue
+  var VILLAGE_CHILD_LINES = [
+    'ねーねー、冒険者さん！ 強いモンスターいた？',
+    'ボクも大きくなったら冒険者になるんだ！',
+    '今日はいい天気だねー！',
+    'お兄ちゃん、お腹空いてない？',
+    'この前、変な巻物を拾ったんだ！ ...捨てちゃったけど',
+    '村長のおじいちゃんって昔は冒険者だったんだって！'
+  ];
+
+  // Village shop stock definition
+  var VILLAGE_SHOP_STOCK = [
+    { key: 'onigiri', price: 100 },
+    { key: 'herb', price: 200 },
+    { key: 'scroll_map', price: 300 },
+    { key: 'arrow_wood', price: 150, count: 5 }
+  ];
+
+  // Village shop interaction
+  Game.prototype._villageShopInteract = function() {
+    this.villageShopMode = true;
+    this.villageShopSelection = 0;
+    this._renderVillageShopUI();
+  };
+
+  Game.prototype._renderVillageShopUI = function() {
+    var ui = this.ui;
+    var box = ui.inventoryBox;
+    var sel = this.villageShopSelection;
+    var SLOT_LETTERS = 'abcdefghijklmnopqrst';
+
+    var html = '<div style="color:#66bb6a;font-size:18px;margin-bottom:12px;border-bottom:1px solid #333;padding-bottom:8px;">道具屋</div>';
+    html += '<div style="color:#888;font-size:12px;margin-bottom:8px;">所持金: ' + this.player.gold + 'ギタン</div>';
+
+    for (var i = 0; i < VILLAGE_SHOP_STOCK.length; i++) {
+      var entry = VILLAGE_SHOP_STOCK[i];
+      var data = ITEM_DATA[entry.key];
+      if (!data) continue;
+      var isSelected = (i === sel);
+      var bgColor = isSelected ? '#1a2a3a' : 'transparent';
+      var borderLeft = isSelected ? '3px solid #66bb6a' : '3px solid transparent';
+      var displayName = data.name;
+      if (entry.count) displayName += ' x' + entry.count;
+      html += '<div style="padding:4px 8px;margin:2px 0;background:' + bgColor + ';border-left:' + borderLeft + ';">';
+      html += '<span style="color:#888;">' + SLOT_LETTERS[i] + ')</span> ';
+      html += '<span style="color:' + data.color + ';">' + data.char + '</span> ';
+      html += '<span style="color:#e0e0e0;">' + escapeHtml(displayName) + '</span>';
+      html += ' <span style="color:#ffd700;">' + entry.price + 'G</span>';
+      html += '</div>';
+    }
+
+    html += '<div style="color:#888;font-size:12px;margin-top:16px;border-top:1px solid #333;padding-top:8px;">';
+    html += '[Enter/e]購入 [↑↓]選択 [ESC]閉じる';
+    html += '</div>';
+
+    box.innerHTML = html;
+    ui.inventoryEl.style.display = 'flex';
+  };
+
+  // Village blacksmith interaction
+  Game.prototype._villageBlacksmithInteract = function() {
+    var ui = this.ui;
+    var player = this.player;
+
+    if (!player.weapon && !player.shield) {
+      ui.addMessage('鍛冶屋「武器も盾も装備してないぞ。」', 'system');
+      return;
+    }
+
+    this.villageBlacksmithMode = true;
+    this.villageBlacksmithSelection = 0;
+    this._renderVillageBlacksmithUI();
+  };
+
+  Game.prototype._renderVillageBlacksmithUI = function() {
+    var ui = this.ui;
+    var player = this.player;
+    var box = ui.inventoryBox;
+    var sel = this.villageBlacksmithSelection;
+
+    var options = [];
+    if (player.weapon) options.push({ label: '武器を鍛える: ' + player.weapon.getDisplayName(), target: 'weapon', item: player.weapon });
+    if (player.shield) options.push({ label: '盾を鍛える: ' + player.shield.getDisplayName(), target: 'shield', item: player.shield });
+    options.push({ label: 'やめる', target: 'cancel' });
+
+    var html = '<div style="color:#e07050;font-size:18px;margin-bottom:12px;border-bottom:1px solid #333;padding-bottom:8px;">鍛冶屋 - 強化 (500ギタン)</div>';
+    html += '<div style="color:#888;font-size:12px;margin-bottom:8px;">所持金: ' + player.gold + 'ギタン</div>';
+
+    for (var i = 0; i < options.length; i++) {
+      var isSelected = (i === sel);
+      var bgColor = isSelected ? '#1a2a3a' : 'transparent';
+      var borderLeft = isSelected ? '3px solid #e07050' : '3px solid transparent';
+      html += '<div style="padding:4px 8px;margin:2px 0;background:' + bgColor + ';border-left:' + borderLeft + ';">';
+      html += '<span style="color:#e0e0e0;">' + escapeHtml(options[i].label) + '</span>';
+      html += '</div>';
+    }
+
+    html += '<div style="color:#888;font-size:12px;margin-top:16px;border-top:1px solid #333;padding-top:8px;">';
+    html += '[Enter/e]選択 [↑↓]選択 [ESC]キャンセル';
+    html += '</div>';
+
+    box.innerHTML = html;
+    ui.inventoryEl.style.display = 'flex';
+  };
+
   Game.prototype.enterDungeon = function() {
     this.scene = 'dungeon';
     this.floorNum = 1;
@@ -278,7 +435,7 @@ var Game = (function() {
     this.victory = false;
     this.scene = 'village';
     this._buildVillageMap();
-    this.player = new Player(10, 10);
+    this.player = new Player(14, 13);
     this.floatingTexts = [];
     this.shakeFrames = 0;
     this.flashTiles = [];
