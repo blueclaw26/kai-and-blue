@@ -34,7 +34,7 @@ var Renderer3D = (function() {
 
   function getWallGeo() {
     if (!_wallGeo) {
-      _wallGeo = new THREE.BoxGeometry(1, 1.5, 1);
+      _wallGeo = new THREE.BoxGeometry(1, 2.0, 1);
     }
     return _wallGeo;
   }
@@ -55,9 +55,9 @@ var Renderer3D = (function() {
     return _materialCache[key];
   }
 
-  // Ease in-out quad
+  // Ease out quad (no initial reverse motion, just smooth deceleration)
   function easeInOut(t) {
-    return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    return 1 - (1 - t) * (1 - t);
   }
 
   // === Renderer Constructor ===
@@ -405,20 +405,36 @@ var Renderer3D = (function() {
 
         switch (tile) {
           case 0: // WALL
-            mesh = new THREE.Mesh(wallGeo, wallMat);
-            mesh.position.set(x, 0.75, y);
+            // Use multi-material: darker top face for dungeon feel
+            var wallTopMat = getCachedMaterial(zone.wall * 0.7 | 0);
+            var wallSideMat = wallMat;
+            var wallMultiMat = [wallSideMat, wallSideMat, wallTopMat, wallSideMat, wallSideMat, wallSideMat];
+            mesh = new THREE.Mesh(wallGeo, wallMultiMat);
+            mesh.position.set(x, 1.0, y);
             mesh.castShadow = true;
             mesh.receiveShadow = true;
+            mesh.userData.isWall = true;
             break;
           case 1: // FLOOR
             mesh = new THREE.Mesh(floorGeo, floorMat);
             mesh.position.set(x, 0, y);
             mesh.receiveShadow = true;
+            // Floor tile border for depth perception
+            var borderGeo1 = new THREE.EdgesGeometry(floorGeo);
+            var borderMat1 = new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.15 });
+            var border1 = new THREE.LineSegments(borderGeo1, borderMat1);
+            mesh.add(border1);
             break;
           case 2: // CORRIDOR
             mesh = new THREE.Mesh(floorGeo, corridorMat);
             mesh.position.set(x, 0, y);
             mesh.receiveShadow = true;
+            mesh.userData.isCorridor = true;
+            // Floor tile border
+            var borderGeo2 = new THREE.EdgesGeometry(floorGeo);
+            var borderMat2 = new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.12 });
+            var border2 = new THREE.LineSegments(borderGeo2, borderMat2);
+            mesh.add(border2);
             break;
           case 3: // STAIRS_DOWN
             mesh = new THREE.Mesh(floorGeo, floorMat);
@@ -967,7 +983,7 @@ var Renderer3D = (function() {
 
       // Bounce effect during movement
       if (a.bounce) {
-        a.mesh.position.y = a.baseY + Math.sin(t * Math.PI) * 0.03;
+        a.mesh.position.y = a.baseY;
       }
 
       if (t >= 1) {
@@ -1396,16 +1412,20 @@ var Renderer3D = (function() {
     var tx = playerX * this.tileSize;
     var tz = playerY * this.tileSize;
 
+    var now = performance.now();
+    var dt = this._lastCamTime ? Math.min((now - this._lastCamTime) / 1000, 0.1) : 0.016;
+    this._lastCamTime = now;
+
     if (this.cameraX < 0) {
       this._smoothCamX = tx;
       this._smoothCamZ = tz;
       this.cameraX = 0;
     }
 
-    // Smooth camera follow (lerp)
-    var lerpSpeed = 0.08;
-    this._smoothCamX += (tx - this._smoothCamX) * lerpSpeed;
-    this._smoothCamZ += (tz - this._smoothCamZ) * lerpSpeed;
+    // Exponential decay smoothing for buttery smooth camera (Issue 7)
+    var smoothFactor = 1 - Math.pow(0.001, dt);
+    this._smoothCamX += (tx - this._smoothCamX) * smoothFactor;
+    this._smoothCamZ += (tz - this._smoothCamZ) * smoothFactor;
 
     var cx = this._smoothCamX;
     var cz = this._smoothCamZ;
@@ -1421,17 +1441,17 @@ var Renderer3D = (function() {
       this._updateRendererSize();
     }
 
-    // Front-facing quarter view: camera behind and above player, looking down Z
-    // Q/E rotate in 90° increments around the player
-    var radius = this._cameraRadius;
-    var height = this._cameraHeight;
-    this.camera.position.x = cx + Math.sin(this._cameraAngle) * radius;
-    this.camera.position.z = cz + Math.cos(this._cameraAngle) * radius;
-    this.camera.position.y = height;
+    // Camera positioned directly behind player along one axis, looking STRAIGHT (Issue 1)
+    // Q/E rotates which axis is "behind" in 90° increments
+    var height = this._cameraHeight;  // 18
+    var offset = 10;
+    var camOffX = Math.sin(this._cameraAngle) * offset;
+    var camOffZ = Math.cos(this._cameraAngle) * offset;
+    this.camera.position.set(cx + camOffX, height, cz + camOffZ);
 
     // Camera shake offset
     if (this._shakeStart) {
-      var shakeElapsed = performance.now() - this._shakeStart;
+      var shakeElapsed = now - this._shakeStart;
       if (shakeElapsed < this._shakeDuration) {
         var shakeT = 1 - shakeElapsed / this._shakeDuration;
         this.camera.position.x += (Math.random() - 0.5) * this._shakeIntensity * shakeT;
@@ -1441,23 +1461,30 @@ var Renderer3D = (function() {
       }
     }
 
+    // Look straight at the player position — walls align perfectly with screen edges
     this.camera.lookAt(cx, 0, cz);
 
     // Player torch — with flicker
-    var time = performance.now() * 0.001;
+    var time = now * 0.001;
     this.playerLight.intensity = 1.5 + Math.sin(time * 10) * 0.1 + Math.sin(time * 7.3) * 0.05;
     this.playerLight.position.set(cx, 3, cz);
 
-    // Room-based light distance (larger in rooms, smaller in corridors)
+    // Room-based light distance: corridors feel more claustrophobic (Issue 9)
     if (this._currentGame) {
       var playerRoom = this._currentGame.getRoomAt ? this._currentGame.getRoomAt(this._currentGame.player.x, this._currentGame.player.y) : null;
-      this.playerLight.distance = playerRoom ? 15 : 6;
+      var targetLightDist = playerRoom ? 15 : 4;
+      if (!this._currentLightDist) this._currentLightDist = targetLightDist;
+      this._currentLightDist += (targetLightDist - this._currentLightDist) * 0.05;
+      this.playerLight.distance = this._currentLightDist;
     }
 
-    // Move directional light to follow roughly
-    this.directionalLight.position.set(cx + 10, 20, cz + 10);
+    // Move directional light behind camera for proper shadow casting (Issue 10)
+    this.directionalLight.position.set(cx + camOffX * 0.5, 20, cz + camOffZ * 0.5);
     this.directionalLight.target.position.set(cx, 0, cz);
     this.directionalLight.target.updateMatrixWorld();
+
+    // Wall transparency: walls between camera and player become semi-transparent (Issue 2)
+    this._updateWallTransparency(cx, cz, camOffX, camOffZ);
   };
 
   // === Process game floating texts into 3D popups ===
