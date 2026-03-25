@@ -37,12 +37,17 @@
         Sound.bgm.play('village');
       }
 
-      // Expose globals for debug/autoplay
+      // Internal cross-module references (needed for gameplay)
       window._game = game;
       window._renderer = renderer;
-      window._ui = ui;
-      window._turnManager = turnManager;
-      window._autoPlayer = new AutoPlayer(game, turnManager, ui, renderer);
+
+      // Debug-only globals (autoplay, UI/turn internals)
+      var autoPlayer = new AutoPlayer(game, turnManager, ui, renderer);
+      if (DEBUG_MODE) {
+        window._ui = ui;
+        window._turnManager = turnManager;
+        window._autoPlayer = autoPlayer;
+      }
 
       // Bind input
       var inputHandler = new Input(turnManager, game);

@@ -6,6 +6,16 @@ var UI = (function() {
   var SLOT_LETTERS = 'abcdefghijklmnopqrst';
 
   // Message type colors + bullet colors
+  // HTML escape helper to prevent XSS from user-controllable data (e.g. localStorage item names)
+  function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
+  }
+
+  // Export for use in other modules
+  window.escapeHtml = escapeHtml;
+
   var MSG_COLORS = {
     attack: '#ffffff',
     damage: '#ef5350',
@@ -74,7 +84,7 @@ var UI = (function() {
       var isLatest = (i === this.messages.length - 1);
       var weight = isLatest ? 'font-weight:bold;' : '';
       html += '<div class="msg-line' + (isLatest ? ' msg-latest' : '') + '" style="color:' + msg.color + ';opacity:' + opacity.toFixed(2) + ';' + weight + '">';
-      html += '<span style="color:' + msg.bullet + ';">●</span> ' + msg.text;
+      html += '<span style="color:' + msg.bullet + ';">●</span> ' + escapeHtml(msg.text);
       html += '</div>';
     }
     this.logEl.innerHTML = html;
@@ -111,8 +121,8 @@ var UI = (function() {
       hpColor = '#ef5350';
     }
 
-    var weaponName = player.weapon ? player.weapon.name : 'なし';
-    var shieldName = player.shield ? player.shield.name : 'なし';
+    var weaponName = player.weapon ? escapeHtml(player.weapon.name) : 'なし';
+    var shieldName = player.shield ? escapeHtml(player.shield.name) : 'なし';
 
     // Zone name
     var zoneName = '';
@@ -131,7 +141,7 @@ var UI = (function() {
     var goldText = ' | 所持金:' + player.gold + 'ギタン';
 
     var effectText = player.getStatusEffectText ? player.getStatusEffectText() : '';
-    var effectHtml = effectText ? ' <span style="color:#ff8a65;">' + effectText + '</span>' : '';
+    var effectHtml = effectText ? ' <span style="color:#ff8a65;">' + escapeHtml(effectText) + '</span>' : '';
 
     var debtText = '';
     if (game.shopDebt > 0) {
@@ -155,9 +165,9 @@ var UI = (function() {
 
     var equipEl = document.getElementById('side-equip');
     if (equipEl) {
-      var weaponText = player.weapon ? player.weapon.getDisplayName() : 'なし';
-      var shieldText = player.shield ? player.shield.getDisplayName() : 'なし';
-      var braceletText = player.bracelet ? player.bracelet.getDisplayName() : 'なし';
+      var weaponText = player.weapon ? escapeHtml(player.weapon.getDisplayName()) : 'なし';
+      var shieldText = player.shield ? escapeHtml(player.shield.getDisplayName()) : 'なし';
+      var braceletText = player.bracelet ? escapeHtml(player.bracelet.getDisplayName()) : 'なし';
       equipEl.innerHTML =
         '<div class="key-group"><span class="key-label">武器</span><span class="key-value" style="color:' + (player.weapon ? player.weapon.color : '#666') + ';">' + weaponText + '</span></div>' +
         '<div class="key-group"><span class="key-label">盾</span><span class="key-value" style="color:' + (player.shield ? player.shield.color : '#666') + ';">' + shieldText + '</span></div>' +
@@ -207,7 +217,7 @@ var UI = (function() {
         html += '<div style="padding:4px 8px;margin:2px 0;background:' + bgColor + ';border-left:' + borderLeft + ';cursor:pointer;">';
         html += '<span style="color:#888;">' + SLOT_LETTERS[i] + ')</span> ';
         html += '<span style="color:' + item.color + ';">' + item.char + '</span> ';
-        html += '<span style="color:' + nameColor + ';">' + item.getDisplayName() + '</span>';
+        html += '<span style="color:' + nameColor + ';">' + escapeHtml(item.getDisplayName()) + '</span>';
         if (equipped) html += ' <span style="color:#ffd700;">[装備中]</span>';
         html += idIndicator;
         html += '</div>';
@@ -230,7 +240,7 @@ var UI = (function() {
       // Item description
       if (selectedItem && selectedItem.description) {
         html += '<div style="color:#8892b0;font-size:11px;margin-top:8px;border-top:1px solid #222;padding-top:6px;">';
-        html += selectedItem.description;
+        html += escapeHtml(selectedItem.description);
         html += '</div>';
       }
 
@@ -262,7 +272,7 @@ var UI = (function() {
       var borderLeft = isSelected ? '3px solid #f44336' : '3px solid transparent';
       html += '<div style="padding:4px 8px;margin:2px 0;background:' + bgColor + ';border-left:' + borderLeft + ';">';
       html += '<span style="color:#888;">' + SLOT_LETTERS[i] + ')</span> ';
-      html += '<span style="color:#e0e0e0;">' + c.name + '</span>';
+      html += '<span style="color:#e0e0e0;">' + escapeHtml(c.name) + '</span>';
       html += '</div>';
     }
 

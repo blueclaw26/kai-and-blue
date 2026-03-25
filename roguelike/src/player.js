@@ -41,8 +41,8 @@ var Player = (function() {
     // Sleep state
     this.sleepTurns = 0;
 
-    // God mode (debug)
-    this.godMode = false;
+    // God mode (debug) — use isGodMode()/setGodMode() instead of direct access
+    this._godMode = false;
 
     // Status effects: [{type: 'confused'|'slowed'|'strengthened', turnsLeft: N}]
     this.statusEffects = [];
@@ -51,6 +51,16 @@ var Player = (function() {
 
   Player.prototype = Object.create(Entity.prototype);
   Player.prototype.constructor = Player;
+
+  // God mode accessors — only functional when DEBUG_MODE is enabled
+  Player.prototype.isGodMode = function() { return DEBUG_MODE && this._godMode; };
+  Player.prototype.setGodMode = function(val) { if (DEBUG_MODE) this._godMode = !!val; };
+
+  // Legacy getter for backward compatibility (returns false in production)
+  Object.defineProperty(Player.prototype, 'godMode', {
+    get: function() { return this.isGodMode(); },
+    set: function(val) { this.setGodMode(val); }
+  });
 
   Player.prototype._recalcStats = function() {
     var weaponAtk = this.weapon ? this.weapon.getEffectiveAttack() : 0;

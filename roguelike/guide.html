@@ -183,6 +183,13 @@
   (function() {
     'use strict';
 
+    // HTML escape helper
+    function escapeHtml(text) {
+      var div = document.createElement('div');
+      div.textContent = String(text);
+      return div.innerHTML;
+    }
+
     // --- Special ability descriptions ---
     var SPECIAL_DESC = {
       null: '—',
@@ -281,8 +288,8 @@
         if (id === 'guard_dog') specialStr = '泥棒時に階段付近に出現';
 
         html += '<tr>';
-        html += '<td>' + e.name + '</td>';
-        html += '<td class="symbol" style="color:' + e.color + ';">' + e.char + '</td>';
+        html += '<td>' + escapeHtml(e.name) + '</td>';
+        html += '<td class="symbol" style="color:' + e.color + ';">' + escapeHtml(e.char) + '</td>';
         html += '<td class="num">' + e.hp + '</td>';
         html += '<td class="num">' + e.attack + '</td>';
         html += '<td class="num">' + e.defense + '</td>';

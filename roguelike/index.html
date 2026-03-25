@@ -3,130 +3,148 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roguelike Dungeon</title>
+  <title>最果ての間 — 不思議のダンジョン</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="game-wrapper">
-    <div id="side-panel">
-      <div class="panel-section">
-        <div class="panel-title">操作</div>
-        <div class="panel-content">
-          <div class="key-group"><span class="key-label">移動</span><span class="key-value">矢印 / hjkl</span></div>
-          <div class="key-group"><span class="key-label">ナナメ</span><span class="key-value">yubn / テンキー</span></div>
-          <div class="key-group"><span class="key-label">足踏み</span><span class="key-value">. / テンキー5</span></div>
-          <div class="key-group"><span class="key-label">階段</span><span class="key-value">&gt;</span></div>
-          <div class="key-group"><span class="key-label">拾う</span><span class="key-value">g / ,</span></div>
-          <div class="key-group"><span class="key-label">持ち物</span><span class="key-value">i</span></div>
-          <div class="key-group"><span class="key-label">ダッシュ</span><span class="key-value">Shift+方向</span></div>
-          <div class="key-group"><span class="key-label">NPCに話す</span><span class="key-value">Enter</span></div>
-          <div class="key-group"><span class="key-label">手に取る/支払い</span><span class="key-value">g (店内)</span></div>
+  <div id="game-frame">
+    <div id="game-wrapper">
+      <div id="side-panel">
+        <div class="panel-section">
+          <div class="panel-title collapsible" data-target="sec-controls">操作 <span class="collapse-icon">▾</span></div>
+          <div class="panel-content" id="sec-controls">
+            <div class="key-group"><span class="key-label">移動</span><span class="key-value">矢印 / hjkl</span></div>
+            <div class="key-group"><span class="key-label">ナナメ</span><span class="key-value">yubn</span></div>
+            <div class="key-group"><span class="key-label">足踏み</span><span class="key-value">.</span></div>
+            <div class="key-group"><span class="key-label">階段</span><span class="key-value">&gt;</span></div>
+            <div class="key-group"><span class="key-label">拾う</span><span class="key-value">g / ,</span></div>
+            <div class="key-group"><span class="key-label">持ち物</span><span class="key-value">i</span></div>
+            <div class="key-group"><span class="key-label">ダッシュ</span><span class="key-value">Shift+方向</span></div>
+            <div class="key-group"><span class="key-label">話す</span><span class="key-value">Enter</span></div>
+          </div>
+        </div>
+        <div class="panel-section">
+          <div class="panel-title collapsible" data-target="sec-inv">持ち物操作 <span class="collapse-icon">▾</span></div>
+          <div class="panel-content" id="sec-inv">
+            <div class="key-group"><span class="key-label">使う</span><span class="key-value">e</span></div>
+            <div class="key-group"><span class="key-label">装備</span><span class="key-value">E</span></div>
+            <div class="key-group"><span class="key-label">置く</span><span class="key-value">d</span></div>
+            <div class="key-group"><span class="key-label">投げる</span><span class="key-value">t</span></div>
+            <div class="key-group"><span class="key-label">壺操作</span><span class="key-value">p / o</span></div>
+            <div class="key-group"><span class="key-label">整理</span><span class="key-value">s</span></div>
+          </div>
+        </div>
+        <div class="panel-section">
+          <div class="panel-title">装備</div>
+          <div class="panel-content" id="side-equip">
+            <div class="equip-slot"><span class="equip-icon">⚔</span><span class="equip-name" style="color:#666;">なし</span></div>
+            <div class="equip-slot"><span class="equip-icon">🛡</span><span class="equip-name" style="color:#666;">なし</span></div>
+            <div class="equip-slot"><span class="equip-icon">◎</span><span class="equip-name" style="color:#666;">なし</span></div>
+          </div>
+        </div>
+        <div class="panel-section">
+          <div class="panel-title">ターン</div>
+          <div class="panel-content">
+            <div class="turn-counter" id="side-turns">0</div>
+          </div>
+        </div>
+        <div class="panel-section panel-sound">
+          <button id="mute-btn" onclick="var m=Sound.toggleMute();this.textContent=m?'🔇 OFF':'🔊 SE';" class="sound-btn">🔊 SE</button>
+          <button id="bgm-btn" onclick="var m=Sound.bgm.toggleBgm();this.textContent=m?'🎵 OFF':'🎶 BGM';" class="sound-btn">🎶 BGM</button>
+        </div>
+        <div class="panel-section">
+          <div class="panel-title collapsible collapsed" data-target="sec-debug">デバッグ <span class="collapse-icon">▸</span></div>
+          <div class="panel-content" id="sec-debug" style="display:none;">
+            <div class="key-group"><span class="key-label">自動</span><span class="key-value">F1</span></div>
+            <div class="key-group"><span class="key-label">高速</span><span class="key-value">F2</span></div>
+            <div class="key-group"><span class="key-label">停止</span><span class="key-value">F3</span></div>
+            <div class="key-group"><span class="key-label">無敵</span><span class="key-value">F4</span></div>
+            <div class="key-group"><span class="key-label">全表示</span><span class="key-value">F5</span></div>
+            <div class="key-group"><span class="key-label">Lv+10</span><span class="key-value">F6</span></div>
+            <div class="key-group"><span class="key-label">アイテム</span><span class="key-value">F7</span></div>
+            <div class="key-group"><span class="key-label">階段へ</span><span class="key-value">F8</span></div>
+          </div>
+        </div>
+        <div class="panel-section">
+          <a href="guide.html" target="_blank" class="guide-link">攻略ガイド →</a>
         </div>
       </div>
-      <div class="panel-section">
-        <div class="panel-title">持ち物操作</div>
-        <div class="panel-content">
-          <div class="key-group"><span class="key-label">使う</span><span class="key-value">e</span></div>
-          <div class="key-group"><span class="key-label">装備</span><span class="key-value">E</span></div>
-          <div class="key-group"><span class="key-label">置く</span><span class="key-value">d</span></div>
-          <div class="key-group"><span class="key-label">投げる</span><span class="key-value">t</span></div>
-          <div class="key-group"><span class="key-label">壺に入れる</span><span class="key-value">p</span></div>
-          <div class="key-group"><span class="key-label">壺から出す</span><span class="key-value">o</span></div>
-          <div class="key-group"><span class="key-label">整理</span><span class="key-value">s</span></div>
-          <div class="key-group"><span class="key-label">閉じる</span><span class="key-value">Esc</span></div>
-        </div>
-      </div>
-      <div class="panel-section">
-        <div class="panel-title">装備</div>
-        <div class="panel-content" id="side-equip">
-          <div class="key-group"><span class="key-label">武器</span><span class="key-value" style="color:#666;">なし</span></div>
-          <div class="key-group"><span class="key-label">盾</span><span class="key-value" style="color:#666;">なし</span></div>
-          <div class="key-group"><span class="key-label">腕輪</span><span class="key-value" style="color:#666;">なし</span></div>
-        </div>
-      </div>
-      <div class="panel-section">
-        <div class="panel-title">ターン</div>
-        <div class="panel-content">
-          <div class="key-group"><span class="key-label">経過</span><span class="key-value" id="side-turns">0</span></div>
-        </div>
-      </div>
-      <div class="panel-section">
-        <div class="panel-title" style="color:#e040fb;">デバッグ</div>
-        <div class="panel-content">
-          <div class="key-group"><span class="key-label">自動プレイ</span><span class="key-value">F1</span></div>
-          <div class="key-group"><span class="key-label">高速プレイ</span><span class="key-value">F2</span></div>
-          <div class="key-group"><span class="key-label">停止</span><span class="key-value">F3</span></div>
-          <div class="key-group"><span class="key-label">無敵</span><span class="key-value">F4</span></div>
-          <div class="key-group"><span class="key-label">全表示</span><span class="key-value">F5</span></div>
-          <div class="key-group"><span class="key-label">Lv+10</span><span class="key-value">F6</span></div>
-          <div class="key-group"><span class="key-label">アイテム</span><span class="key-value">F7</span></div>
-          <div class="key-group"><span class="key-label">階段へ</span><span class="key-value">F8</span></div>
-        </div>
-      </div>
-      <div class="panel-section">
-        <div class="panel-title">サウンド</div>
-        <div class="panel-content">
-          <button id="mute-btn" onclick="var m=Sound.toggleMute();this.textContent=m?'🔇 SE OFF':'🔊 SE ON';" style="background:#1a1e2e;border:1px solid #444;color:#ccc;padding:4px 12px;cursor:pointer;border-radius:4px;font-size:14px;">🔊 SE ON</button>
-          <button id="bgm-btn" onclick="var m=Sound.bgm.toggleBgm();this.textContent=m?'🎵 BGM OFF':'🎶 BGM ON';" style="background:#1a1e2e;border:1px solid #444;color:#ccc;padding:4px 12px;cursor:pointer;border-radius:4px;font-size:14px;margin-top:4px;">🎶 BGM ON</button>
-        </div>
-      </div>
-      <div class="panel-section">
-        <a href="guide.html" target="_blank" class="guide-link">攻略ガイド →</a>
-      </div>
-    </div>
 
-    <div id="game-container">
-      <div id="status-bar">1F | HP: 20/20 | Lv.1 | 満腹度: 100/100 | 攻:2 防:1</div>
-      <canvas id="game-canvas"></canvas>
-      <div id="minimap-container">
-        <canvas id="minimap-canvas"></canvas>
+      <div id="game-container">
+        <div id="status-bar">
+          <div class="status-row-1">
+            <div class="status-left">
+              <span class="floor-info">1F 洞窟</span>
+            </div>
+            <div class="status-center">
+              <span class="hp-label">❤</span>
+              <div class="hp-bar-container">
+                <div class="hp-bar-fill" style="width:100%;background:#66bb6a;"></div>
+                <span class="hp-text">20/20</span>
+              </div>
+              <span class="level-text">Lv.1</span>
+            </div>
+            <div class="status-right">
+              <span class="satiety-text">🍙 100</span>
+              <span class="gold-text">💰 0</span>
+            </div>
+          </div>
+          <div class="status-row-2" id="equip-bar">
+            <span class="equip-weapon">⚔ なし</span>
+            <span class="equip-shield">🛡 なし</span>
+            <span class="equip-bracelet">◎ なし</span>
+            <span class="status-effects"></span>
+          </div>
+        </div>
+        <div id="canvas-area">
+          <canvas id="game-canvas"></canvas>
+          <div id="minimap-container">
+            <canvas id="minimap-canvas"></canvas>
+          </div>
+        </div>
+        <div id="message-log"></div>
       </div>
-      <div id="message-log"></div>
     </div>
   </div>
 
   <!-- Title Screen -->
-  <div id="title-overlay" style="display:flex;position:fixed;top:0;left:0;width:100%;height:100%;background:#0a0a0a;z-index:99999;align-items:center;justify-content:center;flex-direction:column;cursor:pointer;">
-    <pre style="color:#4a6741;font-family:monospace;font-size:12px;line-height:1.2;margin-bottom:24px;">
-    ╔═══════════════════════════════╗
-    ║                               ║
-    ║   ░░░   ░░░   ░░░   ░░░      ║
-    ║   ░ ░   ░ ░   ░ ░   ░ ░      ║
-    ║   ░░░   ░░░   ░░░   ░░░      ║
-    ║     ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓          ║
-    ║     ▓   地 下 迷 宮  ▓          ║
-    ║     ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓          ║
-    ║                               ║
-    ╚═══════════════════════════════╝
-    </pre>
-    <div style="color:#e8a44a;font-size:36px;font-family:'Courier New',monospace;margin-bottom:16px;text-shadow:0 0 20px rgba(232,164,74,0.5);">最果ての間</div>
-    <div style="color:#666;font-size:14px;font-family:'Courier New',monospace;animation:blink 1.5s infinite;">Press any key to start</div>
-    <style>@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}</style>
+  <div id="title-overlay">
+    <div class="title-bg-pattern"></div>
+    <div class="title-content">
+      <div class="title-text">最果ての間</div>
+      <div class="title-subtitle">不思議のダンジョン</div>
+      <div class="press-start">— Press any key to start —</div>
+      <div class="title-version">v0.1 — Kai & Blue</div>
+    </div>
   </div>
 
+  <!-- Game Over -->
   <div id="game-over-overlay" style="display:none;">
     <div class="game-over-box">
       <div class="game-over-title">倒れてしまった...</div>
       <div class="game-over-info">
         <span class="go-floor">1F</span> で力尽きた（<span class="go-level">Lv.1</span>）
       </div>
-      <button id="restart-btn" class="restart-button">村に戻る</button>
+      <button id="restart-btn" class="rpg-button">村に戻る</button>
     </div>
   </div>
 
+  <!-- Victory -->
   <div id="victory-overlay" style="display:none;">
     <div class="victory-box">
-      <div class="victory-title">🎉 最果ての間を踏破した！ 🎉</div>
+      <div class="victory-title">最果ての間を踏破した！</div>
+      <div class="victory-subtitle">あなたは真の風来人だ！</div>
       <div class="victory-stats">
-        <div>ターン数: <span class="victory-turns">0</span></div>
-        <div>倒した敵: <span class="victory-kills">0</span></div>
-        <div>拾ったアイテム: <span class="victory-items">0</span></div>
-        <div>最終レベル: <span class="victory-level">Lv.1</span></div>
+        <div class="stat-row"><span class="stat-label">ターン数</span><span class="stat-value victory-turns">0</span></div>
+        <div class="stat-row"><span class="stat-label">倒した敵</span><span class="stat-value victory-kills">0</span></div>
+        <div class="stat-row"><span class="stat-label">拾ったアイテム</span><span class="stat-value victory-items">0</span></div>
+        <div class="stat-row"><span class="stat-label">最終レベル</span><span class="stat-value victory-level">Lv.1</span></div>
       </div>
-      <button id="victory-restart-btn" class="restart-button">もう一度挑戦する</button>
+      <button id="victory-restart-btn" class="rpg-button rpg-button-gold">もう一度挑戦する</button>
     </div>
   </div>
 
+  <script src="src/config.js"></script>
   <script src="src/sound.js"></script>
   <script src="src/dungeon.js"></script>
   <script src="src/entity.js"></script>
@@ -150,6 +168,37 @@
   <script src="src/autoplay.js"></script>
   <script src="src/input.js"></script>
   <script src="src/main.js"></script>
+
+  <!-- Collapsible panel sections -->
+  <script>
+    document.querySelectorAll('.panel-title.collapsible').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var targetId = el.getAttribute('data-target');
+        var target = document.getElementById(targetId);
+        var icon = el.querySelector('.collapse-icon');
+        if (target) {
+          if (target.style.display === 'none') {
+            target.style.display = '';
+            icon.textContent = '▾';
+            el.classList.remove('collapsed');
+          } else {
+            target.style.display = 'none';
+            icon.textContent = '▸';
+            el.classList.add('collapsed');
+          }
+        }
+      });
+    });
+  </script>
+
+  <script>
+    if (!DEBUG_MODE) {
+      var debugPanel = document.getElementById('sec-debug');
+      if (debugPanel) debugPanel.style.display = 'none';
+      var debugTitle = debugPanel ? debugPanel.previousElementSibling : null;
+      if (debugTitle) debugTitle.style.display = 'none';
+    }
+  </script>
 
   <a href="../roguelike-docs/" class="docs-link" title="制作記録">📖</a>
 </body>

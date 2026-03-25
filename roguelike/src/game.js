@@ -89,29 +89,54 @@ var Game = (function() {
 
   Game.prototype._loadStorage = function() {
     try {
-      var data = localStorage.getItem('roguelike_storage');
-      if (data) {
-        var parsed = JSON.parse(data);
+      var raw = localStorage.getItem('roguelike_storage');
+      if (raw) {
+        var parsed = JSON.parse(raw);
         this.storage = [];
-        for (var i = 0; i < parsed.length; i++) {
-          var saved = parsed[i];
-          var item = new Item(0, 0, saved.dataKey);
-          if (saved.plus !== undefined) item.plus = saved.plus;
-          if (saved.seals) item.seals = saved.seals;
-          if (saved.identified) item.identified = true;
-          if (saved.count) item.count = saved.count;
-          if (saved.uses !== undefined) item.uses = saved.uses;
-          this.storage.push(item);
+        if (!Array.isArray(parsed)) {
+          console.warn('Invalid storage data format, resetting');
+          localStorage.removeItem('roguelike_storage');
+        } else {
+          var count = Math.min(parsed.length, 20); // max 20 items
+          for (var i = 0; i < count; i++) {
+            var saved = parsed[i];
+            if (!saved || typeof saved !== 'object') continue;
+            if (typeof saved.dataKey !== 'string' || !ITEM_DATA[saved.dataKey]) continue; // unknown item type
+            var item = new Item(0, 0, saved.dataKey);
+            // Clamp and validate numeric values
+            if (saved.plus !== undefined) item.plus = Math.max(-99, Math.min(99, parseInt(saved.plus) || 0));
+            if (saved.seals && Array.isArray(saved.seals)) {
+              item.seals = saved.seals.filter(function(s) { return typeof s === 'string' && s.length < 30; });
+            }
+            if (saved.identified) item.identified = true;
+            if (saved.count !== undefined) item.count = Math.max(1, Math.min(99, parseInt(saved.count) || 1));
+            if (saved.uses !== undefined) item.uses = Math.max(0, Math.min(99, parseInt(saved.uses) || 0));
+            this.storage.push(item);
+          }
         }
       }
+    } catch(e) {
+      console.warn('Invalid storage data, resetting');
+      localStorage.removeItem('roguelike_storage');
+    }
+    try {
       var idData = localStorage.getItem('roguelike_identified');
       if (idData) {
         var idArr = JSON.parse(idData);
-        for (var j = 0; j < idArr.length; j++) {
-          window.IDENTIFIED_TYPES.add(idArr[j]);
+        if (Array.isArray(idArr)) {
+          for (var j = 0; j < idArr.length; j++) {
+            if (typeof idArr[j] === 'string' && idArr[j].length < 50) {
+              window.IDENTIFIED_TYPES.add(idArr[j]);
+            }
+          }
+        } else {
+          localStorage.removeItem('roguelike_identified');
         }
       }
-    } catch(e) { /* ignore */ }
+    } catch(e) {
+      console.warn('Invalid identified data, resetting');
+      localStorage.removeItem('roguelike_identified');
+    }
   };
 
   Game.prototype._saveStorage = function() {
