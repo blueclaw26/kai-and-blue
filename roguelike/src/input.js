@@ -48,6 +48,12 @@ var Input = (function() {
 
   Input.prototype.handleKey = function(e) {
     // Village scene handling
+    // Inventory takes priority over scene (works in both village and dungeon)
+    if (this.game.inventoryOpen) {
+      this._handleInventoryKey(e);
+      return;
+    }
+
     if (this.game.scene === 'village') {
       this._handleVillageKey(e);
       return;

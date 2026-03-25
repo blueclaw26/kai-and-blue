@@ -25,8 +25,8 @@ var Item = (function() {
       if (data.damage !== undefined) this.damage = data.damage;
     }
 
-    // Identification: weapons, shields, food, bracelets, arrows are always identified
-    if (this.type === 'weapon' || this.type === 'shield' || this.type === 'food' || this.type === 'bracelet' || this.type === 'arrow') {
+    // Identification: weapons, shields, food, bracelets, arrows, and 脱出の巻物 are always identified
+    if (this.type === 'weapon' || this.type === 'shield' || this.type === 'food' || this.type === 'bracelet' || this.type === 'arrow' || dataKey === 'scroll_escape') {
       this.identified = true;
     } else {
       // Check global identification table
