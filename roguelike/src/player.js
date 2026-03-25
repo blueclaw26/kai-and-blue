@@ -3,12 +3,13 @@ var Player = (function() {
   'use strict';
 
   var MAX_INVENTORY = 20;
-  var EXP_THRESHOLDS = [0, 10, 25, 50, 80, 120, 170, 230, 300, 400, 500, 620, 760, 920, 1100, 1300, 1520, 1760, 2020, 2300];
+  // EXP curve: ~1.4x multiplier for levels beyond the table
+  var EXP_THRESHOLDS = [0, 10, 25, 50, 90, 150, 230, 340, 480, 650, 910, 1274, 1784, 2498, 3497, 4896, 6854, 9596, 13434, 18808];
 
   function Player(x, y) {
     Entity.call(this, x, y, '@', '#4fc3f7', 'Player');
-    this.hp = 20;
-    this.maxHp = 20;
+    this.hp = 15;
+    this.maxHp = 15;
     this.baseAttack = 2;
     this.attack = 2;
     this.baseDefense = 1;
@@ -184,6 +185,10 @@ var Player = (function() {
       this.hp = Math.min(this.hp + 3, this.maxHp);
       this.baseAttack += 1;
       this.baseDefense += (this.level % 2 === 0) ? 1 : 0;
+      // Max satiety bonus at milestone levels
+      if (this.level === 5 || this.level === 10 || this.level === 15 || this.level === 20) {
+        this.maxSatiety = (this.maxSatiety || 100) + 5;
+      }
       this._recalcStats();
       if (ui) {
         Sound.play('levelup');
@@ -198,8 +203,9 @@ var Player = (function() {
 
   Player.prototype.tickSatiety = function(ui) {
     // Check for hunger seal (腹) on shield — halves hunger rate
+    // Hunger rate: 1 satiety per 5 turns (0.2 per turn). Hunger seal halves it. Hunger bracelet doubles it.
     var hasHungerSeal = this.shield && this.shield.seals && this.shield.seals.indexOf('hunger') !== -1;
-    var baseHungerRate = hasHungerSeal ? 0.05 : 0.1;
+    var baseHungerRate = hasHungerSeal ? 0.1 : 0.2;
     var hungerRate = (this.bracelet && this.bracelet.effect === 'hunger') ? baseHungerRate * 2 : baseHungerRate;
     this._satietyAccum += hungerRate;
     if (this._satietyAccum >= 1) {

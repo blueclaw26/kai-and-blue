@@ -561,15 +561,20 @@ var Enemy = (function() {
   Enemy.spawnForFloor = function(dungeon, floorNum, playerStartRoom, extinctEnemies) {
     var enemies = [];
 
-    var minCount, maxCount;
+    var count;
     if (floorNum <= 5) {
-      minCount = 3; maxCount = 6;
-    } else if (floorNum <= 10) {
-      minCount = 5; maxCount = 8;
+      count = 3 + Math.floor(Math.random() * 3); // 3-5
+    } else if (floorNum <= 15) {
+      count = 4 + Math.floor(Math.random() * 3); // 4-6
+    } else if (floorNum <= 30) {
+      count = 5 + Math.floor(Math.random() * 3); // 5-7
+    } else if (floorNum <= 50) {
+      count = 6 + Math.floor(Math.random() * 4); // 6-9
+    } else if (floorNum <= 75) {
+      count = 7 + Math.floor(Math.random() * 4); // 7-10
     } else {
-      minCount = 6; maxCount = 10;
+      count = 8 + Math.floor(Math.random() * 5); // 8-12
     }
-    var count = minCount + Math.floor(Math.random() * (maxCount - minCount + 1));
 
     var availableRooms = [];
     var pCenter = {

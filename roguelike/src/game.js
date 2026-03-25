@@ -588,7 +588,9 @@ var Game = (function() {
       this.ui.addMessage('ここからが本当の戦いだ...', 'system');
     }
 
-    if (this.floorNum > 1 && this.dungeon.floorType === 'normal' && Math.random() < 0.20) {
+    // Shop frequency: F2-10: 15%, F11-30: 20%, F31+: 15%
+    var shopChance = this.floorNum <= 10 ? 0.15 : this.floorNum <= 30 ? 0.20 : 0.15;
+    if (this.floorNum > 1 && this.dungeon.floorType === 'normal' && Math.random() < shopChance) {
       this._generateShop(startRoom);
     }
   };
@@ -1064,7 +1066,9 @@ var Game = (function() {
 
     if (!this.gameOver && !this.victory) {
       var livingCount = this.livingEnemyCount();
-      if (livingCount < MAX_ENEMIES_PER_FLOOR && Math.random() < 0.05) {
+      // Natural enemy spawn rate: scales with floor depth
+      var spawnRate = this.floorNum <= 30 ? 0.02 : this.floorNum <= 60 ? 0.03 : 0.05;
+      if (livingCount < MAX_ENEMIES_PER_FLOOR && Math.random() < spawnRate) {
         var newEnemy = Enemy.spawnOneEnemy(this);
         if (newEnemy) {
           this.enemies.push(newEnemy);

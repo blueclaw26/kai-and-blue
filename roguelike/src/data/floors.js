@@ -9,55 +9,57 @@ var FLOOR_TABLE = {
     [2, 8, 'boy_cart', 5],
     [3, 10, 'nigiri', 6],
     [3, 9, 'slug', 5],
-    // Mid-early (F10-25)
-    [4, 12, 'thief_pelican', 4],
-    [5, 15, 'midnighthat', 7],
-    [6, 18, 'kengo', 4],
-    [7, 20, 'polygon', 6],
-    [7, 20, 'curse_girl', 4],
-    // Mid (F10-30)
-    [10, 30, 'dragon', 5],
-    [12, 30, 'skull_mage', 5],
-    [15, 35, 'minotaur', 4],
-    // Mid-late (F25-50)
-    [25, 50, 'big_chintala', 6],
-    [30, 60, 'mega_dragon', 4],
-    [25, 45, 'dragon', 3],
-    [25, 40, 'minotaur', 3],
-    // Late (F50-75)
+    // Mid-early (F4-18)
+    [4, 10, 'thief_pelican', 4],
+    [6, 14, 'midnighthat', 7],
+    [7, 16, 'kengo', 4],
+    [8, 16, 'curse_girl', 4],
+    [9, 18, 'polygon', 6],
+    // Mid (F13-40)
+    [13, 30, 'dragon', 5],
+    [18, 40, 'skull_mage', 5],
+    [16, 35, 'minotaur', 4],
+    // Mid-late (F28-65)
+    [28, 50, 'big_chintala', 6],
+    [35, 65, 'mega_dragon', 4],
+    [28, 45, 'dragon', 3],
+    [28, 40, 'minotaur', 3],
+    // Late (F50-85)
     [50, 80, 'death_reaper', 5],
     [55, 85, 'phantom', 4],
-    [50, 70, 'big_chintala', 3],
+    [50, 65, 'big_chintala', 3],
     [50, 65, 'mega_dragon', 4],
-    // Nightmare (F75-99)
-    [75, 99, 'hell_dragon', 5],
+    // Nightmare (F70-99)
+    [70, 99, 'hell_dragon', 5],
     [80, 99, 'chaos_knight', 5],
-    [75, 99, 'death_reaper', 3],
-    [75, 99, 'phantom', 3],
-    [70, 99, 'mega_dragon', 2]
+    [70, 99, 'death_reaper', 3],
+    [70, 99, 'phantom', 3],
+    [65, 99, 'mega_dragon', 2]
   ],
   items: [
     // [minFloor, maxFloor, itemId, spawnWeight]
-    // Food & healing (always available)
+    // Food & healing (always available — increased onigiri weight for hunger pressure)
     [1, 99, 'herb', 8],
-    [1, 99, 'onigiri', 8],
+    [1, 99, 'onigiri', 12],
     [3, 99, 'otogiriso', 7],
-    [3, 99, 'big_onigiri', 4],
-    // Early weapons & shields
-    [1, 20, 'wooden_sword', 5],
-    [1, 20, 'wooden_shield', 5],
-    [2, 25, 'bronze_sword', 4],
-    [2, 25, 'leather_shield', 4],
-    // Mid weapons & shields
-    [5, 40, 'katana', 3],
-    [5, 40, 'iron_shield', 3],
-    [6, 50, 'dotanuki', 2],
+    [3, 99, 'big_onigiri', 5],
+    // Early weapons & shields (including decent ones on F1)
+    [1, 20, 'wooden_sword', 6],
+    [1, 20, 'wooden_shield', 6],
+    [1, 20, 'club', 4],
+    [1, 20, 'palm_shield', 4],
+    [1, 25, 'bronze_sword', 5],
+    [1, 25, 'leather_shield', 5],
+    // Mid weapons & shields (カタナ/どうたぬき available from F1 with low weight for "good draw")
+    [1, 40, 'katana', 2],
+    [1, 40, 'iron_shield', 3],
+    [1, 50, 'dotanuki', 1],
     [5, 50, 'heavy_shield', 2],
     [5, 50, 'drain_sword', 2],
     [3, 40, 'ghost_sickle', 2],
-    // Late weapons & shields
-    [8, 99, 'dragon_sword', 2],
-    [12, 99, 'kabura', 1],
+    // Late weapons & shields (rare items can appear from F5 with very low weight)
+    [5, 99, 'dragon_sword', 1],
+    [5, 99, 'kabura', 1],
     [7, 99, 'dragon_shield', 2],
     [6, 99, 'blast_shield', 2],
     [5, 99, 'counter_shield', 2],

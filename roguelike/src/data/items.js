@@ -8,6 +8,7 @@ var ITEM_DATA = {
   kabura: { type: 'weapon', name: 'カブラステギ', char: '/', color: '#ff7043', attack: 15, slots: 8, minFloor: 12, weight: 1, price: 10000 },
   drain_sword: { type: 'weapon', name: 'ドレインバスター', char: '/', color: '#ce93d8', attack: 6, slots: 4, minFloor: 5, weight: 2, price: 2000 },
   ghost_sickle: { type: 'weapon', name: '成仏のカマ', char: '/', color: '#81d4fa', attack: 5, slots: 4, minFloor: 3, weight: 3, price: 1500 },
+  club: { type: 'weapon', name: 'こん棒', char: '/', color: '#a1887f', attack: 2, slots: 7, minFloor: 1, weight: 4, price: 100 },
   dragon_sword: { type: 'weapon', name: 'ドラゴンキラー', char: '/', color: '#e53935', attack: 10, slots: 5, minFloor: 8, weight: 2, price: 5000 },
 
   // Shields
@@ -18,6 +19,7 @@ var ITEM_DATA = {
   dragon_shield: { type: 'shield', name: 'ドラゴンシールド', char: '[', color: '#e53935', defense: 5, slots: 4, minFloor: 7, weight: 2, price: 4000 },
   blast_shield: { type: 'shield', name: '爆発よけの盾', char: '[', color: '#ff9800', defense: 4, slots: 3, minFloor: 6, weight: 2, price: 3000 },
   counter_shield: { type: 'shield', name: 'バトルカウンター', char: '[', color: '#9c27b0', defense: 3, slots: 3, minFloor: 5, weight: 2, price: 2500 },
+  palm_shield: { type: 'shield', name: '正面戦士の盾', char: '[', color: '#bcaaa4', defense: 2, slots: 6, minFloor: 1, weight: 4, price: 100 },
 
   // Grass (potions)
   herb: { type: 'grass', name: '薬草', char: '!', color: '#66bb6a', effect: 'heal', value: 25, minFloor: 1, weight: 15, price: 100 },

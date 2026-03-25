@@ -468,7 +468,8 @@ var Dungeon = (function() {
     }
 
     // Monster House: chance scales with depth
-    var mhChance = floorNum >= 60 ? 0.20 : floorNum >= 30 ? 0.15 : 0.10;
+    // F3-10: 8%, F11-30: 12%, F31-60: 18%, F61-99: 25%
+    var mhChance = floorNum >= 61 ? 0.25 : floorNum >= 31 ? 0.18 : floorNum >= 11 ? 0.12 : 0.08;
     var monsterHouseRoom = null;
     if (floorNum >= 3 && Math.random() < mhChance && rooms.length > 2) {
       // Pick a room that isn't the start room and isn't too small

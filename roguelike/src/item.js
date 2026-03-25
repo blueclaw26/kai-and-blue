@@ -590,30 +590,60 @@ var Item = (function() {
   // Spawn items for a floor using FLOOR_TABLE
   Item.spawnForFloor = function(dungeon, floorNum, playerStartRoom) {
     var items = [];
-    var count = 3 + Math.floor(Math.random() * 6); // 3-8
+
+    // Floor item count: varies by depth
+    var minCount, maxCount;
+    if (floorNum <= 10) {
+      minCount = 5; maxCount = 7;
+    } else if (floorNum <= 30) {
+      minCount = 4; maxCount = 6;
+    } else if (floorNum <= 60) {
+      minCount = 3; maxCount = 5;
+    } else {
+      minCount = 2; maxCount = 4;
+    }
+    var count = minCount + Math.floor(Math.random() * (maxCount - minCount + 1));
 
     var pCenter = {
       x: Math.floor(playerStartRoom.x + playerStartRoom.w / 2),
       y: Math.floor(playerStartRoom.y + playerStartRoom.h / 2)
     };
 
-    for (var i = 0; i < count; i++) {
-      var room = dungeon.rooms[Math.floor(Math.random() * dungeon.rooms.length)];
-      var ix = room.x + 1 + Math.floor(Math.random() * (room.w - 2));
-      var iy = room.y + 1 + Math.floor(Math.random() * (room.h - 2));
-
-      if (dungeon.grid[iy] && dungeon.grid[iy][ix] === Dungeon.TILE.STAIRS_DOWN) continue;
-      if (dungeon.grid[iy] && (dungeon.grid[iy][ix] === Dungeon.TILE.WATER || dungeon.grid[iy][ix] === Dungeon.TILE.LAVA)) continue;
-      if (ix === pCenter.x && iy === pCenter.y) continue;
-
-      var occupied = false;
-      for (var j = 0; j < items.length; j++) {
-        if (items[j].x === ix && items[j].y === iy) { occupied = true; break; }
+    // Helper to find a valid placement position
+    function findPosition() {
+      for (var attempt = 0; attempt < 20; attempt++) {
+        var room = dungeon.rooms[Math.floor(Math.random() * dungeon.rooms.length)];
+        var ix = room.x + 1 + Math.floor(Math.random() * Math.max(1, room.w - 2));
+        var iy = room.y + 1 + Math.floor(Math.random() * Math.max(1, room.h - 2));
+        if (dungeon.grid[iy] && dungeon.grid[iy][ix] === Dungeon.TILE.STAIRS_DOWN) continue;
+        if (dungeon.grid[iy] && (dungeon.grid[iy][ix] === Dungeon.TILE.WATER || dungeon.grid[iy][ix] === Dungeon.TILE.LAVA)) continue;
+        if (ix === pCenter.x && iy === pCenter.y) continue;
+        var occupied = false;
+        for (var j = 0; j < items.length; j++) {
+          if (items[j].x === ix && items[j].y === iy) { occupied = true; break; }
+        }
+        if (!occupied) return { x: ix, y: iy };
       }
-      if (occupied) continue;
+      return null;
+    }
+
+    // Guaranteed food item on F1-3
+    if (floorNum <= 3) {
+      var foodPos = findPosition();
+      if (foodPos) {
+        var foodKey = Math.random() < 0.3 ? 'big_onigiri' : 'onigiri';
+        var foodItem = new Item(foodPos.x, foodPos.y, foodKey);
+        items.push(foodItem);
+        count--; // Don't double-count
+      }
+    }
+
+    for (var i = 0; i < count; i++) {
+      var pos = findPosition();
+      if (!pos) continue;
 
       var selectedKey = pickItemForFloor(floorNum);
-      var item = new Item(ix, iy, selectedKey);
+      var item = new Item(pos.x, pos.y, selectedKey);
 
       // Floor-based identification chance
       if (!item.identified) {
