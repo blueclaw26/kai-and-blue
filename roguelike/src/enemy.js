@@ -348,9 +348,9 @@ var Enemy = (function() {
     var queue = [{ x: start.x, y: start.y, firstStep: null }];
     var visited = {};
     visited[start.x + ',' + start.y] = true;
-    var dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+    var dirs = [[0,-1],[0,1],[-1,0],[1,0],[-1,-1],[1,-1],[-1,1],[1,1]];
     var steps = 0;
-    var maxSteps = 20;
+    var maxSteps = 30;
     var bestMove = null;
 
     while (queue.length > 0 && steps < maxSteps) {
@@ -427,6 +427,8 @@ var Enemy = (function() {
     var stepY = dy === 0 ? 0 : (dy > 0 ? 1 : -1);
 
     var moves = [];
+    // Try diagonal first (most direct path), then cardinal
+    if (stepX !== 0 && stepY !== 0) moves.push([stepX, stepY]);
     if (Math.abs(dx) >= Math.abs(dy)) {
       if (stepX !== 0) moves.push([stepX, 0]);
       if (stepY !== 0) moves.push([0, stepY]);
