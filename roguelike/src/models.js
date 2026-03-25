@@ -46,14 +46,15 @@ var Models3D = (function() {
     return brighten(baseColor, 0.3);
   }
 
-  // === Player Model ===
+  // === Player Model (Issue 4: improved with cape, helmet cone, metallic sheen) ===
   function createPlayer() {
     var group = new THREE.Group();
 
-    // Body
+    // Body — metallic Phong material
+    var bodyMat = new THREE.MeshPhongMaterial({ color: 0x2196f3, shininess: 40, specular: 0x444444 });
     var body = new THREE.Mesh(
       new THREE.BoxGeometry(0.5, 0.7, 0.3),
-      mat(0x2196f3)
+      bodyMat
     );
     body.position.y = 0.55;
     body.castShadow = true;
@@ -68,30 +69,62 @@ var Models3D = (function() {
     head.castShadow = true;
     group.add(head);
 
-    // Helmet
+    // Helmet (half sphere + cone on top)
+    var helmetMat = new THREE.MeshPhongMaterial({ color: 0x607d8b, shininess: 60, specular: 0x888888 });
     var helmet = new THREE.Mesh(
       new THREE.SphereGeometry(0.22, 8, 4, 0, Math.PI * 2, 0, Math.PI / 2),
-      mat(0x607d8b)
+      helmetMat
     );
     helmet.position.y = 1.15;
     group.add(helmet);
 
-    // Sword
-    var sword = new THREE.Mesh(
-      new THREE.BoxGeometry(0.08, 0.5, 0.08),
-      mat(0xbdbdbd)
+    // Helmet cone point
+    var helmetCone = new THREE.Mesh(
+      new THREE.ConeGeometry(0.08, 0.2, 6),
+      helmetMat
     );
-    sword.position.set(0.35, 0.7, 0);
-    sword.rotation.z = -0.3;
+    helmetCone.position.y = 1.35;
+    group.add(helmetCone);
+
+    // Sword — longer and angled, metallic
+    var swordMat = new THREE.MeshPhongMaterial({ color: 0xbdbdbd, shininess: 80, specular: 0xffffff });
+    var sword = new THREE.Mesh(
+      new THREE.BoxGeometry(0.07, 0.65, 0.07),
+      swordMat
+    );
+    sword.position.set(0.38, 0.75, 0);
+    sword.rotation.z = -0.4;
     group.add(sword);
 
-    // Shield
-    var shield = new THREE.Mesh(
-      new THREE.BoxGeometry(0.05, 0.3, 0.25),
+    // Sword guard
+    var guard = new THREE.Mesh(
+      new THREE.BoxGeometry(0.18, 0.04, 0.04),
       mat(0x795548)
+    );
+    guard.position.set(0.32, 0.48, 0);
+    guard.rotation.z = -0.4;
+    group.add(guard);
+
+    // Shield
+    var shieldMat = new THREE.MeshPhongMaterial({ color: 0x795548, shininess: 30, specular: 0x333333 });
+    var shield = new THREE.Mesh(
+      new THREE.BoxGeometry(0.05, 0.32, 0.28),
+      shieldMat
     );
     shield.position.set(-0.3, 0.6, 0);
     group.add(shield);
+
+    // Cape/cloak (flat plane behind body, animated with sin in render loop)
+    var capeMat = new THREE.MeshLambertMaterial({ color: 0x1565c0, side: THREE.DoubleSide });
+    var cape = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.4, 0.55),
+      capeMat
+    );
+    cape.position.set(0, 0.55, -0.18);
+    cape.rotation.x = 0.1;
+    cape.userData._isCape = true;
+    group.add(cape);
+    group.userData._cape = cape;
 
     return group;
   }
@@ -681,24 +714,65 @@ var Models3D = (function() {
     return group;
   }
 
-  // === Stairs Model ===
+  // === Stairs Model (Issue 6: much more visible) ===
   function createStairs() {
     var group = new THREE.Group();
+
+    // Larger cone pointing down
     var cone = new THREE.Mesh(
-      new THREE.ConeGeometry(0.2, 0.3, 4),
-      mat(0xffd700, { emissive: 0x665500 })
+      new THREE.ConeGeometry(0.3, 0.45, 6),
+      mat(0xffd700, { emissive: 0x886600 })
     );
-    cone.position.y = 0.15;
+    cone.position.y = 0.25;
     cone.rotation.x = Math.PI; // point down
     group.add(cone);
-    // Glow ring
+
+    // Outer glow ring (larger)
     var ring = new THREE.Mesh(
-      new THREE.TorusGeometry(0.25, 0.03, 6, 12),
-      mat(0xffeb3b, { emissive: 0x665500 })
+      new THREE.TorusGeometry(0.4, 0.04, 8, 16),
+      mat(0xffeb3b, { emissive: 0x886600 })
     );
     ring.position.y = 0.02;
     ring.rotation.x = Math.PI / 2;
     group.add(ring);
+
+    // Inner ring
+    var ring2 = new THREE.Mesh(
+      new THREE.TorusGeometry(0.25, 0.03, 6, 12),
+      mat(0xffd700, { emissive: 0x665500 })
+    );
+    ring2.position.y = 0.04;
+    ring2.rotation.x = Math.PI / 2;
+    group.add(ring2);
+
+    // Spiral decoration around the stairs
+    var spiralMat = mat(0xffd700, { emissive: 0x665500 });
+    for (var si = 0; si < 8; si++) {
+      var spiralAngle = (si / 8) * Math.PI * 2;
+      var spiralR = 0.32;
+      var spiralDot = new THREE.Mesh(
+        new THREE.SphereGeometry(0.03, 4, 4),
+        spiralMat
+      );
+      spiralDot.position.set(
+        Math.cos(spiralAngle) * spiralR,
+        0.05 + si * 0.03,
+        Math.sin(spiralAngle) * spiralR
+      );
+      group.add(spiralDot);
+    }
+
+    // Pillar of light (tall translucent cylinder)
+    var pillarMat = new THREE.MeshBasicMaterial({
+      color: 0xffd700, transparent: true, opacity: 0.12
+    });
+    var pillar = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.2, 0.35, 4, 8),
+      pillarMat
+    );
+    pillar.position.y = 2.0;
+    group.add(pillar);
+
     return group;
   }
 

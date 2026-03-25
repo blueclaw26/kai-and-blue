@@ -169,6 +169,11 @@ var Renderer3D = (function() {
 
     // Store game reference for room checks
     this._currentGame = null;
+
+    // Smooth camera timing
+    this._lastCamTime = 0;
+    this._currentLightDist = 15;
+    this._lastStairParticle = 0;
   }
 
   // === Init ===
@@ -190,8 +195,9 @@ var Renderer3D = (function() {
       frustumSize / 2, frustumSize / -2,
       0.1, 1000
     );
-    // Front-facing quarter view: camera behind and above, looking down Z axis
-    this.camera.position.set(0, 18, 12);
+    // Camera positioned directly behind player (along Z axis) and elevated
+    // Walls perfectly align with screen edges — no angle
+    this.camera.position.set(0, 18, 10);
     this.camera.lookAt(0, 0, 0);
 
     // WebGL renderer
@@ -406,7 +412,11 @@ var Renderer3D = (function() {
         switch (tile) {
           case 0: // WALL
             // Use multi-material: darker top face for dungeon feel
-            var wallTopMat = getCachedMaterial(zone.wall * 0.7 | 0);
+            var wtc = zone.wall;
+            var wallTopColor = (((wtc >> 16) & 0xff) * 0.6 | 0) << 16 |
+                               (((wtc >> 8) & 0xff) * 0.6 | 0) << 8 |
+                               ((wtc & 0xff) * 0.6 | 0);
+            var wallTopMat = getCachedMaterial(wallTopColor);
             var wallSideMat = wallMat;
             var wallMultiMat = [wallSideMat, wallSideMat, wallTopMat, wallSideMat, wallSideMat, wallSideMat];
             mesh = new THREE.Mesh(wallGeo, wallMultiMat);
@@ -493,8 +503,8 @@ var Renderer3D = (function() {
     }
     var stairsPos = this._getStairsPos(game);
     if (stairsPos) {
-      this._stairsLight = new THREE.PointLight(0xffd700, 1.5, 5);
-      this._stairsLight.position.set(stairsPos.x, 1.0, stairsPos.y);
+      this._stairsLight = new THREE.PointLight(0xffd700, 2.5, 8);
+      this._stairsLight.position.set(stairsPos.x, 1.5, stairsPos.y);
       this.scene.add(this._stairsLight);
     }
 
@@ -919,14 +929,24 @@ var Renderer3D = (function() {
           }
         } else if (isExp) {
           mesh.visible = true;
-          // Dimmed — use darker version
+          // Dimmed — use darker version (handles both single material and material arrays)
           if (!mesh.userData.dimMaterial) {
             var baseMat = mesh.userData.baseMaterial;
-            var dimMat = baseMat.clone();
-            var c = new THREE.Color(baseMat.color.getHex());
-            c.multiplyScalar(0.3);
-            dimMat.color = c;
-            mesh.userData.dimMaterial = dimMat;
+            if (Array.isArray(baseMat)) {
+              mesh.userData.dimMaterial = baseMat.map(function(m) {
+                var dm = m.clone();
+                var dc = new THREE.Color(m.color.getHex());
+                dc.multiplyScalar(0.3);
+                dm.color = dc;
+                return dm;
+              });
+            } else {
+              var dimMat = baseMat.clone();
+              var c = new THREE.Color(baseMat.color.getHex());
+              c.multiplyScalar(0.3);
+              dimMat.color = c;
+              mesh.userData.dimMaterial = dimMat;
+            }
           }
           mesh.material = mesh.userData.dimMaterial;
         } else {
@@ -1178,6 +1198,17 @@ var Renderer3D = (function() {
     }
     pe.mesh.visible = true;
 
+    // Cape wave animation (Issue 4)
+    if (pe.mesh.userData._cape) {
+      var capeWave = Math.sin(now * 0.005) * 0.12;
+      pe.mesh.userData._cape.rotation.x = 0.1 + capeWave;
+    }
+
+    // Player shadow casting (Issue 10)
+    pe.mesh.traverse(function(child) {
+      if (child.isMesh) child.castShadow = true;
+    });
+
     // --- Enemies ---
     for (var i = 0; i < enemies.length; i++) {
       var enemy = enemies[i];
@@ -1209,6 +1240,10 @@ var Renderer3D = (function() {
             }
           });
         }
+        // Enable shadow casting on enemies (Issue 10)
+        enemyModel.traverse(function(child) {
+          if (child.isMesh) child.castShadow = true;
+        });
         this.entityGroup.add(enemyModel);
         this.entityMeshes[eKey] = { mesh: enemyModel, x: enemy.x, y: enemy.y };
         this._prevPositions[eKey] = { x: enemy.x, y: enemy.y };
@@ -1487,6 +1522,167 @@ var Renderer3D = (function() {
     this._updateWallTransparency(cx, cz, camOffX, camOffZ);
   };
 
+  // === Wall transparency for walls between camera and player (Issue 2) ===
+
+  Renderer3D.prototype._updateWallTransparency = function(playerWorldX, playerWorldZ, camOffX, camOffZ) {
+    // Determine the axis the camera is looking along
+    // Walls that are between the player and camera should be semi-transparent
+    for (var y = 0; y < this.tileMeshes.length; y++) {
+      for (var x = 0; x < (this.tileMeshes[y] ? this.tileMeshes[y].length : 0); x++) {
+        var mesh = this.tileMeshes[y][x];
+        if (!mesh || !mesh.userData.isWall || !mesh.visible) continue;
+
+        var wallX = mesh.position.x;
+        var wallZ = mesh.position.z;
+
+        // Check if wall is between player and camera
+        // Project wall-to-player vector onto camera offset direction
+        var toWallX = wallX - playerWorldX;
+        var toWallZ = wallZ - playerWorldZ;
+        var dot = toWallX * camOffX + toWallZ * camOffZ;
+        var dist = Math.sqrt(toWallX * toWallX + toWallZ * toWallZ);
+
+        // If dot > 0, wall is on camera side of player. Also check proximity.
+        var shouldBeTransparent = dot > -0.5 && dist < 8;
+
+        if (shouldBeTransparent) {
+          if (Array.isArray(mesh.material)) {
+            for (var mi = 0; mi < mesh.material.length; mi++) {
+              if (!mesh.material[mi]._origOpacity) {
+                mesh.material[mi] = mesh.material[mi].clone();
+                mesh.material[mi]._origOpacity = 1.0;
+              }
+              mesh.material[mi].transparent = true;
+              mesh.material[mi].opacity = 0.3;
+            }
+          } else {
+            if (!mesh.material._origOpacity) {
+              mesh.material = mesh.material.clone();
+              mesh.material._origOpacity = 1.0;
+            }
+            mesh.material.transparent = true;
+            mesh.material.opacity = 0.3;
+          }
+        } else {
+          if (Array.isArray(mesh.material)) {
+            for (var mi2 = 0; mi2 < mesh.material.length; mi2++) {
+              if (mesh.material[mi2]._origOpacity) {
+                mesh.material[mi2].transparent = false;
+                mesh.material[mi2].opacity = 1.0;
+              }
+            }
+          } else {
+            if (mesh.material._origOpacity) {
+              mesh.material.transparent = false;
+              mesh.material.opacity = 1.0;
+            }
+          }
+        }
+      }
+    }
+  };
+
+  // === Enemy ground indicators and health bars (Issue 5) ===
+
+  Renderer3D.prototype._updateEnemyIndicators = function(game) {
+    var now = performance.now();
+    var enemies = game.enemies;
+    var visible = game.visible;
+    var mapRevealed = game.mapRevealed;
+
+    for (var i = 0; i < enemies.length; i++) {
+      var enemy = enemies[i];
+      if (enemy.dead) continue;
+      var isVis = visible[enemy.y] && visible[enemy.y][enemy.x];
+      if (!isVis && !mapRevealed) continue;
+
+      var eKey = 'enemy_' + i + '_' + enemy.enemyId;
+      var ee = this.entityMeshes[eKey];
+      if (!ee) continue;
+
+      // Ground selection ring
+      if (!ee.mesh.userData._groundRing) {
+        var ringColor = enemy.color ? (typeof enemy.color === 'string' && enemy.color[0] === '#' ? parseInt(enemy.color.slice(1), 16) : 0xff4444) : 0xff4444;
+        var ringGeo = new THREE.RingGeometry(0.35, 0.42, 24);
+        ringGeo.rotateX(-Math.PI / 2);
+        var ringMat = new THREE.MeshBasicMaterial({ color: ringColor, transparent: true, opacity: 0.5, side: THREE.DoubleSide });
+        var ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.position.y = 0.02;
+        ee.mesh.add(ring);
+        ee.mesh.userData._groundRing = ring;
+        ee.mesh.userData._ringMat = ringMat;
+      }
+
+      // Pulse the ring
+      var pulse = (Math.sin(now * 0.004 + i * 1.3) + 1) / 2;
+      ee.mesh.userData._ringMat.opacity = 0.3 + pulse * 0.3;
+      ee.mesh.userData._groundRing.scale.set(1 + pulse * 0.1, 1, 1 + pulse * 0.1);
+
+      // Health bar (only when damaged)
+      var maxHP = enemy.maxHP || enemy.hp;
+      if (enemy.hp < maxHP && this.css2dRenderer) {
+        if (!ee.mesh.userData._healthBar) {
+          var hpContainer = document.createElement('div');
+          hpContainer.style.cssText = 'width:40px;height:5px;background:#333;border-radius:2px;overflow:hidden;';
+          var hpFill = document.createElement('div');
+          hpFill.style.cssText = 'width:100%;height:100%;background:#4caf50;transition:width 0.2s;';
+          hpContainer.appendChild(hpFill);
+          var hpLabel = new THREE.CSS2DObject(hpContainer);
+          hpLabel.position.set(0, 1.5, 0);
+          ee.mesh.add(hpLabel);
+          ee.mesh.userData._healthBar = hpLabel;
+          ee.mesh.userData._hpFill = hpFill;
+        }
+        var hpPct = Math.max(0, enemy.hp / maxHP) * 100;
+        ee.mesh.userData._hpFill.style.width = hpPct + '%';
+        if (hpPct < 30) ee.mesh.userData._hpFill.style.background = '#f44336';
+        else if (hpPct < 60) ee.mesh.userData._hpFill.style.background = '#ff9800';
+        else ee.mesh.userData._hpFill.style.background = '#4caf50';
+        ee.mesh.userData._healthBar.visible = true;
+      } else if (ee.mesh.userData._healthBar) {
+        ee.mesh.userData._healthBar.visible = false;
+      }
+    }
+  };
+
+  // === Item pickup visual hint (Issue 8) ===
+
+  Renderer3D.prototype._updateItemPickupHint = function(game) {
+    var player = game.player;
+    var now = performance.now();
+
+    for (var iKey in this._itemMeshes) {
+      var itemMesh = this._itemMeshes[iKey];
+      if (!itemMesh || !itemMesh.visible) continue;
+
+      var onPlayerTile = Math.round(itemMesh.position.x) === player.x && Math.round(itemMesh.position.z) === player.y;
+
+      if (onPlayerTile) {
+        // Bounce higher and glow
+        itemMesh.position.y = 0.2 + Math.sin(now * 0.006) * 0.15;
+        itemMesh.traverse(function(child) {
+          if (child.isMesh && child.material) {
+            if (!child.userData._origEmissive) {
+              child.material = child.material.clone();
+              child.userData._origEmissive = child.material.emissive ? child.material.emissive.clone() : new THREE.Color(0);
+            }
+            var glowIntensity = (Math.sin(now * 0.008) + 1) / 2;
+            child.material.emissive = new THREE.Color(0x444400);
+            child.material.emissiveIntensity = 0.3 + glowIntensity * 0.4;
+          }
+        });
+      } else {
+        // Reset glow
+        itemMesh.traverse(function(child) {
+          if (child.isMesh && child.userData._origEmissive) {
+            child.material.emissive.copy(child.userData._origEmissive);
+            child.material.emissiveIntensity = 0;
+          }
+        });
+      }
+    }
+  };
+
   // === Process game floating texts into 3D popups ===
 
   Renderer3D.prototype._processGameFloatingTexts = function(game) {
@@ -1733,9 +1929,28 @@ var Renderer3D = (function() {
     // === Shop visual effects ===
     this._updateShopVisuals(game);
 
-    // === Stairs glow pulse ===
+    // === Enemy ground indicators and health bars (Issue 5) ===
+    this._updateEnemyIndicators(game);
+
+    // === Item pickup visual hint (Issue 8) ===
+    this._updateItemPickupHint(game);
+
+    // === Stairs glow pulse + spinning particles (Issue 6) ===
     if (this._stairsLight) {
-      this._stairsLight.intensity = 1.5 + Math.sin(now * 0.003) * 0.5;
+      this._stairsLight.intensity = 2.0 + Math.sin(now * 0.003) * 0.8;
+    }
+    // Stair spinning golden particles
+    if (this.stairsMesh && this.stairsMesh.visible && typeof ParticleSystem3D !== 'undefined') {
+      if (!this._lastStairParticle || now - this._lastStairParticle > 200) {
+        this._lastStairParticle = now;
+        var stairPos = this.stairsMesh.position;
+        ParticleSystem3D.emit(this.scene, {
+          x: stairPos.x, z: stairPos.z,
+          count: 2, color: 0xffd700, size: 0.04,
+          speed: 0.3, lifetime: 1.5,
+          gravity: 0.3, upward: true, spread: 0.4
+        });
+      }
     }
 
     // Camera follow
