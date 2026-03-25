@@ -788,6 +788,55 @@ body {
 }
 
 /* ============================================
+   FULLSCREEN MODE
+   ============================================ */
+body.fullscreen-mode {
+  overflow: hidden;
+}
+
+body.fullscreen-mode #game-frame {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000;
+  border-radius: 0;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+body.fullscreen-mode #game-wrapper {
+  height: 100vh;
+}
+
+body.fullscreen-mode #game-container {
+  flex: 1;
+  height: 100vh;
+}
+
+body.fullscreen-mode #canvas-area {
+  flex: 1;
+  height: calc(100vh - 80px);
+}
+
+body.fullscreen-mode #game-canvas,
+body.fullscreen-mode #game-canvas-3d {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+body.fullscreen-mode #message-log {
+  max-height: 80px;
+}
+
+body.fullscreen-mode #side-panel {
+  width: 160px;
+  min-width: 160px;
+}
+
+/* ============================================
    RESPONSIVE
    ============================================ */
 @media (max-width: 900px) {

@@ -189,6 +189,67 @@
           if (Sound.bgm) Sound.bgm.switchTrack('village');
         });
       }
+
+      // === Fullscreen Toggle ===
+      var fullscreenBtn = document.getElementById('fullscreen-btn');
+      if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', function() {
+          var isFullscreen = document.body.classList.toggle('fullscreen-mode');
+          fullscreenBtn.textContent = isFullscreen ? '🔲 ウィンドウ' : '🔲 全画面';
+
+          setTimeout(function() {
+            var canvasArea = document.getElementById('canvas-area');
+            var w = canvasArea.clientWidth;
+            var h = canvasArea.clientHeight;
+
+            if (renderer2d && renderer2d.canvas) {
+              renderer2d.canvas.width = w;
+              renderer2d.canvas.height = h;
+              renderer2d.viewW = Math.floor(w / 24);
+              renderer2d.viewH = Math.floor(h / 24);
+            }
+
+            if (renderer3d) {
+              renderer3d.resize(w, h);
+            }
+
+            if (window._renderer && window._game) {
+              window._renderer.render(window._game);
+            }
+          }, 100);
+        });
+      }
+
+      // === Browser Fullscreen API (double-click on canvas) ===
+      var canvasAreaEl = document.getElementById('canvas-area');
+      if (canvasAreaEl) {
+        canvasAreaEl.addEventListener('dblclick', function() {
+          if (!document.fullscreenElement) {
+            document.getElementById('game-frame').requestFullscreen().catch(function() {});
+          } else {
+            document.exitFullscreen();
+          }
+        });
+      }
+
+      document.addEventListener('fullscreenchange', function() {
+        setTimeout(function() {
+          var event = new Event('resize');
+          window.dispatchEvent(event);
+        }, 100);
+      });
+
+      // === Window Resize Handler ===
+      window.addEventListener('resize', function() {
+        var canvasArea = document.getElementById('canvas-area');
+        if (!canvasArea) return;
+        var w = canvasArea.clientWidth;
+        var h = canvasArea.clientHeight;
+
+        if (RENDER_MODE === '3d' && renderer3d) {
+          renderer3d.resize(w, h);
+        }
+      });
     }
 
     // Title screen: wait for any key/click

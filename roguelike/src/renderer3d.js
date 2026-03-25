@@ -2347,6 +2347,26 @@ var Renderer3D = (function() {
     this._shopLights.push(shopLight);
   };
 
+  // === Resize (used by fullscreen toggle) ===
+
+  Renderer3D.prototype.resize = function(w, h) {
+    if (this.webglRenderer) {
+      this.webglRenderer.setSize(w, h);
+    }
+    if (this.css2dRenderer) {
+      this.css2dRenderer.setSize(w, h);
+    }
+    if (this.camera) {
+      var aspect = w / h;
+      var fs = this._frustumSize || 15;
+      this.camera.left = -fs * aspect / 2;
+      this.camera.right = fs * aspect / 2;
+      this.camera.top = fs / 2;
+      this.camera.bottom = -fs / 2;
+      this.camera.updateProjectionMatrix();
+    }
+  };
+
   // === Continuous render loop (called from main.js) ===
 
   Renderer3D.prototype.startRenderLoop = function(game) {
