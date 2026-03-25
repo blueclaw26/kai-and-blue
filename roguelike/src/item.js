@@ -200,6 +200,10 @@ var Item = (function() {
 
   Item.prototype._useGrass = function(game, player) {
     var ui = game.ui;
+    // Drinking grass restores 2 satiety (like Shiren)
+    if (player.satiety < player.maxSatiety) {
+      player.satiety = Math.min(player.satiety + 2, player.maxSatiety);
+    }
     // Using grass identifies it
     if (!this.identified) {
       var fakeName = this.getDisplayName();

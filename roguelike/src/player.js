@@ -207,9 +207,9 @@ var Player = (function() {
 
   Player.prototype.tickSatiety = function(ui) {
     // Check for hunger seal (腹) on shield — halves hunger rate
-    // Hunger rate: 1 satiety per 5 turns (0.2 per turn). Hunger seal halves it. Hunger bracelet doubles it.
+    // Hunger rate: 1 satiety per 10 turns (0.1 per turn). Hunger seal halves it. Hunger bracelet doubles it.
     var hasHungerSeal = this.shield && this.shield.seals && this.shield.seals.indexOf('hunger') !== -1;
-    var baseHungerRate = hasHungerSeal ? 0.1 : 0.2;
+    var baseHungerRate = hasHungerSeal ? 0.05 : 0.1;
     var hungerRate = (this.bracelet && this.bracelet.effect === 'hunger') ? baseHungerRate * 2 : baseHungerRate;
     this._satietyAccum += hungerRate;
     if (this._satietyAccum >= 1) {
