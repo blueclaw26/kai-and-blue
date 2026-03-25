@@ -15,6 +15,11 @@ var FLOOR_TABLE = {
     [7, 16, 'kengo', 4],
     [8, 16, 'curse_girl', 4],
     [9, 18, 'polygon', 6],
+    // マゼルン family
+    [10, 15, 'mazerun', 4],
+    [24, 35, 'mazemon', 3],
+    [45, 60, 'mazegon', 3],
+    [70, 85, 'mazedon', 2],
     // Mid (F13-40)
     [13, 30, 'dragon', 5],
     [18, 40, 'skull_mage', 5],
@@ -111,8 +116,8 @@ var FLOOR_TABLE = {
     [8, 99, 'arrow_silver', 2],
     // Special scrolls
     [6, 99, 'scroll_sanctuary', 2],
-    [10, 99, 'scroll_extinction', 1],
     [5, 99, 'scroll_great_hall', 2],
-    [1, 99, 'scroll_escape', 2]
+    [1, 99, 'scroll_escape', 2],
+    [15, 99, 'scroll_blank', 1]
   ]
 };

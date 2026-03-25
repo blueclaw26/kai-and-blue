@@ -304,6 +304,36 @@ var UI = (function() {
     this.inventoryEl.style.display = 'flex';
   };
 
+  // Render blank scroll selection (白紙の巻物)
+  UI.prototype.renderBlankScrollSelect = function(game) {
+    var box = this.inventoryBox;
+    var sel = game.blankScrollSelection;
+    var candidates = game.blankScrollCandidates;
+
+    var html = '<div class="inventory-title" style="color:#fafafa;">白紙の巻物 - 何を書く？</div>';
+    html += '<div class="inv-items">';
+
+    if (candidates.length === 0) {
+      html += '<div class="inv-empty">書ける巻物がない（巻物を識別しよう）</div>';
+    } else {
+      for (var i = 0; i < candidates.length; i++) {
+        var c = candidates[i];
+        var isSelected = (i === sel);
+        html += '<div class="inv-item' + (isSelected ? ' selected' : '') + '">';
+        html += '<span class="inv-slot">' + SLOT_LETTERS[i] + ')</span>';
+        html += '<span class="inv-char" style="color:#fafafa;">?</span>';
+        html += '<span class="inv-name">' + escapeHtml(c.name) + '</span>';
+        html += '</div>';
+      }
+    }
+
+    html += '</div>';
+    html += '<div class="inv-actions"><span>[Enter/e]</span>決定 <span>[↑↓]</span>選択 <span>[ESC]</span>キャンセル</div>';
+
+    box.innerHTML = html;
+    this.inventoryEl.style.display = 'flex';
+  };
+
   UI.prototype.showGameOver = function(floor, level) {
     var overlay = document.getElementById('game-over-overlay');
     if (overlay) {

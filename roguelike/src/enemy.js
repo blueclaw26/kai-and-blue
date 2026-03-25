@@ -15,6 +15,11 @@ var Enemy = (function() {
     this.special = data.special || null;
     this.enemyId = enemyId || null;
     this._turnCount = 0; // for skull_mage floor-fire timing
+    // マゼルン family properties
+    if (data.swallowCapacity) {
+      this.swallowCapacity = data.swallowCapacity;
+      this.swallowedItems = [];
+    }
   }
 
   Enemy.prototype = Object.create(Entity.prototype);

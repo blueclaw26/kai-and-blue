@@ -85,6 +85,12 @@ var Input = (function() {
       return;
     }
 
+    // Blank scroll mode (白紙の巻物)
+    if (this.game.blankScrollMode) {
+      this._handleBlankScrollKey(e);
+      return;
+    }
+
     // Extinction mode (ねだやしの巻物)
     if (this.game.extinctionMode) {
       this._handleExtinctionKey(e);
@@ -495,6 +501,73 @@ var Input = (function() {
     }
   };
 
+  // Blank scroll mode: select scroll effect to write
+  Input.prototype._handleBlankScrollKey = function(e) {
+    e.preventDefault();
+    var game = this.game;
+    var ui = game.ui;
+    var key = e.key;
+    var candidates = game.blankScrollCandidates;
+
+    if (key === 'Escape') {
+      game.blankScrollMode = false;
+      game.inventoryOpen = false;
+      ui.hideInventory();
+      ui.addMessage('白紙の巻物を使うのをやめた', 'system');
+      // Don't consume the scroll (it was already removed from inventory by useItem)
+      // Actually, _useScroll returns true which triggers removal, so we need to re-add...
+      // The scroll was already consumed. That's fine - canceling still uses it.
+      this.turnManager.processTurn(function() { return true; });
+      return;
+    }
+
+    if (key === 'ArrowUp' || key === 'k') {
+      game.blankScrollSelection = Math.max(0, game.blankScrollSelection - 1);
+      ui.renderBlankScrollSelect(game);
+      return;
+    }
+    if (key === 'ArrowDown' || key === 'j') {
+      game.blankScrollSelection = Math.min(candidates.length - 1, game.blankScrollSelection + 1);
+      ui.renderBlankScrollSelect(game);
+      return;
+    }
+
+    var SLOT_LETTERS = 'abcdefghijklmnopqrst';
+    var letterIdx = SLOT_LETTERS.indexOf(key);
+    if (letterIdx !== -1 && letterIdx < candidates.length) {
+      game.blankScrollSelection = letterIdx;
+      ui.renderBlankScrollSelect(game);
+      return;
+    }
+
+    if (key === 'Enter' || key === 'e') {
+      if (candidates.length === 0) {
+        game.blankScrollMode = false;
+        game.inventoryOpen = false;
+        ui.hideInventory();
+        ui.addMessage('書ける巻物がない！', 'system');
+        this.turnManager.processTurn(function() { return true; });
+        return;
+      }
+      var selected = candidates[game.blankScrollSelection];
+
+      game.blankScrollMode = false;
+      game.inventoryOpen = false;
+      ui.hideInventory();
+
+      ui.addMessage('白紙の巻物に「' + selected.name + '」と書いた！', 'heal');
+
+      // Create a temporary scroll item and use it
+      var tempScroll = new Item(0, 0, selected.key);
+      tempScroll.identified = true;
+      // Execute the scroll's effect directly
+      tempScroll._useScroll(game, game.player);
+
+      this.turnManager.processTurn(function() { return true; });
+      return;
+    }
+  };
+
   // Extinction mode: select enemy type to banish
   Input.prototype._handleExtinctionKey = function(e) {
     e.preventDefault();
@@ -541,7 +614,7 @@ var Input = (function() {
 
       // Add to extinct set
       game.extinctEnemies.add(selected.id);
-      ui.addMessage(selected.name + 'をねだやしにした！ もう出現しない！', 'heal');
+      ui.addMessage(selected.name + 'は絶滅した！', 'heal');
 
       // Kill all existing enemies of that type
       for (var i = 0; i < game.enemies.length; i++) {

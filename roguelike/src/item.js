@@ -26,7 +26,7 @@ var Item = (function() {
     }
 
     // Identification: weapons, shields, food, bracelets, arrows, and 脱出の巻物 are always identified
-    if (this.type === 'weapon' || this.type === 'shield' || this.type === 'food' || this.type === 'bracelet' || this.type === 'arrow' || dataKey === 'scroll_escape') {
+    if (this.type === 'weapon' || this.type === 'shield' || this.type === 'food' || this.type === 'bracelet' || this.type === 'arrow' || dataKey === 'scroll_escape' || dataKey === 'scroll_blank') {
       this.identified = true;
     } else {
       // Check global identification table
@@ -414,20 +414,31 @@ var Item = (function() {
           this.identify();
           ui.addMessage('それは' + scrollName + 'だった！', 'pickup');
         }
-        // Find visible enemy types
-        var visibleTypes = {};
+        // Use encountered enemies (all types seen this run) instead of just visible ones
+        var candidateTypes = {};
+        // Add currently visible enemies
         for (var ei = 0; ei < game.enemies.length; ei++) {
           var ve = game.enemies[ei];
-          if (!ve.dead && game.visible[ve.y][ve.x] && ve.enemyId && !ve.isShopkeeper) {
-            visibleTypes[ve.enemyId] = ve.name;
+          if (!ve.dead && ve.enemyId && !ve.isShopkeeper && !ve.isDecoy) {
+            candidateTypes[ve.enemyId] = ve.name;
+          }
+        }
+        // Add all encountered enemies this run
+        if (game.encounteredEnemies) {
+          for (var eid2 in game.encounteredEnemies) {
+            if (!candidateTypes[eid2]) {
+              candidateTypes[eid2] = game.encounteredEnemies[eid2];
+            }
           }
         }
         var candidates = [];
-        for (var eid in visibleTypes) {
-          candidates.push({ id: eid, name: visibleTypes[eid] });
+        for (var eid in candidateTypes) {
+          if (!game.extinctEnemies.has(eid)) {
+            candidates.push({ id: eid, name: candidateTypes[eid] });
+          }
         }
         if (candidates.length === 0) {
-          ui.addMessage('しかし対象となるモンスターが見えない', 'system');
+          ui.addMessage('しかし対象となるモンスターがいない', 'system');
           return true;
         }
         // Enter extinction selection mode
@@ -451,6 +462,16 @@ var Item = (function() {
         game.mapRevealed = true;
         ui.addMessage('大部屋の巻物を読んだ！ フロアの壁が崩れた！', 'heal');
         break;
+
+      case 'blank':
+        // 白紙の巻物: show selection of known scroll effects
+        ui.addMessage('白紙の巻物に何を書く？', 'system');
+        game.blankScrollMode = true;
+        game.inventoryOpen = true;
+        game.blankScrollCandidates = this._getBlankScrollCandidates();
+        game.blankScrollSelection = 0;
+        ui.renderBlankScrollSelect(game);
+        return true;
 
       case 'escape':
         if (game.floorNum >= 10) {
@@ -556,6 +577,25 @@ var Item = (function() {
       }
     };
     return false; // direction mode handles turn consumption
+  };
+
+  // Get list of scroll effects available for 白紙の巻物
+  Item.prototype._getBlankScrollCandidates = function() {
+    var candidates = [];
+    var seen = {};
+    for (var key in ITEM_DATA) {
+      var d = ITEM_DATA[key];
+      if (d.type !== 'scroll') continue;
+      if (d.effect === 'blank') continue; // Can't write blank on blank
+      if (seen[d.effect]) continue;
+      // Always-identified scrolls
+      var alwaysId = (key === 'scroll_escape');
+      if (alwaysId || window.IDENTIFIED_TYPES.has(key)) {
+        candidates.push({ key: key, name: d.name, effect: d.effect });
+        seen[d.effect] = true;
+      }
+    }
+    return candidates;
   };
 
   // Pick an item from FLOOR_TABLE weighted for given floor

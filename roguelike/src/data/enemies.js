@@ -243,6 +243,59 @@ var ENEMY_DATA = {
     maxFloor: 99,
     special: 'critical'
   },
+  // マゼルン family (synthesis monsters)
+  mazerun: {
+    name: 'マゼルン',
+    char: 'E',
+    color: '#e8a44a',
+    hp: 25,
+    attack: 6,
+    defense: 5,
+    exp: 20,
+    minFloor: 10,
+    maxFloor: 15,
+    special: 'swallow',
+    swallowCapacity: 2
+  },
+  mazemon: {
+    name: 'マゼモン',
+    char: 'E',
+    color: '#f57c00',
+    hp: 50,
+    attack: 14,
+    defense: 10,
+    exp: 60,
+    minFloor: 24,
+    maxFloor: 35,
+    special: 'swallow',
+    swallowCapacity: 3
+  },
+  mazegon: {
+    name: 'マゼゴン',
+    char: 'E',
+    color: '#e65100',
+    hp: 80,
+    attack: 22,
+    defense: 15,
+    exp: 100,
+    minFloor: 45,
+    maxFloor: 60,
+    special: 'swallow',
+    swallowCapacity: 4
+  },
+  mazedon: {
+    name: 'マゼドン',
+    char: 'E',
+    color: '#bf360c',
+    hp: 120,
+    attack: 30,
+    defense: 20,
+    exp: 160,
+    minFloor: 70,
+    maxFloor: 85,
+    special: 'swallow',
+    swallowCapacity: 5
+  },
   // Non-combat NPCs
   shopkeeper: {
     name: '店主',

@@ -43,7 +43,8 @@ var ITEM_DATA = {
   scroll_weapon_up: { type: 'scroll', name: '天の恵みの巻物', char: '?', color: '#ffab40', effect: 'weapon_upgrade', minFloor: 4, weight: 3, price: 1000 },
   scroll_shield_up: { type: 'scroll', name: '地の恵みの巻物', char: '?', color: '#a5d6a7', effect: 'shield_upgrade', minFloor: 4, weight: 3, price: 1000 },
   scroll_sanctuary: { type: 'scroll', name: '聖域の巻物', char: '?', color: '#e1bee7', effect: 'sanctuary', minFloor: 6, weight: 1, price: 3000 },
-  scroll_extinction: { type: 'scroll', name: 'ねだやしの巻物', char: '?', color: '#f44336', effect: 'extinction', minFloor: 10, weight: 1, price: 5000 },
+  scroll_extinction: { type: 'scroll', name: 'ねだやしの巻物', char: '?', color: '#f44336', effect: 'extinction', minFloor: 10, weight: 0, price: 5000 },
+  scroll_blank: { type: 'scroll', name: '白紙の巻物', char: '?', color: '#fafafa', effect: 'blank', minFloor: 15, weight: 1, price: 5000 },
   scroll_great_hall: { type: 'scroll', name: '大部屋の巻物', char: '?', color: '#ff9800', effect: 'great_hall', minFloor: 5, weight: 2, price: 2000 },
   scroll_escape: { type: 'scroll', name: '脱出の巻物', char: '?', color: '#4caf50', effect: 'escape', minFloor: 1, weight: 2, price: 1000 },
 

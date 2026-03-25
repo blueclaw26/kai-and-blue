@@ -46,9 +46,14 @@ var Game = (function() {
     this.sanctuaryTiles = new Set();
     // Extinction
     this.extinctEnemies = new Set();
+    this.encounteredEnemies = {}; // { enemyId: name } — tracks all enemy types seen this run
     this.extinctionMode = false;
     this.extinctionCandidates = [];
     this.extinctionSelection = 0;
+    // Blank scroll mode
+    this.blankScrollMode = false;
+    this.blankScrollCandidates = [];
+    this.blankScrollSelection = 0;
     // Dungeon NPCs
     this.dungeonNPCs = [];
     // Merchant/blacksmith modes
@@ -425,6 +430,7 @@ var Game = (function() {
     this.scene = 'dungeon';
     this.floorNum = 1;
     this.extinctEnemies = new Set();
+    this.encounteredEnemies = {};
     this.player = new Player(0, 0);
     this.newFloor();
     this.ui.addMessage('最果ての間へ... 冒険が始まる', 'system');
@@ -1063,6 +1069,15 @@ var Game = (function() {
 
     this.enemies = this.enemies.filter(function(e) { return !e.dead; });
     this.traps = this.traps.filter(function(t) { return !t.consumed; });
+
+    // Track encountered enemy types
+    for (var ei = 0; ei < this.enemies.length; ei++) {
+      var en = this.enemies[ei];
+      if (!en.dead && en.enemyId && !en.isShopkeeper && !en.isDecoy &&
+          this.visible && this.visible[en.y] && this.visible[en.y][en.x]) {
+        this.encounteredEnemies[en.enemyId] = en.name;
+      }
+    }
 
     if (!this.gameOver && !this.victory) {
       var livingCount = this.livingEnemyCount();

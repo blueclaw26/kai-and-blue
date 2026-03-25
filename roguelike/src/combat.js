@@ -116,6 +116,11 @@
       }
       this.animations.push({ type: 'particles', x: enemy.x, y: enemy.y, frame: 0, maxFrames: 10, data: { particles: particles } });
 
+      // マゼルン family: drop swallowed items (with synthesis)
+      if (enemy.swallowedItems && enemy.swallowedItems.length > 0) {
+        this._dropMazerunItems(enemy, ui);
+      }
+
       // Drop loot when enemy dies
       if (!enemy.isShopkeeper) {
         var dropRoll = Math.random();
@@ -189,6 +194,9 @@
           this.ui.addMessage('[返]印の反撃！ ' + enemy.name + 'に' + counterDmg + 'ダメージ', 'attack');
           if (counterDied) {
             player.enemiesKilled++;
+            if (enemy.swallowedItems && enemy.swallowedItems.length > 0) {
+              this._dropMazerunItems(enemy, this.ui);
+            }
             this.ui.addMessage(enemy.name + 'を倒した！ 経験値' + enemy.exp + '獲得', 'attack');
             player.gainExp(enemy.exp, this.ui);
           }
@@ -312,6 +320,9 @@
       this.ui.addMessage('バトルカウンターの反撃！ ' + enemy.name + 'に' + counterDmg2 + 'ダメージ', 'attack');
       if (died) {
         player.enemiesKilled++;
+        if (enemy.swallowedItems && enemy.swallowedItems.length > 0) {
+          this._dropMazerunItems(enemy, this.ui);
+        }
         this.ui.addMessage(enemy.name + 'を倒した！ 経験値' + enemy.exp + '獲得', 'attack');
         player.gainExp(enemy.exp, this.ui);
       }
@@ -320,6 +331,188 @@
     if (player.hp <= 0) {
       this._checkPlayerDeath();
     }
+  };
+
+  // --- Monster family promotion map ---
+  var ENEMY_FAMILY_UP = {
+    mazerun: 'mazemon',
+    mazemon: 'mazegon',
+    mazegon: 'mazedon',
+    // Add more families here as they're created
+  };
+  var ENEMY_FAMILY_DOWN = {
+    mazemon: 'mazerun',
+    mazegon: 'mazemon',
+    mazedon: 'mazegon',
+  };
+
+  // Level up an enemy (family promotion or stat boost)
+  Game.prototype._enemyLevelUp = function(enemy, ui) {
+    var nextId = ENEMY_FAMILY_UP[enemy.enemyId];
+    if (nextId && ENEMY_DATA[nextId]) {
+      var data = ENEMY_DATA[nextId];
+      enemy.enemyId = nextId;
+      enemy.name = data.name;
+      enemy.char = data.char;
+      enemy.color = data.color;
+      enemy.maxHp = data.hp;
+      enemy.hp = data.hp;
+      enemy.attack = data.attack;
+      enemy.defense = data.defense;
+      enemy.exp = data.exp;
+      enemy.special = data.special;
+      if (data.swallowCapacity) {
+        enemy.swallowCapacity = data.swallowCapacity;
+        if (!enemy.swallowedItems) enemy.swallowedItems = [];
+      }
+    } else {
+      // No family promotion: stats x1.5, add 強化 prefix
+      enemy.maxHp = Math.floor(enemy.maxHp * 1.5);
+      enemy.hp = enemy.maxHp;
+      enemy.attack = Math.floor(enemy.attack * 1.5);
+      enemy.defense = Math.floor(enemy.defense * 1.5);
+      enemy.exp = Math.floor(enemy.exp * 1.5);
+      if (enemy.name.indexOf('強化') === -1) {
+        enemy.name = '強化' + enemy.name;
+      }
+    }
+  };
+
+  // Level down an enemy (family demotion or stat reduction)
+  Game.prototype._enemyLevelDown = function(enemy, ui) {
+    var prevId = ENEMY_FAMILY_DOWN[enemy.enemyId];
+    if (prevId && ENEMY_DATA[prevId]) {
+      var data = ENEMY_DATA[prevId];
+      enemy.enemyId = prevId;
+      enemy.name = data.name;
+      enemy.char = data.char;
+      enemy.color = data.color;
+      enemy.maxHp = data.hp;
+      enemy.hp = Math.min(enemy.hp, data.hp);
+      enemy.attack = data.attack;
+      enemy.defense = data.defense;
+      enemy.exp = data.exp;
+      enemy.special = data.special;
+      if (data.swallowCapacity) {
+        enemy.swallowCapacity = data.swallowCapacity;
+        if (!enemy.swallowedItems) enemy.swallowedItems = [];
+      }
+    } else {
+      // No family demotion: stats x0.5, add 弱化 prefix
+      enemy.maxHp = Math.max(1, Math.floor(enemy.maxHp * 0.5));
+      enemy.hp = Math.min(enemy.hp, enemy.maxHp);
+      enemy.attack = Math.max(1, Math.floor(enemy.attack * 0.5));
+      enemy.defense = Math.max(0, Math.floor(enemy.defense * 0.5));
+      enemy.exp = Math.max(1, Math.floor(enemy.exp * 0.5));
+      if (enemy.name.indexOf('弱化') === -1) {
+        enemy.name = '弱化' + enemy.name;
+      }
+    }
+  };
+
+  // --- マゼルン synthesis: drop swallowed items on death ---
+  Game.prototype._dropMazerunItems = function(enemy, ui) {
+    var items = enemy.swallowedItems;
+    if (!items || items.length === 0) return;
+
+    // Separate items by type
+    var weapons = [];
+    var shields = [];
+    var grasses = [];
+    var others = [];
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].type === 'weapon') weapons.push(items[i]);
+      else if (items[i].type === 'shield') shields.push(items[i]);
+      else if (items[i].type === 'grass') grasses.push(items[i]);
+      else others.push(items[i]);
+    }
+
+    // Synthesize weapons (reuse 合成の壺 logic)
+    if (weapons.length >= 2) {
+      var baseW = weapons[0];
+      for (var w = 1; w < weapons.length; w++) {
+        var srcW = weapons[w];
+        baseW.plus = (baseW.plus || 0) + (srcW.plus || 0);
+        if (!baseW.seals) baseW.seals = [];
+        var maxWSeals = baseW.slots || 3;
+        if (srcW.seals) {
+          for (var si = 0; si < srcW.seals.length; si++) {
+            if (baseW.seals.length >= maxWSeals) break;
+            if (baseW.seals.indexOf(srcW.seals[si]) === -1) {
+              baseW.seals.push(srcW.seals[si]);
+            }
+          }
+        }
+      }
+      ui.addMessage('合成成功！ ' + baseW.getDisplayName(), 'heal');
+      // Only the base weapon drops
+      weapons = [baseW];
+    }
+
+    // Apply grass seals to weapon if weapon exists
+    if (weapons.length >= 1 && grasses.length > 0) {
+      var targetW = weapons[0];
+      if (!targetW.seals) targetW.seals = [];
+      var maxSlots = targetW.slots || 3;
+      for (var gi = 0; gi < grasses.length; gi++) {
+        var grassSeal = this._getGrassSeal(grasses[gi]);
+        if (grassSeal && targetW.seals.length < maxSlots && targetW.seals.indexOf(grassSeal) === -1) {
+          targetW.seals.push(grassSeal);
+          ui.addMessage(grasses[gi].name + 'の印が合成された！', 'heal');
+        }
+      }
+      grasses = []; // consumed
+    }
+
+    // Synthesize shields
+    if (shields.length >= 2) {
+      var baseS = shields[0];
+      for (var s = 1; s < shields.length; s++) {
+        var srcS = shields[s];
+        baseS.plus = (baseS.plus || 0) + (srcS.plus || 0);
+        if (!baseS.seals) baseS.seals = [];
+        var maxSSeals = baseS.slots || 3;
+        if (srcS.seals) {
+          for (var ssi = 0; ssi < srcS.seals.length; ssi++) {
+            if (baseS.seals.length >= maxSSeals) break;
+            if (baseS.seals.indexOf(srcS.seals[ssi]) === -1) {
+              baseS.seals.push(srcS.seals[ssi]);
+            }
+          }
+        }
+      }
+      ui.addMessage('合成成功！ ' + baseS.getDisplayName(), 'heal');
+      shields = [baseS];
+    }
+
+    // Drop all remaining items on the floor
+    var allDrops = weapons.concat(shields).concat(grasses).concat(others);
+    for (var d = 0; d < allDrops.length; d++) {
+      var dropItem = allDrops[d];
+      dropItem.x = enemy.x;
+      dropItem.y = enemy.y;
+      this.items.push(dropItem);
+      ui.addMessage(enemy.name + 'の胃袋から' + dropItem.getDisplayName() + 'が出てきた！', 'pickup');
+    }
+  };
+
+  // Get seal key from grass item for synthesis
+  Game.prototype._getGrassSeal = function(grass) {
+    // Map grass effects to seal keys (same as 合成の壺 would)
+    var grassSealMap = {
+      'heal': 'heal_seal',       // 薬草 → 回
+      'cure_poison': 'poison_resist', // 毒消し草
+      'fire_breath': 'dragon',   // ドラゴン草 → 竜
+      'sleep_self': null,
+      'confuse_self': null,
+      'warp': null,
+      'sight': null,
+      'levelup': null,
+      'leveldown': null,
+      'invincible': null,
+      'strength': null
+    };
+    return grassSealMap[grass.effect] || null;
   };
 
   // --- Arrow shooting ---
@@ -365,6 +558,9 @@
         if (died) {
           Sound.play('kill');
           player.enemiesKilled++;
+          if (hitEnemy.swallowedItems && hitEnemy.swallowedItems.length > 0) {
+            self._dropMazerunItems(hitEnemy, ui);
+          }
           ui.addMessage(hitEnemy.name + 'を倒した！ 経験値' + hitEnemy.exp + '獲得', 'attack');
           player.gainExp(hitEnemy.exp, ui);
         }
@@ -488,6 +684,18 @@
   // Apply throw effect after animation
   Game.prototype._applyThrowEffect = function(item, hitEnemy, ui, player) {
     if (hitEnemy) {
+      // --- マゼルン family: swallow items instead of taking damage ---
+      if (hitEnemy.special === 'swallow' && !hitEnemy.sealed) {
+        if (!hitEnemy.swallowedItems) hitEnemy.swallowedItems = [];
+        var capacity = hitEnemy.swallowCapacity || (ENEMY_DATA[hitEnemy.enemyId] && ENEMY_DATA[hitEnemy.enemyId].swallowCapacity) || 2;
+        if (hitEnemy.swallowedItems.length < capacity) {
+          hitEnemy.swallowedItems.push(item);
+          ui.addMessage(hitEnemy.name + 'は' + item.getDisplayName() + 'を飲み込んだ！', 'enemy_special');
+          return;
+        }
+        // At capacity: fall through to normal damage
+      }
+
       // --- Grass thrown at enemy: apply effect ---
       if (item.type === 'grass') {
         switch (item.effect) {
@@ -535,16 +743,12 @@
             ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'はどこかにワープした！', 'attack');
             return;
           case 'levelup':
-            hitEnemy.maxHp = Math.floor(hitEnemy.maxHp * 1.5);
-            hitEnemy.hp = hitEnemy.maxHp;
-            hitEnemy.attack = Math.floor(hitEnemy.attack * 1.5);
-            ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'が強くなった！', 'enemy_special');
+            this._enemyLevelUp(hitEnemy, ui);
+            ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'のレベルが上がった！', 'enemy_special');
             return;
           case 'leveldown':
-            hitEnemy.maxHp = Math.max(1, Math.floor(hitEnemy.maxHp * 0.5));
-            hitEnemy.hp = Math.min(hitEnemy.hp, hitEnemy.maxHp);
-            hitEnemy.attack = Math.max(1, Math.floor(hitEnemy.attack * 0.5));
-            ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'が弱くなった！', 'attack');
+            this._enemyLevelDown(hitEnemy, ui);
+            ui.addMessage(item.getDisplayName() + 'を投げた。' + hitEnemy.name + 'のレベルが下がった！', 'attack');
             return;
           case 'invincible':
             if (!hitEnemy.immuneToStatus) {
