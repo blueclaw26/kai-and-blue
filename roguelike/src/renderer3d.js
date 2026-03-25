@@ -148,6 +148,18 @@ var Renderer3D = (function() {
 
     // Shop visual tracking
     this._shopLights = [];
+
+    // === Phase 4: Village ===
+    this._villageNpcMeshes = {};  // npcName -> mesh
+    this._villageFrustumSize = 19; // more zoomed out for village
+    this._stairsLight = null;     // PointLight for stairs glow
+
+    // Post-processing state
+    this._vignetteOverlay = null;
+    this._damageOverlay = null;
+    this._damageFlashStart = null;
+    this._lastTrackedHP = null;
+    this._postProcessInited = false;
   }
 
   // === Init ===
@@ -425,6 +437,18 @@ var Renderer3D = (function() {
     this._builtFloor = floorNum;
     this._builtScene = 'dungeon';
 
+    // === Stairs glow light ===
+    if (this._stairsLight) {
+      this.scene.remove(this._stairsLight);
+      this._stairsLight = null;
+    }
+    var stairsPos = this._getStairsPos(game);
+    if (stairsPos) {
+      this._stairsLight = new THREE.PointLight(0xffd700, 1.5, 5);
+      this._stairsLight.position.set(stairsPos.x, 1.0, stairsPos.y);
+      this.scene.add(this._stairsLight);
+    }
+
     // === Zone-specific fog ===
     if (floorNum <= 10) {
       this.scene.fog = null;
@@ -478,6 +502,334 @@ var Renderer3D = (function() {
 
     // Reset shop visuals flag
     this._shopVisualsBuilt = false;
+  };
+
+  // === Build Village 3D tile map ===
+
+  Renderer3D.prototype._buildVillageTileMap = function(game) {
+    // Clear old tiles
+    while (this.tileGroup.children.length > 0) {
+      this.tileGroup.remove(this.tileGroup.children[0]);
+    }
+    this.tileMeshes = [];
+    this.stairsMesh = null;
+    this._waterMeshes = [];
+    this._lavaMeshes = [];
+
+    var map = game.villageMap;
+    if (!map) return;
+    var VT = Game.VILLAGE_TILE;
+    var floorGeo = getFloorGeo();
+
+    // Village-specific geometries
+    var wallGeo = new THREE.BoxGeometry(1, 1.2, 1);
+    var bridgeGeo = new THREE.BoxGeometry(1, 0.1, 1);
+
+    // Materials
+    var pathMat = getCachedMaterial(0xa08060);
+    var bridgeMat = getCachedMaterial(0x8b6914);
+    var wallMat = getCachedMaterial(0x6d4c30);
+    var floorMat = getCachedMaterial(0x8b7355);
+    var waterMat = new THREE.MeshLambertMaterial({ color: 0x1a6aaa, transparent: true, opacity: 0.7 });
+    var entranceMat = new THREE.MeshLambertMaterial({ color: 0x1a1a2e, emissive: 0x0a0a15 });
+
+    for (var y = 0; y < map.height; y++) {
+      this.tileMeshes[y] = [];
+      for (var x = 0; x < map.width; x++) {
+        var tile = map.grid[y][x];
+        var mesh = null;
+
+        switch (tile) {
+          case VT.GRASS: {
+            // Green plane with slight color variation
+            var seed = (x * 73 + y * 137) & 0xff;
+            var greenVar = 0x2d8a27 + ((seed & 0x0f) << 8);
+            var grassMat = getCachedMaterial(greenVar);
+            mesh = new THREE.Mesh(floorGeo, grassMat);
+            mesh.position.set(x, 0, y);
+            mesh.receiveShadow = true;
+            break;
+          }
+          case VT.PATH:
+            mesh = new THREE.Mesh(floorGeo, pathMat);
+            mesh.position.set(x, 0.01, y);
+            mesh.receiveShadow = true;
+            break;
+          case VT.WATER:
+            mesh = new THREE.Mesh(floorGeo, waterMat.clone());
+            mesh.position.set(x, -0.05, y);
+            mesh.receiveShadow = true;
+            mesh.userData.isWater = true;
+            mesh.userData.tileX = x;
+            mesh.userData.tileY = y;
+            this._waterMeshes.push(mesh);
+            break;
+          case VT.BRIDGE:
+            // Water underneath
+            var underWater = new THREE.Mesh(floorGeo, waterMat.clone());
+            underWater.position.set(x, -0.05, y);
+            underWater.userData.isWater = true;
+            underWater.userData.tileX = x;
+            underWater.userData.tileY = y;
+            this._waterMeshes.push(underWater);
+            this.tileGroup.add(underWater);
+            // Bridge planks on top
+            mesh = new THREE.Mesh(bridgeGeo, bridgeMat);
+            mesh.position.set(x, 0.05, y);
+            mesh.receiveShadow = true;
+            mesh.castShadow = true;
+            break;
+          case VT.WALL:
+            mesh = new THREE.Mesh(wallGeo, wallMat);
+            mesh.position.set(x, 0.6, y);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            break;
+          case VT.FLOOR:
+            mesh = new THREE.Mesh(floorGeo, floorMat);
+            mesh.position.set(x, 0.01, y);
+            mesh.receiveShadow = true;
+            break;
+          case VT.TREE: {
+            // Grass base
+            var treeGrass = getCachedMaterial(0x2d7a27);
+            var base = new THREE.Mesh(floorGeo, treeGrass);
+            base.position.set(x, 0, y);
+            base.receiveShadow = true;
+            this.tileGroup.add(base);
+            // 3D tree model
+            var treeSeed = x * 31 + y * 97;
+            var treeModel = Models3D.createVillageTree(treeSeed);
+            treeModel.position.set(x, 0, y);
+            this.tileGroup.add(treeModel);
+            // No mesh reference needed (base is the floor)
+            mesh = null;
+            break;
+          }
+          case VT.FLOWER: {
+            // Grass base
+            var flowerGrass = getCachedMaterial(0x2d8a27);
+            var fBase = new THREE.Mesh(floorGeo, flowerGrass);
+            fBase.position.set(x, 0, y);
+            fBase.receiveShadow = true;
+            this.tileGroup.add(fBase);
+            // Flower model
+            var flowerSeed = x * 53 + y * 79;
+            var flowerModel = Models3D.createVillageFlower(flowerSeed);
+            flowerModel.position.set(x, 0, y);
+            this.tileGroup.add(flowerModel);
+            mesh = null;
+            break;
+          }
+          case VT.ENTRANCE: {
+            // Dark entrance
+            var entranceBox = new THREE.Mesh(
+              new THREE.BoxGeometry(1, 0.8, 1),
+              entranceMat
+            );
+            entranceBox.position.set(x, 0.4, y);
+            this.tileGroup.add(entranceBox);
+            // Golden glow
+            var entranceLight = new THREE.PointLight(0xffd700, 1.2, 4);
+            entranceLight.position.set(x, 1.0, y);
+            this.tileGroup.add(entranceLight);
+            // Floor base
+            mesh = new THREE.Mesh(floorGeo, getCachedMaterial(0x1a1a2e));
+            mesh.position.set(x, 0, y);
+            break;
+          }
+        }
+
+        if (mesh) {
+          mesh.userData.tileX = x;
+          mesh.userData.tileY = y;
+          mesh.userData.tileType = tile;
+          mesh.visible = true; // Village is always fully visible
+          this.tileGroup.add(mesh);
+        }
+        this.tileMeshes[y][x] = mesh;
+      }
+    }
+
+    this._builtFloor = -1; // special marker for village
+    this._builtScene = 'village';
+
+    // Village atmosphere
+    this.scene.background = new THREE.Color(0x87ceeb); // sky blue
+    this.scene.fog = null;
+    this.ambientLight.color.setHex(0xfff8e1);
+    this.ambientLight.intensity = 0.8;
+    this.directionalLight.intensity = 0.7;
+    this.playerLight.intensity = 0.5; // dim torch in village
+
+    // Remove stairs light if present
+    if (this._stairsLight) {
+      this.scene.remove(this._stairsLight);
+      this._stairsLight = null;
+    }
+
+    // Clear old village NPC meshes
+    for (var nk in this._villageNpcMeshes) {
+      this.entityGroup.remove(this._villageNpcMeshes[nk]);
+    }
+    this._villageNpcMeshes = {};
+
+    // Reset animation state
+    this._prevPositions = {};
+    this._prevHP = {};
+    this._animations = [];
+    this._itemMeshes = {};
+    this._monsterHouseTriggered = false;
+    this._shopVisualsBuilt = false;
+
+    // Clear shop lights
+    for (var si = 0; si < this._shopLights.length; si++) {
+      this.scene.remove(this._shopLights[si]);
+    }
+    this._shopLights = [];
+
+    if (typeof ParticleSystem3D !== 'undefined') {
+      ParticleSystem3D.clear(this.scene);
+    }
+  };
+
+  // === Update village entities (player + NPCs) ===
+
+  Renderer3D.prototype._updateVillageEntities = function(game) {
+    var player = game.player;
+    var npcs = game.villageNpcs || [];
+    var now = performance.now();
+
+    // --- Player ---
+    var playerKey = 'player';
+    if (!this.entityMeshes[playerKey]) {
+      var playerModel = Models3D.createPlayer();
+      this.entityGroup.add(playerModel);
+      this.entityMeshes[playerKey] = { mesh: playerModel, x: player.x, y: player.y };
+      this._prevPositions[playerKey] = { x: player.x, y: player.y };
+    }
+    var pe = this.entityMeshes[playerKey];
+
+    // Movement animation
+    var prevPos = this._prevPositions[playerKey];
+    if (prevPos && (prevPos.x !== player.x || prevPos.y !== player.y)) {
+      var isAnimating = false;
+      for (var ai = 0; ai < this._animations.length; ai++) {
+        if (this._animations[ai].mesh === pe.mesh) { isAnimating = true; break; }
+      }
+      if (!isAnimating) {
+        this._addAnimation(pe.mesh, prevPos.x, prevPos.y, player.x, player.y, 200, true, 0, null);
+      }
+      pe.x = player.x;
+      pe.y = player.y;
+    }
+    this._prevPositions[playerKey] = { x: player.x, y: player.y };
+
+    var isPlayerAnimating = false;
+    for (var ai2 = 0; ai2 < this._animations.length; ai2++) {
+      if (this._animations[ai2].mesh === pe.mesh) { isPlayerAnimating = true; break; }
+    }
+    if (!isPlayerAnimating) {
+      pe.mesh.position.x = player.x;
+      pe.mesh.position.z = player.y;
+      pe.mesh.position.y = Math.sin(now * 0.003) * 0.05;
+    }
+    pe.mesh.visible = true;
+
+    // --- Village NPCs ---
+    for (var i = 0; i < npcs.length; i++) {
+      var npc = npcs[i];
+      var nKey = 'vnpc_' + npc.name;
+      if (!this._villageNpcMeshes[nKey]) {
+        var npcModel = Models3D.createVillageNPC(npc.name);
+        npcModel.position.set(npc.x, 0, npc.y);
+        this.entityGroup.add(npcModel);
+        this._villageNpcMeshes[nKey] = npcModel;
+      }
+      var nm = this._villageNpcMeshes[nKey];
+      nm.position.set(npc.x, 0, npc.y);
+      // Idle bob
+      if (npc.name !== '猫') {
+        nm.position.y = Math.sin(now * 0.002 + i * 1.5) * 0.03;
+      } else {
+        // Cat has a slight tail wag (rotation)
+        nm.rotation.y = Math.sin(now * 0.004) * 0.15;
+      }
+      nm.visible = true;
+    }
+  };
+
+  // === Post-processing overlay init ===
+
+  Renderer3D.prototype._initPostProcessing = function() {
+    if (this._postProcessInited) return;
+    this._postProcessInited = true;
+
+    var canvasArea = document.getElementById('canvas-area');
+    if (!canvasArea) return;
+
+    // Vignette overlay
+    var vig = document.createElement('div');
+    vig.id = 'vignette-overlay';
+    vig.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;' +
+      'pointer-events:none;z-index:10;' +
+      'background:radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%);' +
+      'opacity:0.3;';
+    canvasArea.appendChild(vig);
+    this._vignetteOverlay = vig;
+
+    // Damage overlay
+    var dmg = document.createElement('div');
+    dmg.id = 'damage-overlay';
+    dmg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;' +
+      'pointer-events:none;z-index:11;opacity:0;' +
+      'background:radial-gradient(ellipse at center, transparent 40%, rgba(255,0,0,0.5) 100%);';
+    canvasArea.appendChild(dmg);
+    this._damageOverlay = dmg;
+  };
+
+  // === Post-processing update ===
+
+  Renderer3D.prototype._updatePostProcessing = function(game) {
+    if (!this._vignetteOverlay || !this._damageOverlay) return;
+    var player = game.player;
+    var now = performance.now();
+
+    // Detect damage
+    if (this._lastTrackedHP !== null && player.hp < this._lastTrackedHP) {
+      this._damageFlashStart = now;
+    }
+    this._lastTrackedHP = player.hp;
+
+    // Damage flash animation (300ms)
+    if (this._damageFlashStart) {
+      var elapsed = now - this._damageFlashStart;
+      if (elapsed < 300) {
+        // 0→0.4→0 over 300ms
+        var t = elapsed / 300;
+        var opacity = t < 0.3 ? (t / 0.3) * 0.4 : 0.4 * (1 - (t - 0.3) / 0.7);
+        this._damageOverlay.style.opacity = String(Math.max(0, opacity));
+      } else {
+        this._damageOverlay.style.opacity = '0';
+        this._damageFlashStart = null;
+      }
+    }
+
+    // Low HP warning (< 25%)
+    var maxHP = player.maxHP || player.hp;
+    if (player.hp < maxHP * 0.25 && player.hp > 0) {
+      // Pulsing red vignette
+      var pulse = (Math.sin(now * 0.006) + 1) / 2; // 0..1, ~1s period
+      var vigOpacity = 0.2 + pulse * 0.2;
+      this._vignetteOverlay.style.background =
+        'radial-gradient(ellipse at center, transparent 50%, rgba(180,0,0,' + (0.3 + pulse * 0.15) + ') 100%)';
+      this._vignetteOverlay.style.opacity = String(vigOpacity);
+    } else {
+      // Normal vignette
+      this._vignetteOverlay.style.background =
+        'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%)';
+      this._vignetteOverlay.style.opacity = '0.3';
+    }
   };
 
   // === Update tile visibility (FOV) ===
@@ -567,7 +919,7 @@ var Renderer3D = (function() {
 
       // Bounce effect during movement
       if (a.bounce) {
-        a.mesh.position.y = a.baseY + Math.sin(t * Math.PI) * 0.15;
+        a.mesh.position.y = a.baseY + Math.sin(t * Math.PI) * 0.03;
       }
 
       if (t >= 1) {
