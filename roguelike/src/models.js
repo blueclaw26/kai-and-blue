@@ -723,12 +723,214 @@ var Models3D = (function() {
     return model;
   }
 
+  // === Village NPC Models ===
+
+  // Generic humanoid base for village NPCs
+  function villageHumanoid(bodyColor, height) {
+    var group = new THREE.Group();
+    var scale = height || 1.0;
+    // Body
+    var body = new THREE.Mesh(
+      new THREE.BoxGeometry(0.4 * scale, 0.6 * scale, 0.3 * scale),
+      mat(bodyColor)
+    );
+    body.position.y = 0.5 * scale;
+    body.castShadow = true;
+    group.add(body);
+    // Head
+    var head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.17 * scale, 8, 8),
+      mat(0xffcc80)
+    );
+    head.position.y = 1.0 * scale;
+    head.castShadow = true;
+    group.add(head);
+    return group;
+  }
+
+  function createVillageNPC(npcType) {
+    var group;
+    switch (npcType) {
+      case '倉庫番':
+        group = villageHumanoid(0xe8a44a);
+        // Apron
+        var apron = new THREE.Mesh(
+          new THREE.BoxGeometry(0.35, 0.35, 0.05),
+          mat(0xffffff)
+        );
+        apron.position.set(0, 0.4, 0.18);
+        group.add(apron);
+        break;
+      case '鍛冶屋':
+        group = villageHumanoid(0xe07050);
+        // Hammer
+        var hammerHandle = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.03, 0.03, 0.35, 4),
+          mat(0x5d4037)
+        );
+        hammerHandle.position.set(0.3, 0.6, 0);
+        hammerHandle.rotation.z = -0.3;
+        group.add(hammerHandle);
+        var hammerHead = new THREE.Mesh(
+          new THREE.BoxGeometry(0.12, 0.08, 0.08),
+          mat(0x9e9e9e)
+        );
+        hammerHead.position.set(0.32, 0.8, 0);
+        group.add(hammerHead);
+        break;
+      case '道具屋':
+        group = villageHumanoid(0x66bb6a);
+        // Hat
+        var hat = new THREE.Mesh(
+          new THREE.ConeGeometry(0.2, 0.2, 8),
+          mat(0x4e342e)
+        );
+        hat.position.y = 1.2;
+        group.add(hat);
+        break;
+      case '情報屋':
+        group = villageHumanoid(0xb388ff);
+        // Glasses
+        var glass1 = new THREE.Mesh(
+          new THREE.SphereGeometry(0.05, 6, 6),
+          mat(0x90caf9, { transparent: true, opacity: 0.6 })
+        );
+        glass1.position.set(0.08, 1.0, 0.15);
+        group.add(glass1);
+        var glass2 = new THREE.Mesh(
+          new THREE.SphereGeometry(0.05, 6, 6),
+          mat(0x90caf9, { transparent: true, opacity: 0.6 })
+        );
+        glass2.position.set(-0.08, 1.0, 0.15);
+        group.add(glass2);
+        break;
+      case '村長':
+        group = villageHumanoid(0xffd54f, 1.15);
+        break;
+      case '子供':
+        group = villageHumanoid(0x81d4fa, 0.7);
+        break;
+      case '猫':
+        group = new THREE.Group();
+        // Small quadruped body
+        var catBody = new THREE.Mesh(
+          new THREE.BoxGeometry(0.35, 0.18, 0.2),
+          mat(0xffab91)
+        );
+        catBody.position.y = 0.22;
+        catBody.castShadow = true;
+        group.add(catBody);
+        // Head
+        var catHead = new THREE.Mesh(
+          new THREE.SphereGeometry(0.12, 6, 6),
+          mat(0xffab91)
+        );
+        catHead.position.set(0.2, 0.32, 0);
+        group.add(catHead);
+        // Ears (triangles)
+        var catEar1 = new THREE.Mesh(
+          new THREE.ConeGeometry(0.04, 0.1, 3),
+          mat(0xff8a65)
+        );
+        catEar1.position.set(0.22, 0.45, 0.06);
+        group.add(catEar1);
+        var catEar2 = new THREE.Mesh(
+          new THREE.ConeGeometry(0.04, 0.1, 3),
+          mat(0xff8a65)
+        );
+        catEar2.position.set(0.22, 0.45, -0.06);
+        group.add(catEar2);
+        // 4 legs
+        var legMat = mat(0xffab91);
+        var legGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.13, 4);
+        var positions = [[0.12, 0.065, 0.08], [0.12, 0.065, -0.08], [-0.12, 0.065, 0.08], [-0.12, 0.065, -0.08]];
+        for (var li = 0; li < 4; li++) {
+          var leg = new THREE.Mesh(legGeo, legMat);
+          leg.position.set(positions[li][0], positions[li][1], positions[li][2]);
+          group.add(leg);
+        }
+        // Tail
+        var catTail = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.02, 0.015, 0.25, 4),
+          mat(0xffab91)
+        );
+        catTail.position.set(-0.25, 0.32, 0);
+        catTail.rotation.z = 0.6;
+        group.add(catTail);
+        break;
+      default:
+        group = villageHumanoid(0x888888);
+        break;
+    }
+    return group;
+  }
+
+  // === Village Tree Model ===
+  function createVillageTree(seed) {
+    var group = new THREE.Group();
+    // Trunk
+    var trunk = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.08, 0.12, 0.6, 6),
+      mat(0x5d4037)
+    );
+    trunk.position.y = 0.3;
+    trunk.castShadow = true;
+    group.add(trunk);
+    // Canopy
+    var canopyScale = 0.35 + (seed % 10) * 0.01;
+    var canopy = new THREE.Mesh(
+      new THREE.SphereGeometry(canopyScale, 8, 8),
+      mat(0x2e7d32)
+    );
+    canopy.position.y = 0.75;
+    canopy.scale.set(1, 0.8 + (seed % 5) * 0.04, 1);
+    canopy.castShadow = true;
+    group.add(canopy);
+    return group;
+  }
+
+  // === Village Flower Model ===
+  function createVillageFlower(seed) {
+    var group = new THREE.Group();
+    // Stem
+    var stem = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.015, 0.015, 0.2, 4),
+      mat(0x4caf50)
+    );
+    stem.position.y = 0.1;
+    group.add(stem);
+    // Petals (3-4 small spheres)
+    var flowerColors = [0xff80ab, 0xffeb3b, 0xce93d8, 0xff8a65];
+    var petalCount = 3 + (seed % 2);
+    var color = flowerColors[seed % flowerColors.length];
+    for (var pi = 0; pi < petalCount; pi++) {
+      var angle = (pi / petalCount) * Math.PI * 2;
+      var petal = new THREE.Mesh(
+        new THREE.SphereGeometry(0.04, 4, 4),
+        mat(color)
+      );
+      petal.position.set(Math.cos(angle) * 0.06, 0.22, Math.sin(angle) * 0.06);
+      group.add(petal);
+    }
+    // Center
+    var center = new THREE.Mesh(
+      new THREE.SphereGeometry(0.03, 4, 4),
+      mat(0xffeb3b)
+    );
+    center.position.y = 0.22;
+    group.add(center);
+    return group;
+  }
+
   return {
     createPlayer: createPlayer,
     createEnemy: createEnemy,
     createItemModel: createItemModel,
     createStairs: createStairs,
     createTrap: createTrap,
+    createVillageNPC: createVillageNPC,
+    createVillageTree: createVillageTree,
+    createVillageFlower: createVillageFlower,
     brighten: brighten
   };
 })();

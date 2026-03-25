@@ -33,6 +33,11 @@ var ParticleSystem3D = (function() {
 
     emit: function(scene, config) {
       var count = config.count || 5;
+      // Enforce max particle limit of 200
+      if (_particles.length + count > 200) {
+        count = Math.max(0, 200 - _particles.length);
+        if (count === 0) return;
+      }
       var size = config.size || 0.05;
       var geo = getParticleGeo(size);
 

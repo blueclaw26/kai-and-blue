@@ -337,9 +337,24 @@ var Renderer3D = (function() {
     this._waterMeshes = [];
     this._lavaMeshes = [];
     this._shopLights = [];
+    this._villageNpcMeshes = {};
+    this._stairsLight = null;
+    this._lastTrackedHP = null;
+    this._damageFlashStart = null;
+    // Remove post-processing overlays
+    var vigEl = document.getElementById('vignette-overlay');
+    if (vigEl && vigEl.parentNode) vigEl.parentNode.removeChild(vigEl);
+    var dmgEl = document.getElementById('damage-overlay');
+    if (dmgEl && dmgEl.parentNode) dmgEl.parentNode.removeChild(dmgEl);
+    this._vignetteOverlay = null;
+    this._damageOverlay = null;
+    this._postProcessInited = false;
     // Remove floor announcement if present
     var announce = document.getElementById('floor-announce-3d');
     if (announce && announce.parentNode) announce.parentNode.removeChild(announce);
+    // Remove loading overlay
+    var loadEl = document.getElementById('loading-3d-overlay');
+    if (loadEl && loadEl.parentNode) loadEl.parentNode.removeChild(loadEl);
   };
 
   // === Reset Camera ===
@@ -436,6 +451,15 @@ var Renderer3D = (function() {
 
     this._builtFloor = floorNum;
     this._builtScene = 'dungeon';
+
+    // Reset scene background to dungeon dark
+    this.scene.background = new THREE.Color(0x1a1a2e);
+    // Reset frustum to dungeon default if it was enlarged for village
+    if (this._targetFrustum >= this._villageFrustumSize) {
+      this._targetFrustum = 14;
+    }
+    // Restore dungeon player light intensity
+    this.playerLight.intensity = 1.5;
 
     // === Stairs glow light ===
     if (this._stairsLight) {
@@ -1483,25 +1507,59 @@ var Renderer3D = (function() {
   Renderer3D.prototype.render = function(game) {
     if (!this.scene || !this.webglRenderer) return;
 
-    // Village scene: fall back to 2D for now (village is simple)
-    if (game.scene === 'village') {
-      // Hide 3D canvas, show 2D for village
-      var el3d = document.getElementById('game-canvas-3d');
-      if (el3d) el3d.style.display = 'none';
-      if (this.css2dRenderer) this.css2dRenderer.domElement.style.display = 'none';
-      this.canvas2d.style.display = '';
-      // Use fallback 2D renderer for village if available
-      if (this._fallback2d) {
-        this._fallback2d.render(game);
-      }
-      return;
-    }
+    // Ensure post-processing overlays are created
+    this._initPostProcessing();
 
-    // Show 3D canvas for dungeon
+    // Show 3D canvas
     var el3d = document.getElementById('game-canvas-3d');
     if (el3d) el3d.style.display = 'block';
     if (this.css2dRenderer) this.css2dRenderer.domElement.style.display = '';
     this.canvas2d.style.display = 'none';
+
+    // === Village scene in 3D ===
+    if (game.scene === 'village') {
+      // Build village tile map if needed
+      if (this._builtScene !== 'village') {
+        this._clearEntities();
+        this._buildVillageTileMap(game);
+      }
+
+      this._animFrame++;
+      var now = performance.now();
+      var dt = this._lastTime ? Math.min((now - this._lastTime) / 1000, 0.1) : 0.016;
+      this._lastTime = now;
+
+      // Animate water
+      this._animateWaterLava();
+
+      // Update animations
+      this._updateAnimations();
+
+      // Update popups
+      this._updatePopups();
+
+      // Village entities (player + NPCs)
+      this._updateVillageEntities(game);
+
+      // Village camera (slightly more zoomed out, min frustum = villageFrustumSize)
+      if (this._targetFrustum < this._villageFrustumSize) {
+        this._targetFrustum = this._villageFrustumSize;
+      }
+      this._updateCamera(game.player.x, game.player.y);
+
+      // Post-processing
+      this._updatePostProcessing(game);
+
+      // Render
+      this.webglRenderer.render(this.scene, this.camera);
+      if (this.css2dRenderer) this.css2dRenderer.render(this.scene, this.camera);
+
+      // Village minimap
+      this._renderVillageMinimap(game);
+      return;
+    }
+
+    // === Dungeon scene ===
 
     // Update visibility
     game.updateVisibility();
@@ -1569,8 +1627,16 @@ var Renderer3D = (function() {
     // === Shop visual effects ===
     this._updateShopVisuals(game);
 
+    // === Stairs glow pulse ===
+    if (this._stairsLight) {
+      this._stairsLight.intensity = 1.5 + Math.sin(now * 0.003) * 0.5;
+    }
+
     // Camera follow
     this._updateCamera(game.player.x, game.player.y);
+
+    // Post-processing
+    this._updatePostProcessing(game);
 
     // Render 3D scene
     this.webglRenderer.render(this.scene, this.camera);
@@ -1584,6 +1650,52 @@ var Renderer3D = (function() {
     this._renderMinimap(game);
   };
 
+  // === Village Minimap ===
+
+  Renderer3D.prototype._renderVillageMinimap = function(game) {
+    var map = game.villageMap;
+    if (!map) return;
+    var player = game.player;
+    var VT = Game.VILLAGE_TILE;
+
+    var ctx = this.miniCtx;
+    var t = 6;
+    this.miniCanvas.width = map.width * t;
+    this.miniCanvas.height = map.height * t;
+
+    ctx.fillStyle = '#87ceeb';
+    ctx.fillRect(0, 0, this.miniCanvas.width, this.miniCanvas.height);
+
+    var colorMap = {};
+    colorMap[VT.GRASS] = '#2d5a27';
+    colorMap[VT.PATH] = '#8b7355';
+    colorMap[VT.WATER] = '#1a6aaa';
+    colorMap[VT.BRIDGE] = '#6b5030';
+    colorMap[VT.WALL] = '#3a2a1a';
+    colorMap[VT.FLOOR] = '#5a4a3a';
+    colorMap[VT.TREE] = '#1a4a1a';
+    colorMap[VT.FLOWER] = '#2d5a27';
+    colorMap[VT.ENTRANCE] = '#1a1a2e';
+
+    for (var y = 0; y < map.height; y++) {
+      for (var x = 0; x < map.width; x++) {
+        ctx.fillStyle = colorMap[map.grid[y][x]] || '#000';
+        ctx.fillRect(x * t, y * t, t, t);
+      }
+    }
+
+    // NPCs
+    var npcs = game.villageNpcs || [];
+    for (var i = 0; i < npcs.length; i++) {
+      ctx.fillStyle = npcs[i].color || '#fff';
+      ctx.fillRect(npcs[i].x * t + 1, npcs[i].y * t + 1, 4, 4);
+    }
+
+    // Player
+    ctx.fillStyle = '#00e5ff';
+    ctx.fillRect(player.x * t + t / 2 - 4, player.y * t + t / 2 - 4, 8, 8);
+  };
+
   Renderer3D.prototype._clearEntities = function() {
     // Remove all entity meshes
     for (var key in this.entityMeshes) {
@@ -1591,6 +1703,11 @@ var Renderer3D = (function() {
     }
     this.entityMeshes = {};
     this._itemMeshes = {};
+    // Clear village NPC meshes
+    for (var nk in this._villageNpcMeshes) {
+      this.entityGroup.remove(this._villageNpcMeshes[nk]);
+    }
+    this._villageNpcMeshes = {};
   };
 
   // === Phase 3: Particle effects for combat events ===
