@@ -57,7 +57,7 @@ var Renderer = (function() {
   var WALL_CHAR = '#';
   var STAIRS_CHAR = '>';
 
-  // Map enemy IDs to sprite names
+  // Map enemy IDs to sprite names (coded sprites fallback)
   var ENEMY_SPRITE_MAP = {
     mamel: 'mamel',
     chintala: 'chintala',
@@ -81,6 +81,26 @@ var Renderer = (function() {
     phantom: 'phantom',
     hell_dragon: 'hell_dragon',
     chaos_knight: 'chaos_knight'
+  };
+
+  // Map enemy IDs to PNG sprite base names (SpriteLoader)
+  var ENEMY_PNG_MAP = {
+    chintala: 'chintala',
+    big_chintala: 'chintala',
+    midnighthat: 'ghost',
+    phantom: 'ghost',
+    dragon: 'dragon',
+    mega_dragon: 'dragon',
+    hell_dragon: 'dragon',
+    skull_mage: 'skull_mage',
+    death_reaper: 'skull_mage',
+    minotaur: 'minotaur',
+    shopkeeper: 'shopkeeper',
+    toad: 'toad',
+    boy_cart: 'boy_cart',
+    thief_pelican: 'thief',
+    kengo: 'kengo',
+    chaos_knight: 'kengo'
   };
 
   // Map item types to sprite names
@@ -257,7 +277,11 @@ var Renderer = (function() {
     // Draw player
     var pScreenX = (player.x - camX) * TILE_SIZE;
     var pScreenY = (player.y - camY) * TILE_SIZE;
-    if (!drawSprite(ctx, 'player', pScreenX, pScreenY, false, true)) {
+    var vilPlayerPng = SpriteLoader.getAnimFrame('player_idle', 4);
+    if (vilPlayerPng) {
+      var vilSpriteH = TILE_SIZE * (28 / 16);
+      ctx.drawImage(vilPlayerPng, pScreenX, pScreenY - (vilSpriteH - TILE_SIZE), TILE_SIZE, vilSpriteH);
+    } else if (!drawSprite(ctx, 'player', pScreenX, pScreenY, false, true)) {
       ctx.fillStyle = COLORS.player;
       ctx.fillText(player.char, pScreenX + TILE_SIZE / 2, pScreenY + TILE_SIZE / 2);
     }
@@ -385,7 +409,15 @@ var Renderer = (function() {
         var tileRoomIdx = (roomMap && roomMap[ty]) ? roomMap[ty][tx] : -1;
         switch (tile) {
           case Dungeon.TILE.WALL:
-            if (!drawSprite(ctx, palette.wallSprite, drawX, drawY, dimmed)) {
+            // Try PNG wall sprite first
+            var wallPng = SpriteLoader.get('wall_mid');
+            if (wallPng) {
+              ctx.drawImage(wallPng, drawX, drawY, TILE_SIZE, TILE_SIZE);
+              if (dimmed) {
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+              }
+            } else if (!drawSprite(ctx, palette.wallSprite, drawX, drawY, dimmed)) {
               // Try default wall sprite fallback
               if (palette.wallSprite !== 'wall' && !drawSprite(ctx, 'wall', drawX, drawY, dimmed)) {
                 // Text fallback
@@ -399,8 +431,14 @@ var Renderer = (function() {
             }
             break;
           case Dungeon.TILE.STAIRS_DOWN:
-            ctx.fillStyle = getRoomFloorColor(palette, tileRoomIdx);
-            ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            // Draw floor background under stairs
+            var stairFloorPng = SpriteLoader.get('floor_' + (((tx + ty) % 8) + 1));
+            if (stairFloorPng) {
+              ctx.drawImage(stairFloorPng, drawX, drawY, TILE_SIZE, TILE_SIZE);
+            } else {
+              ctx.fillStyle = getRoomFloorColor(palette, tileRoomIdx);
+              ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            }
             if (!drawSprite(ctx, 'stairs', drawX, drawY, dimmed)) {
               if (dimmed) { ctx.globalAlpha = 0.35; }
               ctx.fillStyle = COLORS.stairs;
@@ -411,20 +449,26 @@ var Renderer = (function() {
             }
             break;
           case Dungeon.TILE.FLOOR:
-            var floorColor;
-            if (game.sanctuaryTiles && game.sanctuaryTiles.has(tx + ',' + ty)) {
-              floorColor = COLORS.sanctuaryTile;
-            } else if (isShopTile(game, tx, ty)) {
-              floorColor = COLORS.shopFloor;
-            } else if (isMonsterHouseTile(game, tx, ty)) {
-              floorColor = COLORS.monsterHouseFloor;
-            } else if (isTreasureRoomTile(game, tx, ty)) {
-              floorColor = '#2e2a1a'; // golden tint
+            // Try PNG floor tile first (variation based on position)
+            var floorIdx = ((tx + ty) % 8) + 1;
+            var floorPng = SpriteLoader.get('floor_' + floorIdx);
+            if (floorPng) {
+              ctx.drawImage(floorPng, drawX, drawY, TILE_SIZE, TILE_SIZE);
             } else {
-              floorColor = getRoomFloorColor(palette, tileRoomIdx);
+              var floorColor;
+              if (isShopTile(game, tx, ty)) {
+                floorColor = COLORS.shopFloor;
+              } else if (isMonsterHouseTile(game, tx, ty)) {
+                floorColor = COLORS.monsterHouseFloor;
+              } else if (isTreasureRoomTile(game, tx, ty)) {
+                floorColor = '#2e2a1a';
+              } else {
+                floorColor = getRoomFloorColor(palette, tileRoomIdx);
+              }
+              ctx.fillStyle = floorColor;
+              ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
             }
-            ctx.fillStyle = floorColor;
-            ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            // Special overlays
             if (game.sanctuaryTiles && game.sanctuaryTiles.has(tx + ',' + ty)) {
               ctx.fillStyle = 'rgba(255, 215, 0, 0.15)';
               ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
@@ -433,14 +477,30 @@ var Renderer = (function() {
               ctx.fillStyle = 'rgba(255, 215, 0, 0.08)';
               ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
             }
+            if (isShopTile(game, tx, ty) && floorPng) {
+              ctx.fillStyle = 'rgba(100, 80, 40, 0.2)';
+              ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            }
+            if (isMonsterHouseTile(game, tx, ty) && floorPng) {
+              ctx.fillStyle = 'rgba(150, 30, 30, 0.15)';
+              ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            }
             if (dimmed) {
               ctx.fillStyle = 'rgba(0,0,0,0.5)';
               ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
             }
             break;
           case Dungeon.TILE.CORRIDOR:
-            ctx.fillStyle = palette.corridor;
-            ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            // Use PNG floor tile for corridors too (slightly darker overlay)
+            var corrFloorPng = SpriteLoader.get('floor_' + (((tx + ty) % 4) + 1));
+            if (corrFloorPng) {
+              ctx.drawImage(corrFloorPng, drawX, drawY, TILE_SIZE, TILE_SIZE);
+              ctx.fillStyle = 'rgba(0,0,0,0.15)';
+              ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            } else {
+              ctx.fillStyle = palette.corridor;
+              ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+            }
             if (dimmed) {
               ctx.fillStyle = 'rgba(0,0,0,0.5)';
               ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
@@ -559,22 +619,42 @@ var Renderer = (function() {
       var eScreenX = (enemy.x - camX) * TILE_SIZE;
       var eScreenY = (enemy.y - camY) * TILE_SIZE;
 
-      // Try sprite first (with animation)
+      // Try PNG sprite first, then coded sprite, then text fallback
+      var enemyPngName = enemy.enemyId ? ENEMY_PNG_MAP[enemy.enemyId] : null;
       var enemySpriteName = enemy.enemyId ? ENEMY_SPRITE_MAP[enemy.enemyId] : null;
-      // Use hostile shopkeeper sprite when angry
+      // Use hostile shopkeeper sprite when angry (coded only)
       if (enemySpriteName === 'shopkeeper' && game.shopkeeperHostile) {
         enemySpriteName = 'shopkeeper_hostile';
+        enemyPngName = null; // no PNG for hostile variant
       }
-      // Use decoy sprite for decoys
+      // Use decoy sprite for decoys (coded only)
       if (enemy.isDecoy) {
         enemySpriteName = 'decoy';
+        enemyPngName = null;
       }
-      if (enemySpriteName && drawSprite(ctx, enemySpriteName, eScreenX, eScreenY, false, true)) {
-        // Sprite drawn successfully
-      } else {
-        // Fallback to text
-        ctx.fillStyle = enemy.color;
-        ctx.fillText(enemy.char, eScreenX + TILE_SIZE / 2, eScreenY + TILE_SIZE / 2);
+      var drawnEnemy = false;
+      if (enemyPngName) {
+        var enemyPng = SpriteLoader.getAnimFrame(enemyPngName, 2);
+        if (enemyPng) {
+          // Check if this is a tall sprite (16x28) or small (16x16)
+          var isSmall = (enemyPng.naturalHeight <= 16);
+          if (isSmall) {
+            ctx.drawImage(enemyPng, eScreenX, eScreenY, TILE_SIZE, TILE_SIZE);
+          } else {
+            var eSpriteH = TILE_SIZE * (enemyPng.naturalHeight / enemyPng.naturalWidth);
+            ctx.drawImage(enemyPng, eScreenX, eScreenY - (eSpriteH - TILE_SIZE), TILE_SIZE, eSpriteH);
+          }
+          drawnEnemy = true;
+        }
+      }
+      if (!drawnEnemy) {
+        if (enemySpriteName && drawSprite(ctx, enemySpriteName, eScreenX, eScreenY, false, true)) {
+          // Coded sprite drawn
+        } else {
+          // Text fallback
+          ctx.fillStyle = enemy.color;
+          ctx.fillText(enemy.char, eScreenX + TILE_SIZE / 2, eScreenY + TILE_SIZE / 2);
+        }
       }
 
       // Sleeping enemy overlay
@@ -629,7 +709,12 @@ var Renderer = (function() {
     var playerScreenX = (player.x - camX) * TILE_SIZE;
     var playerScreenY = (player.y - camY) * TILE_SIZE;
 
-    if (!drawSprite(ctx, 'player', playerScreenX, playerScreenY, false, true)) {
+    // Try PNG sprite first (16x28 character sprites → scale taller)
+    var playerPng = SpriteLoader.getAnimFrame('player_idle', 4);
+    if (playerPng) {
+      var pSpriteH = TILE_SIZE * (28 / 16);
+      ctx.drawImage(playerPng, playerScreenX, playerScreenY - (pSpriteH - TILE_SIZE), TILE_SIZE, pSpriteH);
+    } else if (!drawSprite(ctx, 'player', playerScreenX, playerScreenY, false, true)) {
       // Fallback to text
       ctx.fillStyle = COLORS.player;
       ctx.font = 'bold 18px monospace';

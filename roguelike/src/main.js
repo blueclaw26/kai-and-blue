@@ -20,6 +20,11 @@
       // Initialize audio context on user interaction
       Sound.init();
 
+      // Start loading PNG sprites (non-blocking, renderer uses them when ready)
+      SpriteLoader.init(function() {
+        console.log('PNG sprites loaded');
+      });
+
       var game = new Game();
       var renderer = new Renderer(canvas, minimapCanvas);
       var ui = new UI(statusEl, logEl);
