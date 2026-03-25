@@ -55,6 +55,11 @@ var Renderer3D = (function() {
     return _materialCache[key];
   }
 
+  // Ease in-out quad
+  function easeInOut(t) {
+    return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  }
+
   // === Renderer Constructor ===
 
   function Renderer3D(canvas, minimapCanvas) {
@@ -66,6 +71,7 @@ var Renderer3D = (function() {
     this.scene = null;
     this.camera = null;
     this.webglRenderer = null;
+    this.css2dRenderer = null;
     this.tileSize = 1;
 
     // Tile mesh pool
@@ -99,6 +105,27 @@ var Renderer3D = (function() {
     // Smooth camera
     this._smoothCamX = 0;
     this._smoothCamZ = 0;
+
+    // === Phase 2: Animation system ===
+    this._animations = [];  // { mesh, startPos, endPos, startTime, duration, bounce, baseY, onComplete }
+    this._prevPositions = {}; // entityKey -> { x, y }
+    this._prevHP = {};        // entityKey -> hp
+
+    // Damage popups (CSS2D)
+    this._popups = [];
+
+    // Camera rotation (Q/E)
+    this._cameraAngle = Math.PI / 4;   // initial 45 degrees isometric
+    this._targetAngle = Math.PI / 4;
+    this._cameraRadius = 20;
+    this._cameraHeight = 15;
+
+    // Camera zoom
+    this._frustumSize = 14;
+    this._targetFrustum = 14;
+
+    // Item mesh rotation tracking
+    this._itemMeshes = {};  // iKey -> mesh (for rotation in render loop)
   }
 
   // === Init ===
@@ -113,8 +140,7 @@ var Renderer3D = (function() {
     var w = container ? container.clientWidth : 600;
     var h = container ? container.clientHeight : 432;
     var aspect = w / h;
-    var frustumSize = 14;
-    this.frustumSize = frustumSize;
+    var frustumSize = this._frustumSize;
 
     this.camera = new THREE.OrthographicCamera(
       frustumSize * aspect / -2, frustumSize * aspect / 2,
@@ -137,6 +163,18 @@ var Renderer3D = (function() {
     this.webglRenderer.domElement.id = 'game-canvas-3d';
     this.webglRenderer.domElement.style.display = 'block';
     canvasArea.appendChild(this.webglRenderer.domElement);
+
+    // CSS2DRenderer for damage popups
+    if (typeof THREE.CSS2DRenderer !== 'undefined') {
+      this.css2dRenderer = new THREE.CSS2DRenderer();
+      this.css2dRenderer.setSize(w, h);
+      this.css2dRenderer.domElement.style.position = 'absolute';
+      this.css2dRenderer.domElement.style.top = '0';
+      this.css2dRenderer.domElement.style.left = '0';
+      this.css2dRenderer.domElement.style.pointerEvents = 'none';
+      canvasArea.style.position = 'relative';
+      canvasArea.appendChild(this.css2dRenderer.domElement);
+    }
 
     // Lighting
     this.ambientLight = new THREE.AmbientLight(0x404040, 0.4);
@@ -171,18 +209,61 @@ var Renderer3D = (function() {
     // Handle resize
     var self = this;
     window.addEventListener('resize', function() {
-      var container = document.getElementById('canvas-area');
-      if (!container) return;
-      var w = container.clientWidth;
-      var h = container.clientHeight;
-      var aspect = w / h;
-      self.camera.left = self.frustumSize * aspect / -2;
-      self.camera.right = self.frustumSize * aspect / 2;
-      self.camera.top = self.frustumSize / 2;
-      self.camera.bottom = self.frustumSize / -2;
-      self.camera.updateProjectionMatrix();
-      self.webglRenderer.setSize(w, h);
+      self._updateRendererSize();
     });
+
+    // === Mouse wheel zoom ===
+    this.webglRenderer.domElement.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      self._targetFrustum += e.deltaY * 0.01 * 0.5;
+      self._targetFrustum = Math.max(8, Math.min(40, self._targetFrustum));
+    }, { passive: false });
+
+    // === Q/E camera rotation ===
+    this._keydownHandler = function(e) {
+      if (typeof RENDER_MODE !== 'undefined' && RENDER_MODE !== '3d') return;
+      // Only handle Q/E, don't interfere with game controls
+      if (e.key === 'q' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        // Check if inventory or other mode is open
+        var g = window._game;
+        if (g && (g.inventoryOpen || g.directionMode || g.blankScrollMode || g.extinctionMode ||
+                  g.merchantMode || g.blacksmithMode || g.potPutMode || g.potTakeMode ||
+                  g.storageMode || g.villageShopMode || g.villageBlacksmithMode)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        self._targetAngle -= Math.PI / 2;
+      }
+      if (e.key === 'e' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        var g = window._game;
+        if (g && (g.inventoryOpen || g.directionMode || g.blankScrollMode || g.extinctionMode ||
+                  g.merchantMode || g.blacksmithMode || g.potPutMode || g.potTakeMode ||
+                  g.storageMode || g.villageShopMode || g.villageBlacksmithMode)) return;
+        // Don't capture 'e' in inventory (use/equip)
+        e.preventDefault();
+        e.stopPropagation();
+        self._targetAngle += Math.PI / 2;
+      }
+    };
+    // Use capture phase so we get Q/E before game input, but only prevent default when we handle it
+    document.addEventListener('keydown', this._keydownHandler, true);
+  };
+
+  // === Update renderer size ===
+  Renderer3D.prototype._updateRendererSize = function() {
+    var container = document.getElementById('canvas-area');
+    if (!container) return;
+    var w = container.clientWidth;
+    var h = container.clientHeight;
+    var aspect = w / h;
+    this.camera.left = this._frustumSize * aspect / -2;
+    this.camera.right = this._frustumSize * aspect / 2;
+    this.camera.top = this._frustumSize / 2;
+    this.camera.bottom = this._frustumSize / -2;
+    this.camera.updateProjectionMatrix();
+    this.webglRenderer.setSize(w, h);
+    if (this.css2dRenderer) {
+      this.css2dRenderer.setSize(w, h);
+    }
   };
 
   // === Destroy (for toggling back to 2D) ===
@@ -191,15 +272,31 @@ var Renderer3D = (function() {
     if (this._renderLoopRunning) {
       this._renderLoopRunning = false;
     }
+    // Remove Q/E handler
+    if (this._keydownHandler) {
+      document.removeEventListener('keydown', this._keydownHandler, true);
+      this._keydownHandler = null;
+    }
     var el = document.getElementById('game-canvas-3d');
     if (el && el.parentNode) el.parentNode.removeChild(el);
+    // Remove CSS2D overlay
+    if (this.css2dRenderer && this.css2dRenderer.domElement.parentNode) {
+      this.css2dRenderer.domElement.parentNode.removeChild(this.css2dRenderer.domElement);
+    }
     this.canvas2d.style.display = '';
     if (this.webglRenderer) {
       this.webglRenderer.dispose();
       this.webglRenderer = null;
     }
+    this.css2dRenderer = null;
     this.scene = null;
     this.camera = null;
+    // Clear animation state
+    this._animations = [];
+    this._prevPositions = {};
+    this._prevHP = {};
+    this._popups = [];
+    this._itemMeshes = {};
   };
 
   // === Reset Camera ===
@@ -294,6 +391,12 @@ var Renderer3D = (function() {
 
     this._builtFloor = floorNum;
     this._builtScene = 'dungeon';
+
+    // Reset animation state for new floor
+    this._prevPositions = {};
+    this._prevHP = {};
+    this._animations = [];
+    this._itemMeshes = {};
   };
 
   // === Update tile visibility (FOV) ===
@@ -356,6 +459,155 @@ var Renderer3D = (function() {
     return null;
   };
 
+  // === Animation system (Phase 2) ===
+
+  Renderer3D.prototype._addAnimation = function(mesh, startX, startZ, endX, endZ, duration, bounce, baseY, onComplete) {
+    this._animations.push({
+      mesh: mesh,
+      startPos: { x: startX, z: startZ },
+      endPos: { x: endX, z: endZ },
+      startTime: performance.now(),
+      duration: duration,
+      bounce: bounce || false,
+      baseY: baseY || 0,
+      onComplete: onComplete || null
+    });
+  };
+
+  Renderer3D.prototype._updateAnimations = function() {
+    var now = performance.now();
+    for (var i = this._animations.length - 1; i >= 0; i--) {
+      var a = this._animations[i];
+      var t = Math.min((now - a.startTime) / a.duration, 1);
+      var et = easeInOut(t);
+
+      a.mesh.position.x = a.startPos.x + (a.endPos.x - a.startPos.x) * et;
+      a.mesh.position.z = a.startPos.z + (a.endPos.z - a.startPos.z) * et;
+
+      // Bounce effect during movement
+      if (a.bounce) {
+        a.mesh.position.y = a.baseY + Math.sin(t * Math.PI) * 0.15;
+      }
+
+      if (t >= 1) {
+        a.mesh.position.x = a.endPos.x;
+        a.mesh.position.z = a.endPos.z;
+        if (a.bounce) a.mesh.position.y = a.baseY;
+        if (a.onComplete) a.onComplete();
+        this._animations.splice(i, 1);
+      }
+    }
+  };
+
+  // === Damage popup system (Phase 2) ===
+
+  Renderer3D.prototype._showDamagePopup = function(worldX, worldZ, text, color) {
+    if (!this.css2dRenderer) return; // CSS2DRenderer not available
+
+    var div = document.createElement('div');
+    div.textContent = text;
+    div.style.color = color || '#ff4444';
+    div.style.fontSize = '20px';
+    div.style.fontWeight = 'bold';
+    div.style.textShadow = '1px 1px 2px black, -1px -1px 2px black';
+    div.style.pointerEvents = 'none';
+    div.style.whiteSpace = 'nowrap';
+
+    var label = new THREE.CSS2DObject(div);
+    label.position.set(worldX, 2, worldZ);
+    this.scene.add(label);
+
+    this._popups.push({
+      label: label,
+      div: div,
+      startTime: performance.now(),
+      startY: 2
+    });
+  };
+
+  Renderer3D.prototype._updatePopups = function() {
+    var now = performance.now();
+    for (var i = this._popups.length - 1; i >= 0; i--) {
+      var p = this._popups[i];
+      var t = (now - p.startTime) / 1000; // seconds
+      p.label.position.y = p.startY + t * 2; // float up
+      p.div.style.opacity = String(Math.max(0, 1 - t));
+      if (t > 1) {
+        this.scene.remove(p.label);
+        this._popups.splice(i, 1);
+      }
+    }
+  };
+
+  // === Attack animation (Phase 2) ===
+
+  Renderer3D.prototype._triggerAttackAnimation = function(attackerMesh, targetMesh, attackerPos, targetPos) {
+    if (!attackerMesh || !targetMesh) return;
+
+    var dx = targetPos.x - attackerPos.x;
+    var dz = targetPos.z - attackerPos.z;
+    var dist = Math.sqrt(dx * dx + dz * dz);
+    if (dist === 0) return;
+
+    var lungeX = attackerPos.x + (dx / dist) * 0.3;
+    var lungeZ = attackerPos.z + (dz / dist) * 0.3;
+
+    var self = this;
+
+    // Lunge forward
+    this._addAnimation(attackerMesh, attackerPos.x, attackerPos.z, lungeX, lungeZ, 100, false, 0, function() {
+      // At peak: flash target white
+      self._flashMeshWhite(targetMesh, 80);
+      // Return to original position
+      self._addAnimation(attackerMesh, lungeX, lungeZ, attackerPos.x, attackerPos.z, 100, false, 0, null);
+    });
+  };
+
+  Renderer3D.prototype._flashMeshWhite = function(mesh, durationMs) {
+    // Store original emissive values, set to white, then restore
+    var originals = [];
+    mesh.traverse(function(child) {
+      if (child.isMesh && child.material) {
+        var origEmissive = child.material.emissive ? child.material.emissive.clone() : new THREE.Color(0);
+        originals.push({ mesh: child, emissive: origEmissive });
+        if (child.material.emissive) {
+          child.material = child.material.clone();
+          child.material.emissive.set(0xffffff);
+          child.material.emissiveIntensity = 1.0;
+        }
+      }
+    });
+
+    setTimeout(function() {
+      for (var i = 0; i < originals.length; i++) {
+        var o = originals[i];
+        if (o.mesh.material && o.mesh.material.emissive) {
+          o.mesh.material.emissive.copy(o.emissive);
+          o.mesh.material.emissiveIntensity = o.emissive.r > 0 || o.emissive.g > 0 || o.emissive.b > 0 ? 0.3 : 0;
+        }
+      }
+    }, durationMs);
+  };
+
+  Renderer3D.prototype._triggerDeathAnimation = function(mesh, onComplete) {
+    var startTime = performance.now();
+    var duration = 300;
+    var originalScale = mesh.scale.clone();
+
+    function animate() {
+      var t = Math.min((performance.now() - startTime) / duration, 1);
+      var s = 1 - t;
+      mesh.scale.set(originalScale.x * s, originalScale.y * s, originalScale.z * s);
+      mesh.position.y = mesh.position.y; // keep position
+      if (t < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        if (onComplete) onComplete();
+      }
+    }
+    animate();
+  };
+
   // === Entity management ===
 
   Renderer3D.prototype._updateEntities = function(game) {
@@ -365,6 +617,7 @@ var Renderer3D = (function() {
     var visible = game.visible;
     var mapRevealed = game.mapRevealed;
     var seeAll = (player.bracelet && player.bracelet.effect === 'see_all') || (game.sightBoost > 0);
+    var now = performance.now();
 
     // Track which entities are still present
     var activeKeys = {};
@@ -376,14 +629,49 @@ var Renderer3D = (function() {
       var playerModel = Models3D.createPlayer();
       this.entityGroup.add(playerModel);
       this.entityMeshes[playerKey] = { mesh: playerModel, x: player.x, y: player.y };
+      this._prevPositions[playerKey] = { x: player.x, y: player.y };
+      this._prevHP[playerKey] = player.hp;
     }
     var pe = this.entityMeshes[playerKey];
-    // Smooth lerp to new position
-    pe.x += (player.x - pe.x) * 0.25;
-    pe.y += (player.y - pe.y) * 0.25;
-    pe.mesh.position.set(pe.x, 0, pe.y);
-    // Idle bob
-    pe.mesh.position.y = Math.sin(this._animFrame * 0.05) * 0.05;
+
+    // Detect movement and create animation
+    var prevPos = this._prevPositions[playerKey];
+    if (prevPos && (prevPos.x !== player.x || prevPos.y !== player.y)) {
+      // Only animate if not currently being animated
+      var isAnimating = false;
+      for (var ai = 0; ai < this._animations.length; ai++) {
+        if (this._animations[ai].mesh === pe.mesh) { isAnimating = true; break; }
+      }
+      if (!isAnimating) {
+        this._addAnimation(pe.mesh, prevPos.x, prevPos.y, player.x, player.y, 200, true, 0, null);
+      }
+      pe.x = player.x;
+      pe.y = player.y;
+    }
+    this._prevPositions[playerKey] = { x: player.x, y: player.y };
+
+    // Detect player HP change (took damage)
+    var prevPlayerHP = this._prevHP[playerKey];
+    if (prevPlayerHP !== undefined && player.hp < prevPlayerHP) {
+      var dmg = prevPlayerHP - player.hp;
+      this._showDamagePopup(player.x, player.y, '-' + dmg, '#ef5350');
+    } else if (prevPlayerHP !== undefined && player.hp > prevPlayerHP) {
+      var heal = player.hp - prevPlayerHP;
+      this._showDamagePopup(player.x, player.y, '+' + heal, '#66bb6a');
+    }
+    this._prevHP[playerKey] = player.hp;
+
+    // Set position from animation or directly
+    var isPlayerAnimating = false;
+    for (var ai = 0; ai < this._animations.length; ai++) {
+      if (this._animations[ai].mesh === pe.mesh) { isPlayerAnimating = true; break; }
+    }
+    if (!isPlayerAnimating) {
+      pe.mesh.position.x = player.x;
+      pe.mesh.position.z = player.y;
+      // Idle bob
+      pe.mesh.position.y = Math.sin(now * 0.003) * 0.05;
+    }
     pe.mesh.visible = true;
 
     // --- Enemies ---
@@ -403,16 +691,58 @@ var Renderer3D = (function() {
         var rank = enemy.familyRank || 1;
         var color = cssToHex(enemy.color) || 0xff4444;
         var enemyModel = Models3D.createEnemy(family, color, rank);
+        // Random idle phase for each enemy
+        enemyModel.userData._idlePhase = Math.random() * Math.PI * 2;
         this.entityGroup.add(enemyModel);
         this.entityMeshes[eKey] = { mesh: enemyModel, x: enemy.x, y: enemy.y };
+        this._prevPositions[eKey] = { x: enemy.x, y: enemy.y };
+        this._prevHP[eKey] = enemy.hp;
       }
 
       var ee = this.entityMeshes[eKey];
-      ee.x += (enemy.x - ee.x) * 0.25;
-      ee.y += (enemy.y - ee.y) * 0.25;
-      ee.mesh.position.set(ee.x, 0, ee.y);
-      // Idle bob (different phase per enemy)
-      ee.mesh.position.y = Math.sin(this._animFrame * 0.04 + i * 1.5) * 0.04;
+
+      // Detect enemy movement and animate
+      var ePrev = this._prevPositions[eKey];
+      if (ePrev && (ePrev.x !== enemy.x || ePrev.y !== enemy.y)) {
+        var isEAnimating = false;
+        for (var ai2 = 0; ai2 < this._animations.length; ai2++) {
+          if (this._animations[ai2].mesh === ee.mesh) { isEAnimating = true; break; }
+        }
+        if (!isEAnimating) {
+          // Enemies slide (no bounce)
+          this._addAnimation(ee.mesh, ePrev.x, ePrev.y, enemy.x, enemy.y, 200, false, 0, null);
+        }
+        ee.x = enemy.x;
+        ee.y = enemy.y;
+      }
+      this._prevPositions[eKey] = { x: enemy.x, y: enemy.y };
+
+      // Detect enemy HP change (took damage) -> attack animation + popup
+      var ePrevHP = this._prevHP[eKey];
+      if (ePrevHP !== undefined && enemy.hp < ePrevHP) {
+        var eDmg = ePrevHP - enemy.hp;
+        this._showDamagePopup(enemy.x, enemy.y, '-' + eDmg, '#ef5350');
+        // Trigger attack animation (player attacking enemy)
+        if (pe.mesh) {
+          this._triggerAttackAnimation(pe.mesh, ee.mesh,
+            { x: player.x, z: player.y },
+            { x: enemy.x, z: enemy.y }
+          );
+        }
+      }
+      this._prevHP[eKey] = enemy.hp;
+
+      // Set position from animation or directly
+      var isEeAnimating = false;
+      for (var ai3 = 0; ai3 < this._animations.length; ai3++) {
+        if (this._animations[ai3].mesh === ee.mesh) { isEeAnimating = true; break; }
+      }
+      if (!isEeAnimating) {
+        ee.mesh.position.x = enemy.x;
+        ee.mesh.position.z = enemy.y;
+        // Idle bob (different phase per enemy)
+        ee.mesh.position.y = Math.sin(now * 0.002 + (ee.mesh.userData._idlePhase || 0)) * 0.04;
+      }
 
       // Sleeping overlay: scale down slightly
       if (enemy.sleeping) {
@@ -424,7 +754,8 @@ var Renderer3D = (function() {
       ee.mesh.visible = true;
     }
 
-    // --- Items ---
+    // --- Items (as 3D objects with rotation) ---
+    this._itemMeshes = {};
     for (var j = 0; j < items.length; j++) {
       var item = items[j];
       var isItemVis = visible[item.y] && visible[item.y][item.x];
@@ -443,8 +774,9 @@ var Renderer3D = (function() {
       var ie = this.entityMeshes[iKey];
       ie.mesh.position.set(item.x, 0, item.y);
       // Gentle spin for items
-      ie.mesh.rotation.y = this._animFrame * 0.02;
+      ie.mesh.rotation.y += 0.02;
       ie.mesh.visible = true;
+      this._itemMeshes[iKey] = ie.mesh;
     }
 
     // --- Traps ---
@@ -507,7 +839,7 @@ var Renderer3D = (function() {
       }
     }
 
-    // Clean up removed entities
+    // Clean up removed entities (with death animation for enemies)
     var keysToRemove = [];
     for (var key in this.entityMeshes) {
       if (!activeKeys[key]) {
@@ -516,12 +848,24 @@ var Renderer3D = (function() {
     }
     for (var ri = 0; ri < keysToRemove.length; ri++) {
       var rk = keysToRemove[ri];
-      this.entityGroup.remove(this.entityMeshes[rk].mesh);
+      var removedEntry = this.entityMeshes[rk];
+      // If it's an enemy, play death animation
+      if (rk.indexOf('enemy_') === 0 && removedEntry.mesh) {
+        (function(mesh, group) {
+          Renderer3D.prototype._triggerDeathAnimation(mesh, function() {
+            group.remove(mesh);
+          });
+        })(removedEntry.mesh, this.entityGroup);
+      } else {
+        this.entityGroup.remove(removedEntry.mesh);
+      }
       delete this.entityMeshes[rk];
+      delete this._prevPositions[rk];
+      delete this._prevHP[rk];
     }
   };
 
-  // === Camera follow ===
+  // === Camera follow with rotation and zoom ===
 
   Renderer3D.prototype._updateCamera = function(playerX, playerY) {
     var tx = playerX * this.tileSize;
@@ -533,13 +877,31 @@ var Renderer3D = (function() {
       this.cameraX = 0;
     }
 
-    this._smoothCamX += (tx - this._smoothCamX) * 0.12;
-    this._smoothCamZ += (tz - this._smoothCamZ) * 0.12;
+    // Smooth camera follow (lerp)
+    var lerpSpeed = 0.08;
+    this._smoothCamX += (tx - this._smoothCamX) * lerpSpeed;
+    this._smoothCamZ += (tz - this._smoothCamZ) * lerpSpeed;
 
     var cx = this._smoothCamX;
     var cz = this._smoothCamZ;
 
-    this.camera.position.set(cx + 10, 14, cz + 10);
+    // Smooth camera angle rotation
+    var angleDiff = this._targetAngle - this._cameraAngle;
+    this._cameraAngle += angleDiff * 0.1;
+
+    // Smooth zoom
+    var zoomDiff = this._targetFrustum - this._frustumSize;
+    if (Math.abs(zoomDiff) > 0.01) {
+      this._frustumSize += zoomDiff * 0.1;
+      this._updateRendererSize();
+    }
+
+    // Camera position from angle (isometric orbit)
+    var radius = this._cameraRadius;
+    var height = this._cameraHeight;
+    this.camera.position.x = cx + Math.cos(this._cameraAngle) * radius;
+    this.camera.position.z = cz + Math.sin(this._cameraAngle) * radius;
+    this.camera.position.y = height;
     this.camera.lookAt(cx, 0, cz);
 
     // Player torch
@@ -549,6 +911,22 @@ var Renderer3D = (function() {
     this.directionalLight.position.set(cx + 10, 20, cz + 10);
     this.directionalLight.target.position.set(cx, 0, cz);
     this.directionalLight.target.updateMatrixWorld();
+  };
+
+  // === Process game floating texts into 3D popups ===
+
+  Renderer3D.prototype._processGameFloatingTexts = function(game) {
+    // Convert game's floating text system to 3D popups
+    if (game.floatingTexts && game.floatingTexts.length > 0) {
+      for (var i = 0; i < game.floatingTexts.length; i++) {
+        var ft = game.floatingTexts[i];
+        if (ft.frame === 0 && !ft._3dHandled) {
+          // New floating text - create 3D popup
+          this._showDamagePopup(ft.x, ft.y, ft.text, ft.color);
+          ft._3dHandled = true;
+        }
+      }
+    }
   };
 
   // === Water/Lava animation ===
@@ -650,6 +1028,7 @@ var Renderer3D = (function() {
       // Hide 3D canvas, show 2D for village
       var el3d = document.getElementById('game-canvas-3d');
       if (el3d) el3d.style.display = 'none';
+      if (this.css2dRenderer) this.css2dRenderer.domElement.style.display = 'none';
       this.canvas2d.style.display = '';
       // Use fallback 2D renderer for village if available
       if (this._fallback2d) {
@@ -661,6 +1040,7 @@ var Renderer3D = (function() {
     // Show 3D canvas for dungeon
     var el3d = document.getElementById('game-canvas-3d');
     if (el3d) el3d.style.display = 'block';
+    if (this.css2dRenderer) this.css2dRenderer.domElement.style.display = '';
     this.canvas2d.style.display = 'none';
 
     // Update visibility
@@ -680,14 +1060,28 @@ var Renderer3D = (function() {
     // Animate water/lava
     this._animateWaterLava();
 
-    // Update entities
+    // Update animations
+    this._updateAnimations();
+
+    // Update popups
+    this._updatePopups();
+
+    // Update entities (includes movement detection + attack detection)
     this._updateEntities(game);
+
+    // Process game floating texts into 3D popups
+    this._processGameFloatingTexts(game);
 
     // Camera follow
     this._updateCamera(game.player.x, game.player.y);
 
     // Render 3D scene
     this.webglRenderer.render(this.scene, this.camera);
+
+    // Render CSS2D overlay (damage popups)
+    if (this.css2dRenderer) {
+      this.css2dRenderer.render(this.scene, this.camera);
+    }
 
     // Minimap (reuses 2D canvas)
     this._renderMinimap(game);
@@ -699,6 +1093,7 @@ var Renderer3D = (function() {
       this.entityGroup.remove(this.entityMeshes[key].mesh);
     }
     this.entityMeshes = {};
+    this._itemMeshes = {};
   };
 
   // === Continuous render loop (called from main.js) ===
