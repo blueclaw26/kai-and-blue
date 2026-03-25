@@ -1314,6 +1314,31 @@ var Renderer3D = (function() {
             }
           });
         }
+        // Slime jiggle animation
+        if (ee.mesh.userData._isSlime) {
+          var jiggleX = 1.0 + Math.sin(now * 0.005 + idlePhase) * 0.06;
+          var jiggleY = 1.0 + Math.sin(now * 0.005 + idlePhase + 1.5) * 0.06;
+          ee.mesh.children[0].scale.set(1.15 * jiggleX, 0.7 * jiggleY, 1.15 * jiggleX);
+        }
+        // Polygon slow multi-axis rotation
+        if (ee.mesh.userData._isPolygon) {
+          ee.mesh.children[0].rotation.x = now * 0.0005 + idlePhase;
+          ee.mesh.children[0].rotation.y = now * 0.0007 + idlePhase;
+          if (ee.mesh.children[1]) {
+            ee.mesh.children[1].rotation.x = now * 0.0005 + idlePhase;
+            ee.mesh.children[1].rotation.y = now * 0.0007 + idlePhase;
+          }
+        }
+        // Mazerun steam animation
+        if (ee.mesh.userData._isMazerun) {
+          ee.mesh.traverse(function(child) {
+            if (child.userData._steamIndex !== undefined) {
+              var si = child.userData._steamIndex;
+              child.position.y = 0.65 + si * 0.08 + Math.sin(now * 0.003 + si * 2) * 0.04;
+              child.material.opacity = 0.3 + Math.sin(now * 0.004 + si) * 0.15;
+            }
+          });
+        }
       }
 
       // Sleeping overlay: scale down slightly (preserve rank scale)
