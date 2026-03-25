@@ -48,14 +48,15 @@ function getSealsDisplay(seals) {
 // Dragon-type enemy IDs (for 竜 seal)
 var DRAGON_TYPE_ENEMIES = {
   dragon: true,
-  skull_mage: true,
-  mega_dragon: true,
-  hell_dragon: true
+  sky_dragon: true,
+  mega_dragon: true
 };
 
 // Ghost-type enemy IDs (for 仏 seal)
 var GHOST_TYPE_ENEMIES = {
   midnighthat: true,
-  phantom: true,
-  death_reaper: true
+  hannya: true,
+  death_angel: true,
+  death_reaper: true,
+  dark_lord: true
 };

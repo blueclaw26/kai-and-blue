@@ -215,12 +215,15 @@ var Item = (function() {
         if (window._game) window._game.addFloatingText(player.x, player.y, '+' + healed, '#66bb6a');
         return true;
       case 'strength':
-        player.baseAttack = (player.baseAttack || player.attack) + this.value;
+        player.strength = Math.min((player.strength || 8) + this.value, (player.maxStrength || 8));
         ui.addMessage(this.name + 'を飲んだ。ちからが' + this.value + '上がった', 'heal');
         player._recalcStats();
         return true;
       case 'cure_poison':
-        ui.addMessage(this.name + 'を飲んだ。体が軽くなった', 'heal');
+        // Restore strength to max
+        player.strength = player.maxStrength || 8;
+        player._recalcStats();
+        ui.addMessage(this.name + 'を飲んだ。ちからが回復した', 'heal');
         return true;
       case 'sleep_self':
         player.sleepTurns = this.value || 5;

@@ -1,7 +1,10 @@
 // Enemy Type Definitions
 var ENEMY_DATA = {
+  // === マムル系 (family: 'mamel') ===
   mamel: {
     name: 'マムル',
+    family: 'mamel',
+    familyRank: 1,
     char: 'M',
     color: '#8bc34a',
     hp: 5,
@@ -9,11 +12,29 @@ var ENEMY_DATA = {
     defense: 0,
     exp: 3,
     minFloor: 1,
-    maxFloor: 5,
+    maxFloor: 4,
     special: null
   },
+  cave_mamel: {
+    name: 'あなぐらマムル',
+    family: 'mamel',
+    familyRank: 2,
+    char: 'M',
+    color: '#ffd700',
+    hp: 6,
+    attack: 70,
+    defense: 50,
+    exp: 5,
+    minFloor: 6,
+    maxFloor: 9,
+    special: null
+  },
+
+  // === チンタラ系 (family: 'chintala') ===
   chintala: {
     name: 'チンタラ',
+    family: 'chintala',
+    familyRank: 1,
     char: 'C',
     color: '#ffb74d',
     hp: 8,
@@ -24,153 +45,24 @@ var ENEMY_DATA = {
     maxFloor: 7,
     special: null
   },
-  toad: {
-    name: 'ガマラ',
-    char: 'F',
-    color: '#4caf50',
-    hp: 7,
-    attack: 2,
-    defense: 0,
-    exp: 4,
-    minFloor: 1,
-    maxFloor: 6,
-    special: 'steal_gold'
-  },
-  boy_cart: {
-    name: 'ボーイ',
-    char: 'B',
-    color: '#ff7043',
-    hp: 8,
-    attack: 2,
-    defense: 0,
-    exp: 5,
-    minFloor: 2,
-    maxFloor: 8,
-    special: 'arrow_shot'
-  },
-  nigiri: {
-    name: 'にぎり見習い',
-    char: 'N',
-    color: '#90caf9',
-    hp: 12,
-    attack: 5,
-    defense: 1,
-    exp: 10,
-    minFloor: 3,
-    maxFloor: 10,
-    special: 'onigiri'
-  },
-  slug: {
-    name: 'おばけ大根',
-    char: 'R',
-    color: '#8bc34a',
-    hp: 10,
-    attack: 3,
-    defense: 1,
-    exp: 8,
-    minFloor: 3,
-    maxFloor: 9,
-    special: 'poison_throw'
-  },
-  thief_pelican: {
-    name: 'ぬすっトド',
-    char: 'Z',
-    color: '#29b6f6',
-    hp: 15,
-    attack: 3,
-    defense: 2,
-    exp: 12,
-    minFloor: 4,
-    maxFloor: 10,
-    special: 'steal_item'
-  },
-  midnighthat: {
-    name: 'ぼうれい武者',
-    char: 'G',
-    color: '#9575cd',
-    hp: 16,
-    attack: 6,
-    defense: 2,
-    exp: 15,
-    minFloor: 6,
-    maxFloor: 14,
-    special: 'wallpass'
-  },
-  kengo: {
-    name: 'ケンゴウ',
-    char: 'K',
-    color: '#78909c',
-    hp: 20,
-    attack: 8,
-    defense: 3,
-    exp: 18,
-    minFloor: 7,
-    maxFloor: 16,
-    special: 'disarm'
-  },
-  curse_girl: {
-    name: 'ミドロ',
-    char: 'J',
-    color: '#7e57c2',
-    hp: 22,
-    attack: 6,
-    defense: 2,
-    exp: 15,
-    minFloor: 8,
-    maxFloor: 16,
-    special: 'rust_equipment'
-  },
-  polygon: {
-    name: 'パ王',
-    char: 'P',
-    color: '#4db6ac',
-    hp: 20,
-    attack: 7,
-    defense: 3,
-    exp: 20,
-    minFloor: 9,
-    maxFloor: 18,
-    special: 'magic'
-  },
-  dragon: {
-    name: 'ドラゴン',
-    char: 'D',
-    color: '#e53935',
-    hp: 35,
-    attack: 12,
-    defense: 5,
-    exp: 40,
-    minFloor: 13,
-    maxFloor: 30,
-    special: 'firebreath'
-  },
-  minotaur: {
-    name: 'タウロス',
-    char: 'T',
-    color: '#8d6e63',
+  mid_chintala: {
+    name: 'ちゅうチンタラ',
+    family: 'chintala',
+    familyRank: 2,
+    char: 'C',
+    color: '#f57c00',
     hp: 40,
-    attack: 15,
-    defense: 6,
-    exp: 50,
-    minFloor: 16,
+    attack: 18,
+    defense: 8,
+    exp: 35,
+    minFloor: 20,
     maxFloor: 35,
-    special: 'critical'
+    special: null
   },
-  skull_mage: {
-    name: 'スカルドラゴン',
-    char: 'S',
-    color: '#bdbdbd',
-    hp: 35,
-    attack: 10,
-    defense: 4,
-    exp: 45,
-    minFloor: 18,
-    maxFloor: 40,
-    special: 'floorfire'
-  },
-  // Mid-game (F28-50)
   big_chintala: {
     name: 'ギガヘッド',
+    family: 'chintala',
+    familyRank: 3,
     char: 'H',
     color: '#ff5722',
     hp: 60,
@@ -181,21 +73,470 @@ var ENEMY_DATA = {
     maxFloor: 50,
     special: null
   },
+
+  // === ガマラ系 (family: 'toad') ===
+  toad: {
+    name: 'ガマラ',
+    family: 'toad',
+    familyRank: 1,
+    char: 'F',
+    color: '#4caf50',
+    hp: 7,
+    attack: 2,
+    defense: 0,
+    exp: 4,
+    minFloor: 1,
+    maxFloor: 6,
+    special: 'steal_gold'
+  },
+  oya_toad: {
+    name: 'オヤガマラ',
+    family: 'toad',
+    familyRank: 2,
+    char: 'F',
+    color: '#2e7d32',
+    hp: 30,
+    attack: 8,
+    defense: 5,
+    exp: 20,
+    minFloor: 14,
+    maxFloor: 25,
+    special: 'steal_gold'
+  },
+
+  // === 戦車系 (family: 'cart') ===
+  boy_cart: {
+    name: 'ボーイ',
+    family: 'cart',
+    familyRank: 1,
+    char: 'B',
+    color: '#ff7043',
+    hp: 8,
+    attack: 2,
+    defense: 0,
+    exp: 5,
+    minFloor: 2,
+    maxFloor: 8,
+    special: 'arrow_shot'
+  },
+  child_tank: {
+    name: 'コドモ戦車',
+    family: 'cart',
+    familyRank: 2,
+    char: 'B',
+    color: '#ef6c00',
+    hp: 30,
+    attack: 8,
+    defense: 6,
+    exp: 25,
+    minFloor: 16,
+    maxFloor: 28,
+    special: 'arrow_shot'
+  },
+  oyaji_tank: {
+    name: 'オヤジ戦車',
+    family: 'cart',
+    familyRank: 3,
+    char: 'B',
+    color: '#d84315',
+    hp: 55,
+    attack: 16,
+    defense: 10,
+    exp: 60,
+    minFloor: 38,
+    maxFloor: 50,
+    special: 'bomb_shot'
+  },
+
+  // === にぎり系 (family: 'nigiri') ===
+  nigiri: {
+    name: 'にぎり見習い',
+    family: 'nigiri',
+    familyRank: 1,
+    char: 'N',
+    color: '#90caf9',
+    hp: 12,
+    attack: 5,
+    defense: 1,
+    exp: 10,
+    minFloor: 3,
+    maxFloor: 10,
+    special: 'onigiri'
+  },
+  nigiri_morph: {
+    name: 'にぎり変化',
+    family: 'nigiri',
+    familyRank: 2,
+    char: 'N',
+    color: '#42a5f5',
+    hp: 40,
+    attack: 12,
+    defense: 6,
+    exp: 30,
+    minFloor: 16,
+    maxFloor: 30,
+    special: 'onigiri'
+  },
+  nigiri_master: {
+    name: 'にぎり親方',
+    family: 'nigiri',
+    familyRank: 3,
+    char: 'N',
+    color: '#1565c0',
+    hp: 70,
+    attack: 20,
+    defense: 12,
+    exp: 80,
+    minFloor: 55,
+    maxFloor: 70,
+    special: 'onigiri'
+  },
+
+  // === 大根系 (family: 'radish') ===
+  slug: {
+    name: 'おばけ大根',
+    family: 'radish',
+    familyRank: 1,
+    char: 'R',
+    color: '#8bc34a',
+    hp: 10,
+    attack: 3,
+    defense: 1,
+    exp: 8,
+    minFloor: 3,
+    maxFloor: 9,
+    special: 'poison_throw'
+  },
+  dizzy_radish: {
+    name: 'めまわし大根',
+    family: 'radish',
+    familyRank: 2,
+    char: 'R',
+    color: '#558b2f',
+    hp: 35,
+    attack: 10,
+    defense: 5,
+    exp: 30,
+    minFloor: 22,
+    maxFloor: 35,
+    special: 'confuse_throw'
+  },
+  chaos_radish: {
+    name: 'みだれ大根',
+    family: 'radish',
+    familyRank: 3,
+    char: 'R',
+    color: '#33691e',
+    hp: 70,
+    attack: 18,
+    defense: 10,
+    exp: 80,
+    minFloor: 60,
+    maxFloor: 75,
+    special: 'confuse_throw'
+  },
+
+  // === トド系 (family: 'thief') ===
+  thief_pelican: {
+    name: 'ぬすっトド',
+    family: 'thief',
+    familyRank: 1,
+    char: 'Z',
+    color: '#29b6f6',
+    hp: 15,
+    attack: 3,
+    defense: 2,
+    exp: 12,
+    minFloor: 4,
+    maxFloor: 10,
+    special: 'steal_item'
+  },
+  green_thief: {
+    name: 'みどりトド',
+    family: 'thief',
+    familyRank: 2,
+    char: 'Z',
+    color: '#00c853',
+    hp: 60,
+    attack: 8,
+    defense: 8,
+    exp: 25,
+    minFloor: 25,
+    maxFloor: 40,
+    special: 'steal_item',
+    guaranteedDrop: true
+  },
+  iron_thief: {
+    name: 'アイアントド',
+    family: 'thief',
+    familyRank: 3,
+    char: 'Z',
+    color: '#455a64',
+    hp: 100,
+    attack: 15,
+    defense: 20,
+    exp: 60,
+    minFloor: 50,
+    maxFloor: 65,
+    special: 'steal_item',
+    guaranteedDrop: true
+  },
+
+  // === 武者系 (family: 'ghost_warrior') ===
+  midnighthat: {
+    name: 'ぼうれい武者',
+    family: 'ghost_warrior',
+    familyRank: 1,
+    char: 'G',
+    color: '#9575cd',
+    hp: 16,
+    attack: 6,
+    defense: 2,
+    exp: 15,
+    minFloor: 6,
+    maxFloor: 14,
+    special: 'possess'
+  },
+  hannya: {
+    name: 'はんにゃ武者',
+    family: 'ghost_warrior',
+    familyRank: 2,
+    char: 'G',
+    color: '#7b1fa2',
+    hp: 50,
+    attack: 15,
+    defense: 8,
+    exp: 40,
+    minFloor: 25,
+    maxFloor: 40,
+    special: 'possess'
+  },
+
+  // === ケンゴウ系 (family: 'kengo') ===
+  kengo: {
+    name: 'ケンゴウ',
+    family: 'kengo',
+    familyRank: 1,
+    char: 'K',
+    color: '#78909c',
+    hp: 20,
+    attack: 8,
+    defense: 3,
+    exp: 18,
+    minFloor: 7,
+    maxFloor: 16,
+    special: 'disarm'
+  },
+  iai: {
+    name: 'イアイ',
+    family: 'kengo',
+    familyRank: 2,
+    char: 'K',
+    color: '#546e7a',
+    hp: 55,
+    attack: 18,
+    defense: 10,
+    exp: 50,
+    minFloor: 30,
+    maxFloor: 50,
+    special: 'disarm'
+  },
+  shihan: {
+    name: 'シハン',
+    family: 'kengo',
+    familyRank: 3,
+    char: 'K',
+    color: '#37474f',
+    hp: 90,
+    attack: 25,
+    defense: 18,
+    exp: 120,
+    minFloor: 66,
+    maxFloor: 79,
+    special: 'disarm'
+  },
+
+  // === ミドロ系 (family: 'slime') ===
+  curse_girl: {
+    name: 'ミドロ',
+    family: 'slime',
+    familyRank: 1,
+    char: 'J',
+    color: '#7e57c2',
+    hp: 22,
+    attack: 6,
+    defense: 2,
+    exp: 15,
+    minFloor: 8,
+    maxFloor: 16,
+    special: 'rust_equipment'
+  },
+  odoro: {
+    name: 'オドロ',
+    family: 'slime',
+    familyRank: 2,
+    char: 'J',
+    color: '#6a1b9a',
+    hp: 55,
+    attack: 12,
+    defense: 8,
+    exp: 40,
+    minFloor: 42,
+    maxFloor: 54,
+    special: 'rust_equipment'
+  },
+  chidoro: {
+    name: 'チドロ',
+    family: 'slime',
+    familyRank: 3,
+    char: 'J',
+    color: '#4a148c',
+    hp: 70,
+    attack: 15,
+    defense: 10,
+    exp: 55,
+    minFloor: 48,
+    maxFloor: 54,
+    special: 'erase_seal'
+  },
+
+  // === 魔法使い系 (family: 'mage') ===
+  skull_apprentice: {
+    name: 'ガイコツまじん',
+    family: 'mage',
+    familyRank: 1,
+    char: 'P',
+    color: '#4db6ac',
+    hp: 20,
+    attack: 7,
+    defense: 3,
+    exp: 20,
+    minFloor: 9,
+    maxFloor: 18,
+    special: 'magic'
+  },
+  skull_mage_mid: {
+    name: 'ガイコツまどう',
+    family: 'mage',
+    familyRank: 2,
+    char: 'P',
+    color: '#00897b',
+    hp: 45,
+    attack: 14,
+    defense: 8,
+    exp: 45,
+    minFloor: 30,
+    maxFloor: 45,
+    special: 'magic'
+  },
+  skull_master: {
+    name: 'ガイコツまてん',
+    family: 'mage',
+    familyRank: 3,
+    char: 'P',
+    color: '#004d40',
+    hp: 80,
+    attack: 22,
+    defense: 15,
+    exp: 100,
+    minFloor: 66,
+    maxFloor: 79,
+    special: 'magic_strong'
+  },
+
+  // === ドラゴン系 (family: 'dragon') ===
+  dragon: {
+    name: 'ドラゴン',
+    family: 'dragon',
+    familyRank: 1,
+    char: 'D',
+    color: '#e53935',
+    hp: 35,
+    attack: 12,
+    defense: 5,
+    exp: 40,
+    minFloor: 13,
+    maxFloor: 30,
+    special: 'firebreath'
+  },
+  sky_dragon: {
+    name: 'スカイドラゴン',
+    family: 'dragon',
+    familyRank: 2,
+    char: 'D',
+    color: '#c62828',
+    hp: 70,
+    attack: 20,
+    defense: 10,
+    exp: 80,
+    minFloor: 35,
+    maxFloor: 55,
+    special: 'firebreath'
+  },
   mega_dragon: {
     name: 'アークドラゴン',
+    family: 'dragon',
+    familyRank: 3,
     char: 'A',
     color: '#d32f2f',
     hp: 80,
     attack: 25,
     defense: 12,
     exp: 120,
-    minFloor: 35,
-    maxFloor: 65,
+    minFloor: 80,
+    maxFloor: 99,
     special: 'floorfire'
   },
-  // Late-game (F50-85)
+
+  // === タウロス系 (family: 'bull') ===
+  minotaur: {
+    name: 'タウロス',
+    family: 'bull',
+    familyRank: 1,
+    char: 'T',
+    color: '#8d6e63',
+    hp: 40,
+    attack: 15,
+    defense: 6,
+    exp: 50,
+    minFloor: 16,
+    maxFloor: 35,
+    special: 'critical'
+  },
+  mega_taur: {
+    name: 'メガタウロス',
+    family: 'bull',
+    familyRank: 2,
+    char: 'T',
+    color: '#4e342e',
+    hp: 80,
+    attack: 30,
+    defense: 15,
+    exp: 100,
+    minFloor: 45,
+    maxFloor: 65,
+    special: 'critical'
+  },
+
+  // === 死神系 (family: 'reaper') ===
+  death_angel: {
+    name: '死の使い',
+    family: 'reaper',
+    familyRank: 1,
+    char: 'X',
+    color: '#424242',
+    hp: 45,
+    attack: 12,
+    defense: 6,
+    exp: 30,
+    minFloor: 25,
+    maxFloor: 40,
+    special: 'wallpass'
+  },
   death_reaper: {
-    name: 'しにがみ',
+    name: '死神',
+    family: 'reaper',
+    familyRank: 2,
     char: 'X',
     color: '#212121',
     hp: 90,
@@ -204,48 +545,102 @@ var ENEMY_DATA = {
     exp: 150,
     minFloor: 50,
     maxFloor: 80,
-    special: 'critical'
-  },
-  phantom: {
-    name: 'ファントムデビル',
-    char: 'V',
-    color: '#4a148c',
-    hp: 80,
-    attack: 22,
-    defense: 16,
-    exp: 130,
-    minFloor: 55,
-    maxFloor: 85,
     special: 'wallpass'
   },
-  // Nightmare (F70-99)
-  hell_dragon: {
-    name: 'ギガドラゴン',
-    char: 'G',
-    color: '#b71c1c',
-    hp: 150,
-    attack: 40,
-    defense: 22,
-    exp: 250,
-    minFloor: 70,
-    maxFloor: 99,
-    special: 'floorfire'
-  },
-  chaos_knight: {
-    name: '混沌の騎士',
-    char: 'Q',
-    color: '#880e4f',
-    hp: 130,
-    attack: 35,
-    defense: 25,
-    exp: 300,
+  dark_lord: {
+    name: '冥王',
+    family: 'reaper',
+    familyRank: 3,
+    char: 'X',
+    color: '#000000',
+    hp: 110,
+    attack: 30,
+    defense: 20,
+    exp: 200,
     minFloor: 80,
     maxFloor: 99,
-    special: 'critical'
+    special: 'wallpass'
   },
-  // マゼルン family (synthesis monsters)
+
+  // === サソリ系 (family: 'scorpion') ===
+  poison_scorpion: {
+    name: '毒サソリ',
+    family: 'scorpion',
+    familyRank: 1,
+    char: 'S',
+    color: '#7cb342',
+    hp: 15,
+    attack: 5,
+    defense: 2,
+    exp: 10,
+    minFloor: 4,
+    maxFloor: 10,
+    special: 'poison_sting'
+  },
+  demon_scorpion: {
+    name: '鬼サソリ',
+    family: 'scorpion',
+    familyRank: 2,
+    char: 'S',
+    color: '#558b2f',
+    hp: 50,
+    attack: 15,
+    defense: 8,
+    exp: 40,
+    minFloor: 28,
+    maxFloor: 45,
+    special: 'max_strength_down'
+  },
+  great_scorpion: {
+    name: '大鬼サソリ',
+    family: 'scorpion',
+    familyRank: 3,
+    char: 'S',
+    color: '#33691e',
+    hp: 85,
+    attack: 22,
+    defense: 15,
+    exp: 80,
+    minFloor: 48,
+    maxFloor: 55,
+    special: 'max_strength_down'
+  },
+
+  // === ポリゴン系 (family: 'polygon') ===
+  spinning_polygon: {
+    name: 'まわるポリゴン',
+    family: 'polygon',
+    familyRank: 1,
+    char: 'Y',
+    color: '#26c6da',
+    hp: 30,
+    attack: 8,
+    defense: 4,
+    exp: 18,
+    minFloor: 20,
+    maxFloor: 35,
+    special: 'drain_fullness'
+  },
+  singing_polygon: {
+    name: 'うたうポリゴン',
+    family: 'polygon',
+    familyRank: 2,
+    char: 'Y',
+    color: '#0097a7',
+    hp: 65,
+    attack: 18,
+    defense: 10,
+    exp: 50,
+    minFloor: 45,
+    maxFloor: 65,
+    special: 'drain_fullness_strong'
+  },
+
+  // === マゼルン系 (family: 'mazerun') ===
   mazerun: {
     name: 'マゼルン',
+    family: 'mazerun',
+    familyRank: 1,
     char: 'E',
     color: '#e8a44a',
     hp: 25,
@@ -259,6 +654,8 @@ var ENEMY_DATA = {
   },
   mazemon: {
     name: 'マゼモン',
+    family: 'mazerun',
+    familyRank: 2,
     char: 'E',
     color: '#f57c00',
     hp: 50,
@@ -272,6 +669,8 @@ var ENEMY_DATA = {
   },
   mazegon: {
     name: 'マゼゴン',
+    family: 'mazerun',
+    familyRank: 3,
     char: 'E',
     color: '#e65100',
     hp: 80,
@@ -285,6 +684,8 @@ var ENEMY_DATA = {
   },
   mazedon: {
     name: 'マゼドン',
+    family: 'mazerun',
+    familyRank: 4,
     char: 'E',
     color: '#bf360c',
     hp: 120,
@@ -296,7 +697,8 @@ var ENEMY_DATA = {
     special: 'swallow',
     swallowCapacity: 5
   },
-  // Non-combat NPCs
+
+  // === Non-combat NPCs ===
   shopkeeper: {
     name: '店主',
     char: '$',
@@ -322,4 +724,25 @@ var ENEMY_DATA = {
     maxFloor: 99,
     special: null
   }
+};
+
+// Family promotion/demotion map (ordered by rank)
+var FAMILY_MAP = {
+  mamel: ['mamel', 'cave_mamel'],
+  chintala: ['chintala', 'mid_chintala', 'big_chintala'],
+  toad: ['toad', 'oya_toad'],
+  cart: ['boy_cart', 'child_tank', 'oyaji_tank'],
+  nigiri: ['nigiri', 'nigiri_morph', 'nigiri_master'],
+  radish: ['slug', 'dizzy_radish', 'chaos_radish'],
+  thief: ['thief_pelican', 'green_thief', 'iron_thief'],
+  ghost_warrior: ['midnighthat', 'hannya'],
+  kengo: ['kengo', 'iai', 'shihan'],
+  slime: ['curse_girl', 'odoro', 'chidoro'],
+  mage: ['skull_apprentice', 'skull_mage_mid', 'skull_master'],
+  dragon: ['dragon', 'sky_dragon', 'mega_dragon'],
+  bull: ['minotaur', 'mega_taur'],
+  reaper: ['death_angel', 'death_reaper', 'dark_lord'],
+  scorpion: ['poison_scorpion', 'demon_scorpion', 'great_scorpion'],
+  polygon: ['spinning_polygon', 'singing_polygon'],
+  mazerun: ['mazerun', 'mazemon', 'mazegon', 'mazedon']
 };

@@ -22,6 +22,10 @@ var Player = (function() {
     this._satietyAccum = 0;
     this._hungryWarned = false;
 
+    // Strength system
+    this.strength = 8;
+    this.maxStrength = 8;
+
     // Gold
     this.gold = 0;
 
@@ -66,7 +70,7 @@ var Player = (function() {
   Player.prototype._recalcStats = function() {
     var weaponAtk = this.weapon ? this.weapon.getEffectiveAttack() : 0;
     var shieldDef = this.shield ? this.shield.getEffectiveDefense() : 0;
-    this.attack = this.baseAttack + weaponAtk + (this.level - 1);
+    this.attack = this.baseAttack + (this.strength || 8) + weaponAtk + (this.level - 1);
     this.defense = this.baseDefense + shieldDef + Math.floor((this.level - 1) / 2);
     if (this.powerupTurns > 0) {
       this.attack += 5;

@@ -170,13 +170,46 @@ var Enemy = (function() {
       }
     }
 
-    // Boy Cart: shoots arrow if player in straight line within 5 tiles
+    // Arrow shot (boy_cart, child_tank): shoots arrow in straight line
     if (this.special === 'arrow_shot' && !this.sealed && dist <= 5) {
       if ((dx === 0 || dy === 0) && this._hasLineOfSight(game, this.x, this.y, player.x, player.y)) {
-        var arrowDmg = 3;
-        game.ui.addMessage('ボーイが矢を放った！ ' + arrowDmg + 'ダメージ', 'enemy_special');
+        var arrowDmg = this.enemyId === 'child_tank' ? 6 : 3;
+        game.ui.addMessage(this.name + 'が矢を放った！ ' + arrowDmg + 'ダメージ', 'enemy_special');
         if (!player.godMode) player.hp -= arrowDmg;
         Sound.play('arrow');
+        if (player.hp <= 0) {
+          player.hp = 0;
+          game.gameOver = true;
+          Sound.play('gameover');
+          game.ui.addMessage('倒れてしまった... ' + game.floorNum + 'Fで力尽きた', 'damage');
+          game.ui.showGameOver(game.floorNum, player.level);
+        }
+        return;
+      }
+    }
+
+    // Bomb shot (oyaji_tank): shoots bomb for 20 fixed damage
+    if (this.special === 'bomb_shot' && !this.sealed && dist <= 5) {
+      if ((dx === 0 || dy === 0) && this._hasLineOfSight(game, this.x, this.y, player.x, player.y)) {
+        var bombDmg = 20;
+        var hasBlastRes = (player.shield && player.shield.seals && player.shield.seals.indexOf('blast_resist') !== -1) ||
+                          (player.shield && player.shield.special === 'blast_resist');
+        if (hasBlastRes) {
+          bombDmg = Math.floor(bombDmg * 0.5);
+          game.ui.addMessage('オヤジ戦車は大砲を撃った！ [爆]印が爆風を防いだ！ ' + bombDmg + 'ダメージ', 'enemy_special');
+        } else {
+          game.ui.addMessage('オヤジ戦車は大砲を撃った！ ' + bombDmg + 'ダメージ！', 'enemy_special');
+        }
+        if (!player.godMode) player.hp -= bombDmg;
+        // Destroy items on ground near player
+        for (var bi = game.items.length - 1; bi >= 0; bi--) {
+          var bItem = game.items[bi];
+          if (Math.abs(bItem.x - player.x) <= 1 && Math.abs(bItem.y - player.y) <= 1) {
+            game.ui.addMessage(bItem.getDisplayName() + 'が爆発で消滅した', 'system');
+            if (game.shopItems) game.shopItems.delete(bItem);
+            game.items.splice(bi, 1);
+          }
+        }
         if (player.hp <= 0) {
           player.hp = 0;
           game.gameOver = true;
@@ -192,23 +225,73 @@ var Enemy = (function() {
     if (this.special === 'poison_throw' && !this.sealed && dist <= 3) {
       if (this._inSameRoom(game)) {
         game.ui.addMessage('おばけ大根が毒草を投げてきた！ ちからが下がった', 'enemy_special');
-        player.baseAttack = Math.max(1, player.baseAttack - 1);
+        player.strength = Math.max(0, (player.strength || 8) - 1);
         player._recalcStats();
         return;
       }
     }
 
-    // Pa-ou (polygon): ranged magic attack
+    // Confuse throw (dizzy_radish, chaos_radish): throws confusion grass
+    if (this.special === 'confuse_throw' && !this.sealed && dist <= 3) {
+      if (this._inSameRoom(game)) {
+        game.ui.addMessage('混乱草を投げつけられた！', 'enemy_special');
+        player.addStatusEffect('confused', 10, game.ui);
+        return;
+      }
+    }
+
+    // Magic (mage family tier 1-2): ranged magic attack
     if (this.special === 'magic' && !this.sealed && dist <= 5) {
       var inSameRoom = this._inSameRoom(game);
       if (inSameRoom) {
-        // Cast spell instead of moving
         if (Math.random() < 0.5) {
           player.addStatusEffect('confused', 5, game.ui);
-          game.ui.addMessage('パ王が杖を振った！ 混乱になった', 'enemy_special');
+          game.ui.addMessage(this.name + 'が杖を振った！ 混乱になった', 'enemy_special');
         } else {
           player.addStatusEffect('slowed', 5, game.ui);
-          game.ui.addMessage('パ王が杖を振った！ 鈍足になった', 'enemy_special');
+          game.ui.addMessage(this.name + 'が杖を振った！ 鈍足になった', 'enemy_special');
+        }
+        return;
+      }
+    }
+
+    // Magic strong (skull_master): stronger magic effects
+    if (this.special === 'magic_strong' && !this.sealed && dist <= 5) {
+      var inSameRoom2 = this._inSameRoom(game);
+      if (inSameRoom2) {
+        var magicRoll = Math.random();
+        if (magicRoll < 0.25) {
+          // Level drain -3
+          for (var ld = 0; ld < 3; ld++) {
+            if (player.level > 1) {
+              player.level--;
+              player.maxHp = Math.max(5, player.maxHp - 3);
+              player.hp = Math.min(player.hp, player.maxHp);
+              player.baseAttack = Math.max(1, player.baseAttack - 1);
+            }
+          }
+          player._recalcStats();
+          game.ui.addMessage(this.name + 'が杖を振った！ レベルが3下がった！', 'enemy_special');
+        } else if (magicRoll < 0.5) {
+          // Sleep 10 turns
+          player.sleepTurns = 10;
+          game.ui.addMessage(this.name + 'が杖を振った！ 深い眠りに落ちた！', 'enemy_special');
+        } else if (magicRoll < 0.75) {
+          // Confuse 10 turns
+          player.addStatusEffect('confused', 10, game.ui);
+          game.ui.addMessage(this.name + 'が杖を振った！ 混乱になった！', 'enemy_special');
+        } else {
+          // 40 fixed damage
+          var magicDmg = 40;
+          if (!player.godMode && !player.hasStatusEffect('invincible')) player.hp -= magicDmg;
+          game.ui.addMessage(this.name + 'が杖を振った！ ' + magicDmg + 'ダメージ！', 'enemy_special');
+          if (player.hp <= 0) {
+            player.hp = 0;
+            game.gameOver = true;
+            Sound.play('gameover');
+            game.ui.addMessage('倒れてしまった... ' + game.floorNum + 'Fで力尽きた', 'damage');
+            game.ui.showGameOver(game.floorNum, player.level);
+          }
         }
         return;
       }

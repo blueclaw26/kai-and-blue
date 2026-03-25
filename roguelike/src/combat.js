@@ -121,24 +121,45 @@
         this._dropMazerunItems(enemy, ui);
       }
 
+      // Possess: on death, level up a nearby enemy
+      if (enemy.special === 'possess') {
+        var nearestEnemy = null;
+        var nearestDist = 999;
+        for (var pi2 = 0; pi2 < this.enemies.length; pi2++) {
+          var candidate = this.enemies[pi2];
+          if (candidate !== enemy && !candidate.dead && !candidate.isShopkeeper && !candidate.isDecoy) {
+            var pdist = Math.abs(candidate.x - enemy.x) + Math.abs(candidate.y - enemy.y);
+            if (pdist < nearestDist) {
+              nearestDist = pdist;
+              nearestEnemy = candidate;
+            }
+          }
+        }
+        if (nearestEnemy && nearestDist <= 10) {
+          this._enemyLevelUp(nearestEnemy, this.ui);
+          this.ui.addMessage('ぼうれい武者の怨念が' + nearestEnemy.name + 'に乗り移った！', 'enemy_special');
+        }
+      }
+
       // Drop loot when enemy dies
       if (!enemy.isShopkeeper) {
+        var shouldDrop = enemy.guaranteedDrop || (ENEMY_DATA[enemy.enemyId] && ENEMY_DATA[enemy.enemyId].guaranteedDrop);
         var dropRoll = Math.random();
-        if (dropRoll < 0.15) {
-          // 15% chance: drop something
-          if (Math.random() < 0.15) {
+        if (shouldDrop || dropRoll < 0.15) {
+          // guaranteed or 15% chance: drop something
+          if (!shouldDrop && Math.random() < 0.15) {
             // ~2% overall: drop gold
             var goldAmount = Math.floor(10 + Math.random() * (20 + this.floorNum * 10));
             var goldItem = this._createGoldItem(enemy.x, enemy.y, goldAmount);
             this.items.push(goldItem);
           } else {
-            // ~13% overall: drop a random item
+            // guaranteed drop or ~13% overall: drop a random item
             var droppedKey = this._pickItemForFloor(this.floorNum);
             var droppedItem = new Item(enemy.x, enemy.y, droppedKey);
             this.items.push(droppedItem);
           }
         }
-        // 85% chance: drop nothing
+        // 85% chance: drop nothing (unless guaranteedDrop)
       }
     }
   };
@@ -296,6 +317,55 @@
       }
     }
 
+    // Poison sting (scorpion): reduce strength
+    if (enemy.special === 'poison_sting' && !enemy.sealed && !player.godMode && Math.random() < 0.5) {
+      player.strength = Math.max(0, (player.strength || 8) - 1);
+      player._recalcStats();
+      this.ui.addMessage('ちからが1下がった！', 'enemy_special');
+    }
+
+    // Max strength down (scorpion tier 2+): reduce max strength
+    if (enemy.special === 'max_strength_down' && !enemy.sealed && !player.godMode && Math.random() < 0.5) {
+      player.maxStrength = Math.max(1, (player.maxStrength || 8) - 1);
+      player.strength = Math.min(player.strength || 8, player.maxStrength);
+      player._recalcStats();
+      this.ui.addMessage('ちからの最大値が1下がった！', 'enemy_special');
+    }
+
+    // Drain fullness (polygon): reduce max satiety
+    if (enemy.special === 'drain_fullness' && !enemy.sealed && !player.godMode && Math.random() < 0.5) {
+      player.maxSatiety = Math.max(10, (player.maxSatiety || 100) - 5);
+      player.satiety = Math.min(player.satiety, player.maxSatiety);
+      this.ui.addMessage('最大満腹度が5下がった！', 'enemy_special');
+    }
+
+    // Drain fullness strong (polygon tier 2): reduce max satiety by 7
+    if (enemy.special === 'drain_fullness_strong' && !enemy.sealed && !player.godMode && Math.random() < 0.5) {
+      player.maxSatiety = Math.max(10, (player.maxSatiety || 100) - 7);
+      player.satiety = Math.min(player.satiety, player.maxSatiety);
+      this.ui.addMessage('最大満腹度が7下がった！', 'enemy_special');
+    }
+
+    // Erase seal (chidoro): erase a random seal from equipped weapon or shield
+    if (enemy.special === 'erase_seal' && !enemy.sealed && !player.godMode && Math.random() < 0.2) {
+      var sealTargets = [];
+      if (player.weapon && player.weapon.seals && player.weapon.seals.length > 0) {
+        sealTargets.push({ item: player.weapon, type: 'weapon' });
+      }
+      if (player.shield && player.shield.seals && player.shield.seals.length > 0) {
+        sealTargets.push({ item: player.shield, type: 'shield' });
+      }
+      if (sealTargets.length > 0) {
+        var target = sealTargets[Math.floor(Math.random() * sealTargets.length)];
+        var sealIdx = Math.floor(Math.random() * target.item.seals.length);
+        var erasedSeal = target.item.seals[sealIdx];
+        var sealName = SEAL_DATA[erasedSeal] ? SEAL_DATA[erasedSeal].name : erasedSeal;
+        target.item.seals.splice(sealIdx, 1);
+        player._recalcStats();
+        this.ui.addMessage('[' + sealName + ']の印が消された！', 'enemy_special');
+      }
+    }
+
     // Midoro: rust equipment
     if (enemy.special === 'rust_equipment' && !enemy.sealed && !player.godMode && player.shield) {
       var rustShield2 = player.shield;
@@ -333,38 +403,49 @@
     }
   };
 
-  // --- Monster family promotion map ---
-  var ENEMY_FAMILY_UP = {
-    mazerun: 'mazemon',
-    mazemon: 'mazegon',
-    mazegon: 'mazedon',
-    // Add more families here as they're created
-  };
-  var ENEMY_FAMILY_DOWN = {
-    mazemon: 'mazerun',
-    mazegon: 'mazemon',
-    mazedon: 'mazegon',
-  };
+  // --- Monster family promotion/demotion using FAMILY_MAP ---
+
+  // Helper: find next/prev in family
+  function _findFamilyNeighbor(enemyId, direction) {
+    var data = ENEMY_DATA[enemyId];
+    if (!data || !data.family) return null;
+    var familyList = FAMILY_MAP[data.family];
+    if (!familyList) return null;
+    var idx = familyList.indexOf(enemyId);
+    if (idx === -1) return null;
+    var targetIdx = idx + direction;
+    if (targetIdx < 0 || targetIdx >= familyList.length) return null;
+    return familyList[targetIdx];
+  }
+
+  // Apply family data to an enemy (preserving position, swallowed items, etc.)
+  function _applyEnemyData(enemy, newId) {
+    var data = ENEMY_DATA[newId];
+    if (!data) return;
+    enemy.enemyId = newId;
+    enemy.name = data.name;
+    enemy.char = data.char;
+    enemy.color = data.color;
+    enemy.maxHp = data.hp;
+    enemy.hp = data.hp;
+    enemy.attack = data.attack;
+    enemy.defense = data.defense;
+    enemy.exp = data.exp;
+    enemy.special = data.special;
+    if (data.swallowCapacity) {
+      enemy.swallowCapacity = data.swallowCapacity;
+      if (!enemy.swallowedItems) enemy.swallowedItems = [];
+    }
+    if (data.guaranteedDrop) {
+      enemy.guaranteedDrop = true;
+    }
+  }
 
   // Level up an enemy (family promotion or stat boost)
   Game.prototype._enemyLevelUp = function(enemy, ui) {
-    var nextId = ENEMY_FAMILY_UP[enemy.enemyId];
+    var nextId = _findFamilyNeighbor(enemy.enemyId, 1);
     if (nextId && ENEMY_DATA[nextId]) {
-      var data = ENEMY_DATA[nextId];
-      enemy.enemyId = nextId;
-      enemy.name = data.name;
-      enemy.char = data.char;
-      enemy.color = data.color;
-      enemy.maxHp = data.hp;
-      enemy.hp = data.hp;
-      enemy.attack = data.attack;
-      enemy.defense = data.defense;
-      enemy.exp = data.exp;
-      enemy.special = data.special;
-      if (data.swallowCapacity) {
-        enemy.swallowCapacity = data.swallowCapacity;
-        if (!enemy.swallowedItems) enemy.swallowedItems = [];
-      }
+      _applyEnemyData(enemy, nextId);
     } else {
       // No family promotion: stats x1.5, add 強化 prefix
       enemy.maxHp = Math.floor(enemy.maxHp * 1.5);
@@ -380,23 +461,11 @@
 
   // Level down an enemy (family demotion or stat reduction)
   Game.prototype._enemyLevelDown = function(enemy, ui) {
-    var prevId = ENEMY_FAMILY_DOWN[enemy.enemyId];
+    var prevId = _findFamilyNeighbor(enemy.enemyId, -1);
     if (prevId && ENEMY_DATA[prevId]) {
       var data = ENEMY_DATA[prevId];
-      enemy.enemyId = prevId;
-      enemy.name = data.name;
-      enemy.char = data.char;
-      enemy.color = data.color;
-      enemy.maxHp = data.hp;
-      enemy.hp = Math.min(enemy.hp, data.hp);
-      enemy.attack = data.attack;
-      enemy.defense = data.defense;
-      enemy.exp = data.exp;
-      enemy.special = data.special;
-      if (data.swallowCapacity) {
-        enemy.swallowCapacity = data.swallowCapacity;
-        if (!enemy.swallowedItems) enemy.swallowedItems = [];
-      }
+      _applyEnemyData(enemy, prevId);
+      enemy.hp = Math.min(enemy.hp, data.hp); // don't heal on demotion
     } else {
       // No family demotion: stats x0.5, add 弱化 prefix
       enemy.maxHp = Math.max(1, Math.floor(enemy.maxHp * 0.5));
@@ -1139,7 +1208,7 @@
       case 'poison':
         ui.addMessage('毒矢が飛んできた！ ちからが下がった', 'damage');
         if (!player.godMode) player.hp -= 5;
-        player.baseAttack = Math.max(1, player.baseAttack - 1);
+        player.strength = Math.max(0, (player.strength || 8) - 1);
         player._recalcStats();
         this._checkPlayerDeath();
         break;
