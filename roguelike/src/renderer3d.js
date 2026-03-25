@@ -114,11 +114,11 @@ var Renderer3D = (function() {
     // Damage popups (CSS2D)
     this._popups = [];
 
-    // Camera rotation (Q/E)
-    this._cameraAngle = Math.PI / 4;   // initial 45 degrees isometric
-    this._targetAngle = Math.PI / 4;
-    this._cameraRadius = 20;
-    this._cameraHeight = 15;
+    // Camera rotation (Q/E) — front-facing quarter view (walls parallel to screen edges)
+    this._cameraAngle = 0;   // 0 = looking straight along Z axis (front-facing)
+    this._targetAngle = 0;
+    this._cameraRadius = 12;
+    this._cameraHeight = 18;
 
     // Camera zoom
     this._frustumSize = 14;
@@ -126,6 +126,28 @@ var Renderer3D = (function() {
 
     // Item mesh rotation tracking
     this._itemMeshes = {};  // iKey -> mesh (for rotation in render loop)
+
+    // === Phase 3: Particles, environment, transitions ===
+    this._prevLevel = 0;
+    this._waterMeshes = [];  // track water tiles for animation
+    this._lavaMeshes = [];   // track lava tiles for animation
+    this._lastTime = 0;
+
+    // Floor transition
+    this._floorTransition = null; // { phase, startTime }
+    this._floorOverlay = null;    // THREE.Mesh for fade overlay
+    this._floorAnnounce = null;   // DOM element for floor text
+
+    // Camera shake
+    this._shakeStart = null;
+    this._shakeDuration = 300;
+    this._shakeIntensity = 0.15;
+
+    // Monster house tracking
+    this._monsterHouseTriggered = false;
+
+    // Shop visual tracking
+    this._shopLights = [];
   }
 
   // === Init ===
@@ -147,7 +169,8 @@ var Renderer3D = (function() {
       frustumSize / 2, frustumSize / -2,
       0.1, 1000
     );
-    this.camera.position.set(10, 14, 10);
+    // Front-facing quarter view: camera behind and above, looking down Z axis
+    this.camera.position.set(0, 18, 12);
     this.camera.lookAt(0, 0, 0);
 
     // WebGL renderer
@@ -297,6 +320,14 @@ var Renderer3D = (function() {
     this._prevHP = {};
     this._popups = [];
     this._itemMeshes = {};
+    this._floorTransition = null;
+    this._shakeStart = null;
+    this._waterMeshes = [];
+    this._lavaMeshes = [];
+    this._shopLights = [];
+    // Remove floor announcement if present
+    var announce = document.getElementById('floor-announce-3d');
+    if (announce && announce.parentNode) announce.parentNode.removeChild(announce);
   };
 
   // === Reset Camera ===
@@ -364,16 +395,18 @@ var Renderer3D = (function() {
             this.stairsMesh = stairsModel;
             break;
           case 4: // WATER
-            mesh = new THREE.Mesh(floorGeo, waterMat);
+            mesh = new THREE.Mesh(floorGeo, waterMat.clone());
             mesh.position.set(x, -0.05, y);
             mesh.receiveShadow = true;
             mesh.userData.isWater = true;
+            this._waterMeshes.push(mesh);
             break;
           case 6: // LAVA
-            mesh = new THREE.Mesh(floorGeo, lavaMat);
+            mesh = new THREE.Mesh(floorGeo, lavaMat.clone());
             mesh.position.set(x, -0.03, y);
             mesh.receiveShadow = true;
             mesh.userData.isLava = true;
+            this._lavaMeshes.push(mesh);
             break;
         }
 
@@ -392,11 +425,59 @@ var Renderer3D = (function() {
     this._builtFloor = floorNum;
     this._builtScene = 'dungeon';
 
+    // === Zone-specific fog ===
+    if (floorNum <= 10) {
+      this.scene.fog = null;
+    } else if (floorNum <= 25) {
+      this.scene.fog = new THREE.Fog(0x1a2a3a, 10, 25);
+    } else if (floorNum <= 50) {
+      this.scene.fog = new THREE.FogExp2(0x1a0500, 0.04);
+    } else if (floorNum <= 75) {
+      this.scene.fog = new THREE.Fog(0x3a4a5a, 8, 20);
+    } else {
+      this.scene.fog = new THREE.FogExp2(0x0a0015, 0.06);
+    }
+
+    // === Zone-specific ambient lighting ===
+    if (floorNum <= 10) {
+      this.ambientLight.color.setHex(0x404040);
+      this.ambientLight.intensity = 0.5;
+    } else if (floorNum <= 25) {
+      this.ambientLight.color.setHex(0x3344aa);
+      this.ambientLight.intensity = 0.4;
+    } else if (floorNum <= 50) {
+      this.ambientLight.color.setHex(0xff4400);
+      this.ambientLight.intensity = 0.3;
+    } else if (floorNum <= 75) {
+      this.ambientLight.color.setHex(0x6688bb);
+      this.ambientLight.intensity = 0.35;
+    } else {
+      this.ambientLight.color.setHex(0x330066);
+      this.ambientLight.intensity = 0.2;
+    }
+
     // Reset animation state for new floor
     this._prevPositions = {};
     this._prevHP = {};
     this._animations = [];
     this._itemMeshes = {};
+    this._waterMeshes = [];
+    this._lavaMeshes = [];
+    this._monsterHouseTriggered = false;
+
+    // Clear old shop lights
+    for (var si = 0; si < this._shopLights.length; si++) {
+      this.scene.remove(this._shopLights[si]);
+    }
+    this._shopLights = [];
+
+    // Clear particles
+    if (typeof ParticleSystem3D !== 'undefined') {
+      ParticleSystem3D.clear(this.scene);
+    }
+
+    // Reset shop visuals flag
+    this._shopVisualsBuilt = false;
   };
 
   // === Update tile visibility (FOV) ===
@@ -896,12 +977,26 @@ var Renderer3D = (function() {
       this._updateRendererSize();
     }
 
-    // Camera position from angle (isometric orbit)
+    // Front-facing quarter view: camera behind and above player, looking down Z
+    // Q/E rotate in 90° increments around the player
     var radius = this._cameraRadius;
     var height = this._cameraHeight;
-    this.camera.position.x = cx + Math.cos(this._cameraAngle) * radius;
-    this.camera.position.z = cz + Math.sin(this._cameraAngle) * radius;
+    this.camera.position.x = cx + Math.sin(this._cameraAngle) * radius;
+    this.camera.position.z = cz + Math.cos(this._cameraAngle) * radius;
     this.camera.position.y = height;
+
+    // Camera shake offset
+    if (this._shakeStart) {
+      var shakeElapsed = performance.now() - this._shakeStart;
+      if (shakeElapsed < this._shakeDuration) {
+        var shakeT = 1 - shakeElapsed / this._shakeDuration;
+        this.camera.position.x += (Math.random() - 0.5) * this._shakeIntensity * shakeT;
+        this.camera.position.y += (Math.random() - 0.5) * this._shakeIntensity * shakeT;
+      } else {
+        this._shakeStart = null;
+      }
+    }
+
     this.camera.lookAt(cx, 0, cz);
 
     // Player torch
@@ -933,21 +1028,34 @@ var Renderer3D = (function() {
 
   Renderer3D.prototype._animateWaterLava = function() {
     var time = this._animFrame * 0.05;
-    for (var y = 0; y < this.tileMeshes.length; y++) {
-      for (var x = 0; x < (this.tileMeshes[y] ? this.tileMeshes[y].length : 0); x++) {
-        var mesh = this.tileMeshes[y][x];
-        if (!mesh || !mesh.visible) continue;
 
-        if (mesh.userData.isWater) {
-          mesh.position.y = -0.05 + Math.sin(time + x * 0.5 + y * 0.7) * 0.03;
-        } else if (mesh.userData.isLava) {
-          mesh.position.y = -0.03 + Math.sin(time * 1.5 + x * 0.3 + y * 0.4) * 0.02;
-          // Pulsing emissive
-          if (mesh.material.emissive) {
-            var pulse = 0.3 + Math.sin(time * 2) * 0.15;
-            mesh.material.emissiveIntensity = pulse;
-          }
-        }
+    // Water tiles: gentle wave
+    for (var wi = 0; wi < this._waterMeshes.length; wi++) {
+      var wm = this._waterMeshes[wi];
+      if (!wm.visible) continue;
+      var wx = wm.userData.tileX;
+      var wy = wm.userData.tileY;
+      wm.position.y = -0.1 + Math.sin(time * 2 + wx * 0.5 + wy * 0.3) * 0.03;
+      // Gentle color shift
+      var waterT = (Math.sin(time * 1.5 + wx * 0.3) + 1) / 2;
+      wm.material.opacity = 0.55 + waterT * 0.1;
+    }
+
+    // Lava tiles: pulsing glow
+    for (var li = 0; li < this._lavaMeshes.length; li++) {
+      var lm = this._lavaMeshes[li];
+      if (!lm.visible) continue;
+      var lx = lm.userData.tileX;
+      var ly = lm.userData.tileY;
+      lm.position.y = -0.03 + Math.sin(time * 1.5 + lx * 0.3 + ly * 0.4) * 0.02;
+      // Pulsing color between orange-red
+      var lavaT = (Math.sin(time * 3 + lx * 0.2) + 1) / 2;
+      if (lm.material.color) {
+        lm.material.color.setHex(ParticleSystem3D && ParticleSystem3D.lerpColor
+          ? ParticleSystem3D.lerpColor(0xff2200, 0xff6600, lavaT) : 0xff4400);
+      }
+      if (lm.material.emissive) {
+        lm.material.emissiveIntensity = 0.3 + Math.sin(time * 2) * 0.15;
       }
     }
   };
@@ -1046,13 +1154,36 @@ var Renderer3D = (function() {
     // Update visibility
     game.updateVisibility();
 
-    // Rebuild tile map when floor changes
-    if (this._builtFloor !== (game.floorNum || 1) || this._builtScene !== 'dungeon') {
-      this._clearEntities();
-      this._buildTileMap(game);
+    // Rebuild tile map when floor changes (with transition effect)
+    var currentFloor = game.floorNum || 1;
+    if (this._builtFloor !== currentFloor || this._builtScene !== 'dungeon') {
+      if (this._builtFloor > 0 && this._builtScene === 'dungeon' && !this._floorTransition) {
+        // Trigger floor transition (fade to black → rebuild → fade in)
+        this._startFloorTransition(game);
+      } else {
+        // First build or mid-transition rebuild
+        this._clearEntities();
+        this._buildTileMap(game);
+      }
     }
 
     this._animFrame++;
+
+    // Delta time for particles
+    var now = performance.now();
+    var dt = this._lastTime ? Math.min((now - this._lastTime) / 1000, 0.1) : 0.016;
+    this._lastTime = now;
+
+    // === Floor transition effect ===
+    if (this._floorTransition) {
+      this._updateFloorTransition(game);
+      // During blackout phase, skip normal rendering
+      if (this._floorTransition && this._floorTransition.phase === 'black') {
+        this.webglRenderer.render(this.scene, this.camera);
+        if (this.css2dRenderer) this.css2dRenderer.render(this.scene, this.camera);
+        return;
+      }
+    }
 
     // Update FOV
     this._updateTileVisibility(game);
@@ -1071,6 +1202,20 @@ var Renderer3D = (function() {
 
     // Process game floating texts into 3D popups
     this._processGameFloatingTexts(game);
+
+    // === Particle system update ===
+    if (typeof ParticleSystem3D !== 'undefined') {
+      ParticleSystem3D.update(dt);
+    }
+
+    // === Detect combat events for particles ===
+    this._updateParticleEffects(game);
+
+    // === Monster house entrance detection ===
+    this._checkMonsterHouse(game);
+
+    // === Shop visual effects ===
+    this._updateShopVisuals(game);
 
     // Camera follow
     this._updateCamera(game.player.x, game.player.y);
@@ -1094,6 +1239,265 @@ var Renderer3D = (function() {
     }
     this.entityMeshes = {};
     this._itemMeshes = {};
+  };
+
+  // === Phase 3: Particle effects for combat events ===
+
+  Renderer3D.prototype._updateParticleEffects = function(game) {
+    if (typeof ParticleSystem3D === 'undefined') return;
+    var player = game.player;
+
+    // Track player level for level-up effect
+    if (!this._prevLevel) this._prevLevel = player.level;
+    if (player.level > this._prevLevel) {
+      ParticleSystem3D.levelUp(this.scene, player.x, player.y);
+      this._prevLevel = player.level;
+    }
+
+    // Track player HP for heal effect (already detect damage in _updateEntities)
+    var prevHP = this._prevHP['player'];
+    if (prevHP !== undefined && player.hp > prevHP) {
+      ParticleSystem3D.heal(this.scene, player.x, player.y);
+    }
+
+    // Attack hit particles are triggered from _updateEntities when enemy HP drops
+    // (integrated below in the HP change detection)
+  };
+
+  // Override the enemy HP-change detection to also emit particles
+  var _origUpdateEntities = Renderer3D.prototype._updateEntities;
+  Renderer3D.prototype._updateEntities = function(game) {
+    // Capture enemy HP before update for particle emission
+    var enemyHPBefore = {};
+    for (var i = 0; i < game.enemies.length; i++) {
+      var e = game.enemies[i];
+      if (!e.dead) {
+        var eKey = 'enemy_' + i + '_' + e.enemyId;
+        if (this._prevHP[eKey] !== undefined) {
+          enemyHPBefore[eKey] = { hp: this._prevHP[eKey], x: e.x, y: e.y };
+        }
+      }
+    }
+
+    // Call original
+    _origUpdateEntities.call(this, game);
+
+    // Check for HP drops → attack particles
+    if (typeof ParticleSystem3D !== 'undefined') {
+      for (var i = 0; i < game.enemies.length; i++) {
+        var e = game.enemies[i];
+        if (e.dead) continue;
+        var eKey = 'enemy_' + i + '_' + e.enemyId;
+        var before = enemyHPBefore[eKey];
+        if (before && e.hp < before.hp) {
+          ParticleSystem3D.attackHit(this.scene, e.x, e.y);
+        }
+      }
+
+      // Check player took damage → attack particles on player
+      var pHP = this._prevHP['player'];
+      // (pHP is already updated by _origUpdateEntities, so we compare with stored)
+    }
+  };
+
+  // === Phase 3: Floor Transition Effect ===
+
+  Renderer3D.prototype._startFloorTransition = function(game) {
+    this._floorTransition = { phase: 'fadeOut', startTime: performance.now(), game: game };
+
+    // Create fullscreen black overlay
+    if (!this._floorOverlay) {
+      var overlayGeo = new THREE.PlaneGeometry(100, 100);
+      var overlayMat = new THREE.MeshBasicMaterial({
+        color: 0x000000, transparent: true, opacity: 0,
+        depthTest: false, depthWrite: false
+      });
+      this._floorOverlay = new THREE.Mesh(overlayGeo, overlayMat);
+      this._floorOverlay.renderOrder = 999;
+    }
+    this._floorOverlay.material.opacity = 0;
+    // Position overlay in front of camera
+    this.scene.add(this._floorOverlay);
+  };
+
+  Renderer3D.prototype._updateFloorTransition = function(game) {
+    if (!this._floorTransition) return;
+
+    var elapsed = performance.now() - this._floorTransition.startTime;
+    var overlay = this._floorOverlay;
+
+    // Keep overlay facing camera
+    if (overlay) {
+      overlay.position.copy(this.camera.position);
+      var dir = new THREE.Vector3();
+      this.camera.getWorldDirection(dir);
+      overlay.position.add(dir.multiplyScalar(1));
+      overlay.lookAt(this.camera.position);
+    }
+
+    switch (this._floorTransition.phase) {
+      case 'fadeOut': // 0→300ms: fade to black
+        var t1 = Math.min(elapsed / 300, 1);
+        if (overlay) overlay.material.opacity = t1;
+        if (t1 >= 1) {
+          this._floorTransition.phase = 'black';
+          this._floorTransition.startTime = performance.now();
+          // Rebuild during blackout
+          this._clearEntities();
+          this._buildTileMap(game);
+        }
+        break;
+
+      case 'black': // 100ms hold black
+        if (elapsed >= 100) {
+          this._floorTransition.phase = 'fadeIn';
+          this._floorTransition.startTime = performance.now();
+          // Show floor announcement
+          this._showFloorAnnouncement(game);
+        }
+        break;
+
+      case 'fadeIn': // 0→300ms: fade from black
+        var t2 = Math.min(elapsed / 300, 1);
+        if (overlay) overlay.material.opacity = 1 - t2;
+        if (t2 >= 1) {
+          if (overlay) this.scene.remove(overlay);
+          this._floorTransition = null;
+        }
+        break;
+    }
+  };
+
+  Renderer3D.prototype._showFloorAnnouncement = function(game) {
+    // Create DOM overlay for floor text
+    var existing = document.getElementById('floor-announce-3d');
+    if (existing) existing.parentNode.removeChild(existing);
+
+    var floorNum = game.floorNum || 1;
+    var zoneName = '洞窟';
+    if (floorNum <= 10) zoneName = '洞窟';
+    else if (floorNum <= 25) zoneName = '地底湖';
+    else if (floorNum <= 50) zoneName = '溶岩洞';
+    else if (floorNum <= 75) zoneName = '凍土';
+    else zoneName = '深淵';
+
+    var div = document.createElement('div');
+    div.id = 'floor-announce-3d';
+    div.textContent = floorNum + 'F ' + zoneName;
+    div.style.cssText = 'position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);' +
+      'font-size:36px;font-weight:bold;color:#ffd700;text-shadow:2px 2px 8px rgba(0,0,0,0.8);' +
+      'pointer-events:none;z-index:100;opacity:1;transition:opacity 1.5s ease-out 0.5s;' +
+      'font-family:"Noto Sans JP",sans-serif;';
+
+    var canvasArea = document.getElementById('canvas-area');
+    if (canvasArea) {
+      canvasArea.appendChild(div);
+      // Trigger fade out after a brief moment
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          div.style.opacity = '0';
+        });
+      });
+      // Remove after animation
+      setTimeout(function() {
+        if (div.parentNode) div.parentNode.removeChild(div);
+      }, 2500);
+    }
+  };
+
+  // === Phase 3: Camera Shake ===
+
+  Renderer3D.prototype._shakeCamera = function(intensity, duration) {
+    this._shakeStart = performance.now();
+    this._shakeDuration = duration || 300;
+    this._shakeIntensity = intensity || 0.15;
+  };
+
+  // === Phase 3: Monster House Entrance Effect ===
+
+  Renderer3D.prototype._checkMonsterHouse = function(game) {
+    if (!game.monsterHouseTriggered || this._monsterHouseTriggered) return;
+    this._monsterHouseTriggered = true;
+
+    // Camera shake
+    this._shakeCamera(0.2, 400);
+
+    // Flash all visible enemy meshes white
+    for (var key in this.entityMeshes) {
+      if (key.indexOf('enemy_') === 0) {
+        this._flashMeshWhite(this.entityMeshes[key].mesh, 150);
+      }
+    }
+
+    // Attack particles on each enemy position for dramatic effect
+    if (typeof ParticleSystem3D !== 'undefined') {
+      for (var key in this.entityMeshes) {
+        if (key.indexOf('enemy_') === 0) {
+          var em = this.entityMeshes[key];
+          ParticleSystem3D.emit(this.scene, {
+            x: em.mesh.position.x, z: em.mesh.position.z,
+            count: 4, color: 0xff0000, size: 0.04,
+            speed: 1, lifetime: 0.6, spread: 0.3,
+            gravity: 0, upward: true
+          });
+        }
+      }
+    }
+
+    // Exclamation marks above enemies using CSS2DObject
+    if (typeof THREE.CSS2DObject !== 'undefined') {
+      for (var key in this.entityMeshes) {
+        if (key.indexOf('enemy_') === 0) {
+          var em = this.entityMeshes[key];
+          var excl = document.createElement('div');
+          excl.textContent = '!';
+          excl.style.cssText = 'color:#ff0;font-size:24px;font-weight:bold;text-shadow:1px 1px 2px #000;';
+          var label = new THREE.CSS2DObject(excl);
+          label.position.set(em.mesh.position.x, 2.0, em.mesh.position.z);
+          this.scene.add(label);
+          // Remove after 1.5s
+          (function(scene, lbl, div) {
+            setTimeout(function() {
+              scene.remove(lbl);
+            }, 1500);
+          })(this.scene, label, excl);
+        }
+      }
+    }
+  };
+
+  // === Phase 3: Shop Visual Effects ===
+
+  Renderer3D.prototype._updateShopVisuals = function(game) {
+    if (!game.shopRoom) return;
+
+    // Only set up once per floor
+    if (this._shopVisualsBuilt) return;
+    this._shopVisualsBuilt = true;
+
+    var room = game.shopRoom;
+
+    // Replace floor tiles in shop room with red/gold carpet
+    var carpetMat = new THREE.MeshLambertMaterial({ color: 0x8b0000 });
+    for (var sy = room.y + 1; sy < room.y + room.h - 1; sy++) {
+      for (var sx = room.x + 1; sx < room.x + room.w - 1; sx++) {
+        if (this.tileMeshes[sy] && this.tileMeshes[sy][sx]) {
+          var tileMesh = this.tileMeshes[sy][sx];
+          if (tileMesh.userData.tileType === 1) { // FLOOR
+            tileMesh.material = carpetMat;
+            tileMesh.userData.baseMaterial = carpetMat;
+          }
+        }
+      }
+    }
+
+    // Shopkeeper golden glow
+    var shopCenterX = Math.floor(room.x + room.w / 2);
+    var shopCenterY = room.y + 1;
+    var shopLight = new THREE.PointLight(0xffd700, 0.8, 6);
+    shopLight.position.set(shopCenterX, 2, shopCenterY);
+    this.scene.add(shopLight);
+    this._shopLights.push(shopLight);
   };
 
   // === Continuous render loop (called from main.js) ===
