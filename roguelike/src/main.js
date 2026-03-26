@@ -197,6 +197,21 @@
           var isFullscreen = document.body.classList.toggle('fullscreen-mode');
           fullscreenBtn.textContent = isFullscreen ? '🔲 ウィンドウ' : '🔲 全画面';
 
+          // Fix 3: When exiting fullscreen, properly restore window mode
+          if (!isFullscreen) {
+            // Reset any inline width/height styles on canvases
+            var canvas2dEl = document.getElementById('game-canvas');
+            if (canvas2dEl) {
+              canvas2dEl.style.width = '';
+              canvas2dEl.style.height = '';
+            }
+            var canvas3dEl = document.getElementById('game-canvas-3d');
+            if (canvas3dEl) {
+              canvas3dEl.style.width = '';
+              canvas3dEl.style.height = '';
+            }
+          }
+
           setTimeout(function() {
             var canvasArea = document.getElementById('canvas-area');
             var w = canvasArea.clientWidth;
@@ -216,7 +231,7 @@
             if (window._renderer && window._game) {
               window._renderer.render(window._game);
             }
-          }, 100);
+          }, 200);
         });
       }
 

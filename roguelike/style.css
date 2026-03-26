@@ -814,11 +814,14 @@ body.fullscreen-mode #game-wrapper {
 body.fullscreen-mode #game-container {
   flex: 1;
   height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 body.fullscreen-mode #canvas-area {
   flex: 1;
-  height: calc(100vh - 80px);
+  overflow: hidden;
+  position: relative;
 }
 
 body.fullscreen-mode #game-canvas,
@@ -828,7 +831,17 @@ body.fullscreen-mode #game-canvas-3d {
 }
 
 body.fullscreen-mode #message-log {
-  max-height: 80px;
+  max-height: 100px;
+  min-height: 60px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+body.fullscreen-mode #minimap-container {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 20;
 }
 
 body.fullscreen-mode #side-panel {

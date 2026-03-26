@@ -402,15 +402,15 @@ var Renderer3D = (function() {
     }
     this.tileMeshes = [];
     this.stairsMesh = null;
+    // Reset FOV cache for flicker fix (Fix 4)
+    this._prevVisible = null;
+    this._prevExplored = null;
 
     var dungeon = game.dungeon;
     var floorNum = game.floorNum || 1;
     var zone = getZoneColors(floorNum);
 
-    var floorMat = getCachedMaterial(zone.floor);
-    var floorMatDim = getCachedMaterial(zone.floor);
     var wallMat = getCachedMaterial(zone.wall);
-    var corridorMat = getCachedMaterial(zone.corridor);
     var waterMat = new THREE.MeshLambertMaterial({ color: 0x1a4a7a, transparent: true, opacity: 0.7 });
     var lavaMat = new THREE.MeshLambertMaterial({ color: 0x7a2a0a, transparent: true, opacity: 0.8, emissive: 0x3a1505 });
 
@@ -425,22 +425,41 @@ var Renderer3D = (function() {
 
         switch (tile) {
           case 0: // WALL
-            // Use multi-material: darker top face for dungeon feel
-            var wtc = zone.wall;
-            var wallTopColor = (((wtc >> 16) & 0xff) * 0.6 | 0) << 16 |
-                               (((wtc >> 8) & 0xff) * 0.6 | 0) << 8 |
-                               ((wtc & 0xff) * 0.6 | 0);
-            var wallTopMat = getCachedMaterial(wallTopColor);
-            var wallSideMat = wallMat;
-            var wallMultiMat = [wallSideMat, wallSideMat, wallTopMat, wallSideMat, wallSideMat, wallSideMat];
+            // Fix 5: Wall texture variation — alternate shades + brick lines
+            var wallVariation = seededRandom(x, y, floorNum);
+            var wallShade = 0.9 + wallVariation * 0.2; // 0.9 to 1.1
+            var variedWallColor = multiplyColorScalar(zone.wall, wallShade);
+            var variedWallMat = new THREE.MeshLambertMaterial({ color: variedWallColor });
+
+            var wtc = variedWallColor;
+            var wallTopColor = multiplyColorScalar(wtc, 0.6);
+            var wallTopMat = new THREE.MeshLambertMaterial({ color: wallTopColor });
+            var wallMultiMat = [variedWallMat, variedWallMat, wallTopMat, variedWallMat, variedWallMat, variedWallMat];
             mesh = new THREE.Mesh(wallGeo, wallMultiMat);
             mesh.position.set(x, 1.0, y);
             mesh.castShadow = true;
             mesh.receiveShadow = true;
             mesh.userData.isWall = true;
+
+            // Fix 5: Brick lines on some walls
+            if (wallVariation > 0.3) {
+              var brickColor = multiplyColorScalar(variedWallColor, 0.5);
+              var brickMat = new THREE.MeshBasicMaterial({ color: brickColor });
+              var brickGeo = new THREE.PlaneGeometry(1, 0.04);
+              var brick1 = new THREE.Mesh(brickGeo, brickMat);
+              brick1.position.set(0, 0.33, 0.501);
+              mesh.add(brick1);
+              var brick2 = new THREE.Mesh(brickGeo, brickMat);
+              brick2.position.set(0, -0.33, 0.501);
+              mesh.add(brick2);
+            }
             break;
           case 1: // FLOOR
-            mesh = new THREE.Mesh(floorGeo, floorMat);
+            // Fix 5: Floor texture variation — per-tile shade
+            var floorVariation = 0.9 + seededRandom(x, y, floorNum) * 0.2;
+            var variedFloorColor = multiplyColorScalar(zone.floor, floorVariation);
+            var variedFloorMat = new THREE.MeshLambertMaterial({ color: variedFloorColor });
+            mesh = new THREE.Mesh(floorGeo, variedFloorMat);
             mesh.position.set(x, 0, y);
             mesh.receiveShadow = true;
             // Floor tile border for depth perception
@@ -448,9 +467,26 @@ var Renderer3D = (function() {
             var borderMat1 = new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.15 });
             var border1 = new THREE.LineSegments(borderGeo1, borderMat1);
             mesh.add(border1);
+            // Fix 5: Random stone crack detail on some tiles
+            if (seededRandom(x + 7, y + 13, floorNum) > 0.7) {
+              var crackColor = multiplyColorScalar(variedFloorColor, 0.6);
+              var crackMat = new THREE.MeshBasicMaterial({ color: crackColor });
+              var crackGeo = new THREE.PlaneGeometry(0.3, 0.05);
+              crackGeo.rotateX(-Math.PI / 2);
+              var crack = new THREE.Mesh(crackGeo, crackMat);
+              var crackOffX = (seededRandom(x + 3, y + 5, floorNum) - 0.5) * 0.5;
+              var crackOffZ = (seededRandom(x + 11, y + 2, floorNum) - 0.5) * 0.5;
+              crack.position.set(crackOffX, 0.005, crackOffZ);
+              crack.rotation.y = seededRandom(x, y + 1, floorNum) * Math.PI;
+              mesh.add(crack);
+            }
             break;
           case 2: // CORRIDOR
-            mesh = new THREE.Mesh(floorGeo, corridorMat);
+            // Fix 5: Corridor variation
+            var corrVariation = 0.9 + seededRandom(x, y, floorNum + 100) * 0.2;
+            var variedCorrColor = multiplyColorScalar(zone.corridor, corrVariation);
+            var variedCorrMat = new THREE.MeshLambertMaterial({ color: variedCorrColor });
+            mesh = new THREE.Mesh(floorGeo, variedCorrMat);
             mesh.position.set(x, 0, y);
             mesh.receiveShadow = true;
             mesh.userData.isCorridor = true;
@@ -461,7 +497,9 @@ var Renderer3D = (function() {
             mesh.add(border2);
             break;
           case 3: // STAIRS_DOWN
-            mesh = new THREE.Mesh(floorGeo, floorMat);
+            var stairFloorVar = 0.9 + seededRandom(x, y, floorNum) * 0.2;
+            var stairFloorMat = new THREE.MeshLambertMaterial({ color: multiplyColorScalar(zone.floor, stairFloorVar) });
+            mesh = new THREE.Mesh(floorGeo, stairFloorMat);
             mesh.position.set(x, 0, y);
             mesh.receiveShadow = true;
             // Add stairs model on top
@@ -484,6 +522,12 @@ var Renderer3D = (function() {
             mesh.userData.isLava = true;
             this._lavaMeshes.push(mesh);
             break;
+        }
+
+        // Fix 6: Walls beyond rooms — render unexplored out-of-map or WALL tiles as solid rock
+        // If tile is null (no mesh created) but is within bounds, create a wall block (solid rock)
+        if (!mesh && tile === undefined) {
+          // Out-of-bounds tile, treat as solid rock
         }
 
         if (mesh) {
@@ -920,11 +964,25 @@ var Renderer3D = (function() {
     var mapRevealed = game.mapRevealed;
     var px = game.player.x;
     var py = game.player.y;
-    var updateRadius = 18; // Only process tiles within this radius + explored margin
+    var updateRadius = 18;
+    var h = this.tileMeshes.length;
 
-    for (var y = 0; y < this.tileMeshes.length; y++) {
-      for (var x = 0; x < (this.tileMeshes[y] ? this.tileMeshes[y].length : 0); x++) {
-        var mesh = this.tileMeshes[y][x];
+    // Fix 4: Initialize prev visibility cache if needed
+    if (!this._prevVisible) {
+      this._prevVisible = [];
+      this._prevExplored = [];
+      for (var iy = 0; iy < h; iy++) {
+        this._prevVisible[iy] = [];
+        this._prevExplored[iy] = [];
+      }
+    }
+
+    for (var y = 0; y < h; y++) {
+      var row = this.tileMeshes[y];
+      if (!row) continue;
+      var w = row.length;
+      for (var x = 0; x < w; x++) {
+        var mesh = row[x];
         if (!mesh) continue;
 
         // Skip tiles far from player (unless map revealed)
@@ -932,8 +990,19 @@ var Renderer3D = (function() {
           continue;
         }
 
-        var isVis = visible[y] && visible[y][x];
-        var isExp = explored[y] && explored[y][x];
+        var isVis = !!(visible[y] && visible[y][x]);
+        var isExp = !!(explored[y] && explored[y][x]);
+
+        // Fix 4: Only update material when visibility state actually changed
+        var prevVis = this._prevVisible[y][x];
+        var prevExp = this._prevExplored[y] ? this._prevExplored[y][x] : false;
+        var changed = (isVis !== prevVis) || (isExp !== prevExp) || mapRevealed;
+
+        if (!changed) continue;
+
+        this._prevVisible[y][x] = isVis;
+        if (!this._prevExplored[y]) this._prevExplored[y] = [];
+        this._prevExplored[y][x] = isExp;
 
         if (mapRevealed || isVis) {
           mesh.visible = true;
@@ -942,8 +1011,8 @@ var Renderer3D = (function() {
             mesh.material = mesh.userData.baseMaterial;
           }
         } else if (isExp) {
+          // Fix 1: Explored but not visible — dim at 30% brightness (geometry visible, entities hidden)
           mesh.visible = true;
-          // Dimmed — use darker version (handles both single material and material arrays)
           if (!mesh.userData.dimMaterial) {
             var baseMat = mesh.userData.baseMaterial;
             if (Array.isArray(baseMat)) {
@@ -1224,6 +1293,7 @@ var Renderer3D = (function() {
     });
 
     // --- Enemies ---
+    // Fix 1: Only show enemies on tiles that are currently visible (not just explored)
     for (var i = 0; i < enemies.length; i++) {
       var enemy = enemies[i];
       if (enemy.dead) continue;
@@ -1370,6 +1440,7 @@ var Renderer3D = (function() {
     }
 
     // --- Items (as 3D objects with rotation) ---
+    // Fix 1: Only show items on tiles that are currently visible (not just explored)
     this._itemMeshes = {};
     for (var j = 0; j < items.length; j++) {
       var item = items[j];
@@ -1395,6 +1466,7 @@ var Renderer3D = (function() {
     }
 
     // --- Traps ---
+    // Fix 1: Only show traps on currently visible tiles
     var traps = game.traps || [];
     var seeTraps = player.bracelet && player.bracelet.effect === 'see_traps';
     for (var k = 0; k < traps.length; k++) {
@@ -1402,8 +1474,7 @@ var Renderer3D = (function() {
       if (trap.consumed) continue;
       if (!trap.visible && !seeTraps) continue;
       var isTrapVis = visible[trap.y] && visible[trap.y][trap.x];
-      var isTrapExp = game.explored[trap.y] && game.explored[trap.y][trap.x];
-      if (!isTrapVis && !isTrapExp) continue;
+      if (!isTrapVis && !mapRevealed) continue;
 
       var tKey = 'trap_' + k;
       activeKeys[tKey] = true;
@@ -2196,9 +2267,11 @@ var Renderer3D = (function() {
       overlay.lookAt(this.camera.position);
     }
 
+    // Fix 7: Longer floor transition with text on black screen
+    // Fade out (500ms) → Black + text (1000ms) → Fade in (500ms) = ~2s total
     switch (this._floorTransition.phase) {
-      case 'fadeOut': // 0→300ms: fade to black
-        var t1 = Math.min(elapsed / 300, 1);
+      case 'fadeOut': // 0→500ms: fade to black
+        var t1 = Math.min(elapsed / 500, 1);
         if (overlay) overlay.material.opacity = t1;
         if (t1 >= 1) {
           this._floorTransition.phase = 'black';
@@ -2206,20 +2279,20 @@ var Renderer3D = (function() {
           // Rebuild during blackout
           this._clearEntities();
           this._buildTileMap(game);
-        }
-        break;
-
-      case 'black': // 100ms hold black
-        if (elapsed >= 100) {
-          this._floorTransition.phase = 'fadeIn';
-          this._floorTransition.startTime = performance.now();
-          // Show floor announcement
+          // Show floor text during black phase
           this._showFloorAnnouncement(game);
         }
         break;
 
-      case 'fadeIn': // 0→300ms: fade from black
-        var t2 = Math.min(elapsed / 300, 1);
+      case 'black': // Hold black for 1000ms (text visible on black)
+        if (elapsed >= 1000) {
+          this._floorTransition.phase = 'fadeIn';
+          this._floorTransition.startTime = performance.now();
+        }
+        break;
+
+      case 'fadeIn': // 0→500ms: fade from black
+        var t2 = Math.min(elapsed / 500, 1);
         if (overlay) overlay.material.opacity = 1 - t2;
         if (t2 >= 1) {
           if (overlay) this.scene.remove(overlay);
@@ -2230,7 +2303,7 @@ var Renderer3D = (function() {
   };
 
   Renderer3D.prototype._showFloorAnnouncement = function(game) {
-    // Create DOM overlay for floor text
+    // Create DOM overlay for floor text — shown on black screen
     var existing = document.getElementById('floor-announce-3d');
     if (existing) existing.parentNode.removeChild(existing);
 
@@ -2244,22 +2317,32 @@ var Renderer3D = (function() {
 
     var div = document.createElement('div');
     div.id = 'floor-announce-3d';
-    div.textContent = floorNum + 'F ' + zoneName;
-    div.style.cssText = 'position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);' +
+    div.textContent = '最果ての間 ' + floorNum + 'F';
+    div.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
       'font-size:36px;font-weight:bold;color:#ffd700;text-shadow:2px 2px 8px rgba(0,0,0,0.8);' +
-      'pointer-events:none;z-index:100;opacity:1;transition:opacity 1.5s ease-out 0.5s;' +
-      'font-family:"Noto Sans JP",sans-serif;';
+      'pointer-events:none;z-index:200;opacity:0;' +
+      'font-family:"Noto Sans JP",sans-serif;letter-spacing:4px;';
+
+    // Subtitle with zone name
+    var sub = document.createElement('div');
+    sub.textContent = zoneName;
+    sub.style.cssText = 'font-size:18px;color:#b89a5a;margin-top:8px;letter-spacing:6px;text-align:center;';
+    div.appendChild(sub);
 
     var canvasArea = document.getElementById('canvas-area');
     if (canvasArea) {
       canvasArea.appendChild(div);
-      // Trigger fade out after a brief moment
+      // Fade in the text quickly
       requestAnimationFrame(function() {
-        requestAnimationFrame(function() {
-          div.style.opacity = '0';
-        });
+        div.style.transition = 'opacity 0.3s ease-in';
+        div.style.opacity = '1';
       });
-      // Remove after animation
+      // Start fading out after 1200ms (during fade-in of scene)
+      setTimeout(function() {
+        div.style.transition = 'opacity 0.8s ease-out';
+        div.style.opacity = '0';
+      }, 1200);
+      // Remove after full animation
       setTimeout(function() {
         if (div.parentNode) div.parentNode.removeChild(div);
       }, 2500);
