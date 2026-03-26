@@ -240,10 +240,10 @@ var UI = (function() {
 
         html += '<div class="inv-item' + (isSelected ? ' selected' : '') + '">';
         html += '<span class="inv-slot">' + SLOT_LETTERS[i] + ')</span>';
+        var nameColor = item.identified ? '#e0e0e0' : '#ffd54f';
         html += '<span class="inv-char" style="color:' + item.color + ';">' + item.char + '</span>';
-        html += '<span class="inv-name">' + escapeHtml(item.getDisplayName()) + '</span>';
+        html += '<span class="inv-name" style="color:' + nameColor + ';">' + escapeHtml(item.getDisplayName()) + '</span>';
         if (equipped) html += '<span class="equipped-tag">[装備中]</span>';
-        if (!item.identified) html += '<span class="unid-tag">[未識別]</span>';
         html += '</div>';
       }
     }

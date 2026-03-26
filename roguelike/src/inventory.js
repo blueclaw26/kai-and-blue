@@ -150,6 +150,8 @@
         if (wItem.type !== 'weapon') continue;
 
         baseWeapon.plus = (baseWeapon.plus || 0) + (wItem.plus || 0);
+        baseWeapon.modifier = (baseWeapon.modifier || 0) + (wItem.modifier || 0);
+        baseWeapon.attack = (baseWeapon.attack || 0) + (wItem.modifier || 0);
 
         if (!baseWeapon.seals) baseWeapon.seals = [];
         var maxSeals = baseWeapon.slots || 3;
@@ -179,6 +181,8 @@
         if (sItem.type !== 'shield') continue;
 
         baseShield.plus = (baseShield.plus || 0) + (sItem.plus || 0);
+        baseShield.modifier = (baseShield.modifier || 0) + (sItem.modifier || 0);
+        baseShield.defense = (baseShield.defense || 0) + (sItem.modifier || 0);
 
         if (!baseShield.seals) baseShield.seals = [];
         var maxSSeals = baseShield.slots || 3;

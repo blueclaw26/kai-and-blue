@@ -53,6 +53,23 @@ var Item = (function() {
       }
     }
 
+    // Weapon/shield modifier (強化値): +0 to +3 for floor drops
+    if (this.type === 'weapon' || this.type === 'shield') {
+      if (data.modifier !== undefined) {
+        this.modifier = data.modifier;
+      } else {
+        // Random modifier for floor drops: +0 (50%), +1 (25%), +2 (15%), +3 (10%)
+        var roll = Math.random();
+        if (roll < 0.5) this.modifier = 0;
+        else if (roll < 0.75) this.modifier = 1;
+        else if (roll < 0.90) this.modifier = 2;
+        else this.modifier = 3;
+      }
+      // Apply modifier to base stats
+      if (this.type === 'weapon' && this.attack !== undefined) this.attack += this.modifier;
+      if (this.type === 'shield' && this.defense !== undefined) this.defense += this.modifier;
+    }
+
     // Upgrade value for weapons/shields
     this.plus = 0;
 
@@ -98,9 +115,13 @@ var Item = (function() {
       return name;
     }
 
+    // Show modifier for weapons/shields (e.g. カタナ+2)
+    if ((this.type === 'weapon' || this.type === 'shield') && this.modifier > 0) {
+      name += '+' + this.modifier;
+    }
     // Show +N for weapons/shields
     if ((this.type === 'weapon' || this.type === 'shield') && this.plus !== 0) {
-      name += (this.plus > 0 ? '+' : '') + this.plus;
+      name += (this.plus > 0 ? ' +' : ' ') + this.plus;
     }
     // Show seals as kanji after name
     if ((this.type === 'weapon' || this.type === 'shield') && this.seals && this.seals.length > 0) {
@@ -133,8 +154,11 @@ var Item = (function() {
       }
       return name;
     }
+    if ((this.type === 'weapon' || this.type === 'shield') && this.modifier > 0) {
+      name += '+' + this.modifier;
+    }
     if ((this.type === 'weapon' || this.type === 'shield') && this.plus !== 0) {
-      name += (this.plus > 0 ? '+' : '') + this.plus;
+      name += (this.plus > 0 ? ' +' : ' ') + this.plus;
     }
     // Show seals
     if ((this.type === 'weapon' || this.type === 'shield') && this.seals && this.seals.length > 0) {
@@ -332,8 +356,12 @@ var Item = (function() {
             }
           }
         }
-        // Set mapRevealed flag: shows all tiles, enemies, items (but NOT traps)
+        // Set mapRevealed flag: shows all tiles, enemies, items
         game.mapRevealed = true;
+        // あかりの巻物 also reveals all traps
+        for (var ti = 0; ti < game.traps.length; ti++) {
+          game.traps[ti].visible = true;
+        }
         ui.addMessage('フロアの全体が明るくなった！', 'system');
         break;
       case 'confuse_enemies':

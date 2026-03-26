@@ -110,6 +110,7 @@ var Game = (function() {
             var item = new Item(0, 0, saved.dataKey);
             // Clamp and validate numeric values
             if (saved.plus !== undefined) item.plus = Math.max(-99, Math.min(99, parseInt(saved.plus) || 0));
+            if (saved.modifier !== undefined) item.modifier = Math.max(0, Math.min(99, parseInt(saved.modifier) || 0));
             if (saved.seals && Array.isArray(saved.seals)) {
               item.seals = saved.seals.filter(function(s) { return typeof s === 'string' && s.length < 30; });
             }
@@ -152,6 +153,7 @@ var Game = (function() {
         data.push({
           dataKey: item.dataKey,
           plus: item.plus || 0,
+          modifier: item.modifier || 0,
           seals: item.seals || [],
           identified: item.identified || false,
           count: item.count || 0,

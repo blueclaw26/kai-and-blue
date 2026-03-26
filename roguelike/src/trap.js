@@ -17,6 +17,20 @@ var Trap = (function() {
 
   var TRAP_KEYS = Object.keys(TRAP_DATA);
 
+  // Trap type weights (pitfall is very rare ~3%)
+  var TRAP_WEIGHTS = {
+    landmine:        8,
+    pitfall:         2,  // ~3% — very rare
+    poison_arrow:    8,
+    sleep:           10,
+    spin:            10,
+    hunger:          8,
+    trip:            10,
+    rust:            8,
+    arrow_trap_wood: 8,
+    arrow_trap_iron: 6
+  };
+
   function Trap(x, y, type) {
     var data = TRAP_DATA[type];
     this.x = x;
@@ -31,15 +45,30 @@ var Trap = (function() {
     this.consumed = false;   // removed from floor after use
   }
 
-  // Pick a random trap type
+  // Pick a weighted random trap type
   Trap.randomType = function() {
-    return TRAP_KEYS[Math.floor(Math.random() * TRAP_KEYS.length)];
+    var totalWeight = 0;
+    for (var i = 0; i < TRAP_KEYS.length; i++) {
+      totalWeight += (TRAP_WEIGHTS[TRAP_KEYS[i]] || 5);
+    }
+    var roll = Math.random() * totalWeight;
+    var cumulative = 0;
+    for (var j = 0; j < TRAP_KEYS.length; j++) {
+      cumulative += (TRAP_WEIGHTS[TRAP_KEYS[j]] || 5);
+      if (roll < cumulative) return TRAP_KEYS[j];
+    }
+    return TRAP_KEYS[TRAP_KEYS.length - 1];
   };
 
   // Spawn traps for a floor
   Trap.spawnForFloor = function(dungeon, floorNum, existingItems) {
     var traps = [];
-    var count = 2 + Math.floor(Math.random() * 4); // 2-5
+    // Reduced trap count: F1-20: 2-4, F21-50: 3-5, F51-99: 4-6
+    var minTraps, maxTraps;
+    if (floorNum <= 20) { minTraps = 2; maxTraps = 4; }
+    else if (floorNum <= 50) { minTraps = 3; maxTraps = 5; }
+    else { minTraps = 4; maxTraps = 6; }
+    var count = minTraps + Math.floor(Math.random() * (maxTraps - minTraps + 1));
 
     // Collect occupied positions
     var occupied = {};

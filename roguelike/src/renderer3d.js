@@ -10,6 +10,20 @@ var Renderer3D = (function() {
     return parseInt(css.slice(1), 16);
   }
 
+  // Seeded random for consistent per-tile variation
+  function seededRandom(x, y, seed) {
+    var n = Math.sin(x * 12.9898 + y * 78.233 + (seed || 0) * 43758.5453) * 43758.5453;
+    return n - Math.floor(n);
+  }
+
+  // Multiply a hex color by a scalar factor
+  function multiplyColorScalar(hex, factor) {
+    var r = Math.min(255, Math.max(0, ((hex >> 16) & 0xff) * factor | 0));
+    var g = Math.min(255, Math.max(0, ((hex >> 8) & 0xff) * factor | 0));
+    var b = Math.min(255, Math.max(0, (hex & 0xff) * factor | 0));
+    return (r << 16) | (g << 8) | b;
+  }
+
   // Floor zone palettes (match 2D renderer zones)
   function getZoneColors(floorNum) {
     if (floorNum <= 10) return { floor: 0x5d4037, wall: 0x3e2723, corridor: 0x4e342e };   // 洞窟

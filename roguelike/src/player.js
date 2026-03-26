@@ -333,11 +333,11 @@ var Player = (function() {
       'shield': 1,
       'bracelet': 2,
       'arrow': 3,
-      'staff': 4,
-      'grass': 5,
-      'scroll': 6,
-      'food': 7,
-      'pot': 8
+      'grass': 4,
+      'scroll': 5,
+      'staff': 6,
+      'pot': 7,
+      'food': 8
     };
 
     this.inventory.sort(function(a, b) {

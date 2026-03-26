@@ -502,6 +502,8 @@
       for (var w = 1; w < weapons.length; w++) {
         var srcW = weapons[w];
         baseW.plus = (baseW.plus || 0) + (srcW.plus || 0);
+        baseW.modifier = (baseW.modifier || 0) + (srcW.modifier || 0);
+        baseW.attack = (baseW.attack || 0) + (srcW.modifier || 0);
         if (!baseW.seals) baseW.seals = [];
         var maxWSeals = baseW.slots || 3;
         if (srcW.seals) {
@@ -539,6 +541,8 @@
       for (var s = 1; s < shields.length; s++) {
         var srcS = shields[s];
         baseS.plus = (baseS.plus || 0) + (srcS.plus || 0);
+        baseS.modifier = (baseS.modifier || 0) + (srcS.modifier || 0);
+        baseS.defense = (baseS.defense || 0) + (srcS.modifier || 0);
         if (!baseS.seals) baseS.seals = [];
         var maxSSeals = baseS.slots || 3;
         if (srcS.seals) {
@@ -1142,13 +1146,8 @@
   };
 
   Game.prototype.checkEnemyTrap = function(enemy) {
-    var trap = this.getTrapAt(enemy.x, enemy.y);
-    if (!trap) return;
-
-    if (trap.effect !== 'explosion' && trap.effect !== 'pitfall') return;
-
-    trap.visible = true;
-    this.triggerTrapOnEnemy(trap, enemy);
+    // Enemies walk over traps without triggering them (Shiren-style)
+    return;
   };
 
   Game.prototype.triggerTrap = function(trap, player) {
