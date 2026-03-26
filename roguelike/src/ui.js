@@ -125,8 +125,7 @@ var UI = (function() {
         floorInfo.textContent = '拠点の村';
         floorInfo.style.color = '#66bb6a';
       } else {
-        var zoneName = getZoneName(game.floorNum);
-        floorInfo.textContent = game.floorNum + 'F ' + zoneName;
+        floorInfo.textContent = '最果ての間 ' + game.floorNum + 'F';
         floorInfo.style.color = '#e8a44a';
       }
     }
