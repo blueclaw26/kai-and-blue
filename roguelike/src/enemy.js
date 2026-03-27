@@ -132,7 +132,7 @@ var Enemy = (function() {
           game.ui.addMessage('どこからか炎が飛んできた！ お香の効果で炎を無効化した！', 'system');
           return;
         }
-        var fireDmg = 30; // Fixed 30 damage (ignores defense)
+        var fireDmg = B('enemies.floorFireDamage', 30); // Fixed damage (ignores defense)
         // Check for dragon_resist seal on shield
         var hasDragonResist = (player.shield && player.shield.seals && player.shield.seals.indexOf('dragon_resist') !== -1) ||
                               (player.shield && player.shield.special === 'dragon_resist');
@@ -447,11 +447,12 @@ var Enemy = (function() {
 
   // Can this enemy see the player? (same room or within FOV range)
   Enemy.prototype._canSeePlayer = function(game) {
-    // Blind enemies incense: vision reduced to 1 tile
+    // Blind enemies incense: vision reduced
     if (game.activeIncense && game.activeIncense.effect === 'blind_enemies') {
+      var blindVision = B('incense.blindEnemyVision', 1);
       var bdx = Math.abs(game.player.x - this.x);
       var bdy = Math.abs(game.player.y - this.y);
-      return (bdx <= 1 && bdy <= 1);
+      return (bdx <= blindVision && bdy <= blindVision);
     }
     // Same room check
     if (this._inSameRoom(game)) return true;

@@ -180,7 +180,10 @@
     <div class="tabs" id="tabs">
       <div class="tab active" data-tab="player">プレイヤー</div>
       <div class="tab" data-tab="combat">戦闘</div>
+      <div class="tab" data-tab="damage">ダメージ計算</div>
       <div class="tab" data-tab="enemies">敵</div>
+      <div class="tab" data-tab="incense">お香</div>
+      <div class="tab" data-tab="curseBlessing">呪い/祝福</div>
       <div class="tab" data-tab="traps">罠</div>
       <div class="tab" data-tab="items">アイテム</div>
       <div class="tab" data-tab="dungeon">ダンジョン</div>
@@ -219,21 +222,57 @@
             ['levelUpHp', 'HP上昇量', '', 1, 20, 1],
             ['levelUpAttack', '攻撃力上昇量', '', 0, 10, 1],
           ]},
+          { name: 'ドスコイ', params: [
+            ['doskoiThreshold', 'ドスコイ突入閾値', '最大満腹度の%', 100, 200, 5],
+            ['doskoiExitThreshold', 'ドスコイ解除閾値', '最大満腹度の%', 100, 200, 5],
+            ['maxSatietyCap', '最大満腹度上限', '', 100, 300, 10],
+            ['eatFullSatietyBonus', '満腹時食事ボーナス', '最大満腹度+', 1, 20, 1],
+            ['eatFullBigBonus', '大おにぎりボーナス', '満腹時の最大満腹度+', 1, 30, 1],
+          ]},
         ]
       },
       combat: {
         title: '戦闘',
         groups: [
-          { name: '基本ダメージ', params: [
-            ['damageVariance', 'ダメージ振れ幅', 'random(0..N-1)', 1, 10, 1],
+          { name: '基本', params: [
             ['minDamage', '最低ダメージ', '', 0, 10, 1],
-          ]},
-          { name: '特殊効果', params: [
-            ['critChance', '会心率', '会心の印の確率', 0.05, 1.0, 0.05],
-            ['typeEffectMultiplier', '特効倍率', '竜/仏/吸の印', 1.0, 3.0, 0.1],
             ['counterReflect', '返印反射率', 'ダメージの何%を返すか', 0.1, 1.0, 0.1],
             ['strengthenedMultiplier', '強化状態の倍率', '', 1.0, 3.0, 0.1],
             ['powerupAttackBonus', 'パワーアップ攻撃+', '', 1, 20, 1],
+          ]},
+          { name: 'ドスコイ', params: [
+            ['doskoiAttackBonus', 'ドスコイ攻撃+', '素手攻撃ボーナス', 1, 30, 1],
+            ['doskoiDamageMultiplier', 'ドスコイ倍率', 'ダメージ倍率', 1.0, 3.0, 0.1],
+          ]},
+        ]
+      },
+      damage: {
+        title: 'ダメージ計算',
+        groups: [
+          { name: 'ダメージ分散・会心', params: [
+            ['damageVariance', 'ダメージ振れ幅', '±N% (0.125=12.5%)', 0.0, 0.5, 0.025],
+            ['critChance', '会心率', '会心の印1つあたり', 0.01, 0.5, 0.01],
+            ['critMultiplier', '会心倍率', 'プレイヤー会心', 1.0, 5.0, 0.1],
+            ['enemyCritMultiplier', '痛恨倍率', '敵の痛恨ダメージ', 1.0, 5.0, 0.1],
+          ]},
+          { name: '武器・ちから係数', params: [
+            ['weaponStrengthBase', '武器基礎係数', '武器攻撃 × (this + str/scale)', 0.1, 2.0, 0.05],
+            ['weaponStrengthScale', 'ちから除数', '武器攻撃 × (base + str/this)', 8, 64, 1],
+          ]},
+          { name: 'レベル攻撃力', params: [
+            ['levelAttackTier1Rate', 'Lv1-5 係数', '1レベルあたり', 0.5, 5.0, 0.1],
+            ['levelAttackTier2Rate', 'Lv6-13 係数', '1レベルあたり', 0.1, 3.0, 0.1],
+            ['levelAttackTier3Rate', 'Lv14+ 係数', '1レベルあたり', 0.1, 2.0, 0.1],
+          ]},
+          { name: '盾防御・軽減', params: [
+            ['shieldDefenseCap', '盾防御キャップ', 'これまで全額適用', 5, 50, 1],
+            ['shieldDefenseScale', 'キャップ超過係数', '超過分の倍率', 0.1, 1.0, 0.05],
+            ['reductionSealMultiplier', '軽減印倍率', '1つにつき掛け算', 0.1, 1.0, 0.05],
+            ['typeEffectBonus', '特効ボーナス', '1印あたり加算', 0.1, 2.0, 0.1],
+          ]},
+          { name: 'HP回復', params: [
+            ['healDivisor', '回復除数', 'floor(Lv/this)+1 = 回復量', 1, 20, 1],
+            ['minHealRate', '最低回復量', '1ターンの最低HP回復', 1, 10, 1],
           ]},
         ]
       },
@@ -249,6 +288,34 @@
           { name: 'AI', params: [
             ['visionRange', '視界距離', 'タイル数', 2, 15, 1],
             ['wanderChance', '徘徊確率', 'プレイヤーが見えない時', 0.1, 1.0, 0.1],
+          ]},
+          { name: '深層', params: [
+            ['deepFloorAttackPlateau', '攻撃力プラトー階', '攻撃力スケーリング停止', 20, 99, 1],
+            ['floorFireDamage', 'フロア炎ダメージ', 'スカルドラゴン等', 5, 80, 5],
+          ]},
+        ]
+      },
+      incense: {
+        title: 'お香',
+        groups: [
+          { name: '効果', params: [
+            ['blindEnemyVision', '目つぶし視界', '敵の視界タイル数', 1, 5, 1],
+            ['protectReduction', '身守り軽減率', 'ダメージ倍率', 0.1, 1.0, 0.05],
+            ['evasionMissChance', '回避ミス率', '飛び道具ミス率', 0.0, 1.0, 0.1],
+          ]},
+        ]
+      },
+      curseBlessing: {
+        title: '呪い/祝福',
+        groups: [
+          { name: '発生確率', params: [
+            ['floorCursedChance', '呪い確率', 'フロアアイテム', 0.0, 0.3, 0.01],
+            ['floorBlessedChance', '祝福確率', 'フロアアイテム', 0.0, 0.3, 0.01],
+          ]},
+          { name: '効果', params: [
+            ['cursedSellMultiplier', '呪い売値倍率', '', 0.1, 1.0, 0.1],
+            ['blessedSellMultiplier', '祝福売値倍率', '', 1.0, 3.0, 0.1],
+            ['blessedEffectMultiplier', '祝福効果倍率', '回復量等', 1.0, 5.0, 0.5],
           ]},
         ]
       },
@@ -387,26 +454,33 @@
       if (currentTab === 'diff') updateDiff();
     }
 
+    // Map UI tabs to BALANCE sections (damage tab → combat section)
+    var TAB_TO_SECTION = { damage: 'combat' };
+    function resolveSection(tab) { return TAB_TO_SECTION[tab] || tab; }
+
     function getVal(tab, key) {
-      if (tab === 'traps' && BALANCE.traps.weights && BALANCE.traps.weights[key] !== undefined) {
+      var sec = resolveSection(tab);
+      if (sec === 'traps' && BALANCE.traps.weights && BALANCE.traps.weights[key] !== undefined) {
         return BALANCE.traps.weights[key];
       }
-      return BALANCE[tab][key];
+      return BALANCE[sec][key];
     }
 
     function getDefault(tab, key) {
-      if (tab === 'traps' && BALANCE._defaults.traps.weights && BALANCE._defaults.traps.weights[key] !== undefined) {
+      var sec = resolveSection(tab);
+      if (sec === 'traps' && BALANCE._defaults.traps.weights && BALANCE._defaults.traps.weights[key] !== undefined) {
         return BALANCE._defaults.traps.weights[key];
       }
-      return BALANCE._defaults[tab][key];
+      return BALANCE._defaults[sec][key];
     }
 
     function setVal(tab, key, val) {
-      if (tab === 'traps' && BALANCE.traps.weights && BALANCE.traps.weights[key] !== undefined) {
+      var sec = resolveSection(tab);
+      if (sec === 'traps' && BALANCE.traps.weights && BALANCE.traps.weights[key] !== undefined) {
         BALANCE.traps.weights[key] = val;
         return;
       }
-      BALANCE[tab][key] = val;
+      BALANCE[sec][key] = val;
     }
 
     function updateModified(row) {

@@ -83,7 +83,7 @@ var Player = (function() {
     }
     // Doskoi attack boost
     if (this.doskoi) {
-      this.attack += 10;
+      this.attack += B('combat.doskoiAttackBonus', 10);
     }
     // Bracelet: strength boost
     if (this.bracelet && this.bracelet.effect === 'strength_boost') {
@@ -220,8 +220,8 @@ var Player = (function() {
 
   // Check and update doskoi state based on satiety thresholds
   Player.prototype.checkDoskoi = function(ui) {
-    var threshold150 = Math.floor(this.maxSatiety * 1.5);
-    var threshold120 = Math.floor(this.maxSatiety * 1.2);
+    var threshold150 = Math.floor(this.maxSatiety * B('player.doskoiThreshold', 150) / 100);
+    var threshold120 = Math.floor(this.maxSatiety * B('player.doskoiExitThreshold', 120) / 100);
 
     if (!this.doskoi && this.satiety >= threshold150) {
       this.doskoi = true;
@@ -419,7 +419,7 @@ var Player = (function() {
   // Fast recovery: scales with level, makes deep-floor recovery viable
   Player.prototype.naturalHeal = function() {
     if (this.hp < this.maxHp && this.hp > 0 && this.satiety > 0) {
-      var healRate = Math.max(1, Math.floor(this.level / 7) + 1);
+      var healRate = Math.max(B('combat.minHealRate', 1), Math.floor(this.level / B('combat.healDivisor', 7)) + 1);
       // Regen bracelet doubles heal rate
       if (this.bracelet && this.bracelet.effect === 'regen') {
         healRate *= 2;

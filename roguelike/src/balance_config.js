@@ -20,17 +20,59 @@ var BALANCE = (function() {
       starvationDamage: 1,
       levelUpHp: 3,             // HP gained per level
       levelUpAttack: 1,         // attack gained per level
+      doskoiThreshold: 150,     // % of maxSatiety to enter doskoi
+      doskoiExitThreshold: 120, // % to exit doskoi
+      maxSatietyCap: 200,       // max possible satiety
+      eatFullSatietyBonus: 5,   // max satiety increase from eating when full
+      eatFullBigBonus: 10,      // max satiety increase from big onigiri when full
     },
 
     // === Combat ===
     combat: {
-      damageVariance: 3,        // random(0..N-1) added to damage
+      damageVariance: 0.125,    // ±12.5% damage variance
       minDamage: 1,
-      critChance: 0.25,         // crit seal proc rate
-      typeEffectMultiplier: 1.5, // dragon/ghost/drain seal bonus
+      critChance: 0.12,         // 12% per 会心 seal
+      critMultiplier: 2.0,      // player critical multiplier
+      enemyCritMultiplier: 1.5, // 痛恨 multiplier
+      typeEffectBonus: 0.5,     // per effective seal
+      typeEffectMultiplier: 1.5, // dragon/ghost/drain seal bonus (legacy)
       counterReflect: 0.3,      // counter shield reflects 30% damage
       strengthenedMultiplier: 1.5,
       powerupAttackBonus: 5,
+      doskoiAttackBonus: 10,    // flat attack bonus when doskoi
+      doskoiDamageMultiplier: 1.5, // damage multiplier when doskoi
+      reductionSealMultiplier: 0.7, // per reduction seal
+
+      // Damage formula coefficients
+      weaponStrengthBase: 0.75, // weapon × (this + str/32)
+      weaponStrengthScale: 32,  // divisor for strength scaling
+      levelAttackTier1Rate: 1.5, // per level for Lv1-5
+      levelAttackTier2Rate: 1.0, // per level for Lv6-13
+      levelAttackTier3Rate: 0.5, // per level for Lv14+
+
+      // Shield defense diminishing returns
+      shieldDefenseCap: 20,     // full value up to this
+      shieldDefenseScale: 0.6,  // per point above cap
+
+      // HP recovery
+      healDivisor: 7,           // floor(level/this) + 1 = HP per turn
+      minHealRate: 1,
+    },
+
+    // === Incense ===
+    incense: {
+      blindEnemyVision: 1,      // enemy vision when blind incense active
+      protectReduction: 0.5,    // damage multiplier when protect active
+      evasionMissChance: 1.0,   // 100% miss for enemy projectiles
+    },
+
+    // === Curse/Blessing ===
+    curseBlessing: {
+      floorCursedChance: 0.05,  // 5% chance floor item is cursed
+      floorBlessedChance: 0.03, // 3%
+      cursedSellMultiplier: 0.7,
+      blessedSellMultiplier: 1.3,
+      blessedEffectMultiplier: 2.0,
     },
 
     // === Enemy Spawning ===
@@ -50,6 +92,8 @@ var BALANCE = (function() {
       visionRange: 6,           // tiles for enemy detection
       wanderChance: 0.5,        // chance to move when can't see player
       turnSpawnInterval: 30,    // spawn new enemy every N turns
+      deepFloorAttackPlateau: 60, // attack stops scaling above this
+      floorFireDamage: 30,      // fixed damage from floor-wide fire
     },
 
     // === Traps ===

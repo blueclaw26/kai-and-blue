@@ -50,24 +50,28 @@
     // Strength attack = raw strength value
     var strengthAttack = strength;
 
-    // Weapon attack = weapon strength × (0.75 + strength/32)
+    // Weapon attack = weapon strength × (base + strength/scale)
     var weaponStrength = weapon ? (weapon.getEffectiveAttack ? weapon.getEffectiveAttack() : (weapon.attack || 0)) : 0;
-    var weaponAttack = weaponStrength * (0.75 + strength / 32);
+    var weaponAttack = weaponStrength * (B('combat.weaponStrengthBase', 0.75) + strength / B('combat.weaponStrengthScale', 32));
 
     // Level attack (tiered formula)
+    var tier1Rate = B('combat.levelAttackTier1Rate', 1.5);
+    var tier2Rate = B('combat.levelAttackTier2Rate', 1.0);
+    var tier3Rate = B('combat.levelAttackTier3Rate', 0.5);
     var levelAttack;
     if (level <= 5) {
-      levelAttack = 1 + (level - 1) * 1.5;
+      levelAttack = 1 + (level - 1) * tier1Rate;
     } else if (level <= 13) {
-      levelAttack = 7.5 + (level - 5) * 1;
+      levelAttack = 1 + 4 * tier1Rate + (level - 5) * tier2Rate;
     } else {
-      levelAttack = 15.5 + (level - 13) * 0.5;
+      levelAttack = 1 + 4 * tier1Rate + 8 * tier2Rate + (level - 13) * tier3Rate;
     }
 
     var totalAttack = strengthAttack + weaponAttack + levelAttack;
 
-    // Random variance ±12.5%
-    var variance = 0.875 + Math.random() * 0.25;
+    // Random variance ±N%
+    var v = B('combat.damageVariance', 0.125);
+    var variance = (1 - v) + Math.random() * v * 2;
 
     // Enemy defense (halved)
     var defense = (enemy.defense || 0) / 2;
@@ -75,12 +79,13 @@
     // Base damage
     var baseDamage = Math.max(1, Math.floor(totalAttack * variance - defense + 1));
 
-    // Type effectiveness multiplier (additive: each type adds 0.5)
+    // Type effectiveness multiplier (additive: each type adds bonus)
     var typeMultiplier = 1.0;
+    var typeBonus = B('combat.typeEffectBonus', 0.5);
     var sealMessages = [];
     if (weapon && weapon.seals) {
       var effectiveSeals = countEffectiveSeals(weapon, enemy);
-      typeMultiplier += effectiveSeals * 0.5;
+      typeMultiplier += effectiveSeals * typeBonus;
       // Generate messages for effective seals
       var seals = weapon.seals;
       for (var si = 0; si < seals.length; si++) {
@@ -98,12 +103,12 @@
       }
     } else if (weapon && weapon.special) {
       var legacyEffective = countEffectiveSeals(weapon, enemy);
-      typeMultiplier += legacyEffective * 0.5;
+      typeMultiplier += legacyEffective * typeBonus;
       if (legacyEffective > 0) sealMessages.push('特効！');
     }
 
     // Doskoi multiplier
-    var doskoiMult = player.doskoi ? 1.5 : 1.0;
+    var doskoiMult = player.doskoi ? B('combat.doskoiDamageMultiplier', 1.5) : 1.0;
 
     // Buff multipliers (from incense, etc.)
     var buffMult = 1.0;
@@ -111,18 +116,19 @@
     if (player.powerupTurns > 0) buffMult *= 1.5;
     if (player.hasStatusEffect('strengthened')) buffMult *= B('combat.strengthenedMultiplier', 1.5);
 
-    // Critical hit check (会心 seal: ~12% chance per seal)
+    // Critical hit check (会心 seal: chance per seal)
     var isCrit = false;
+    var critChance = B('combat.critChance', 0.12);
     if (weapon && weapon.seals) {
       for (var ci = 0; ci < weapon.seals.length; ci++) {
-        if (weapon.seals[ci] === 'crit' && Math.random() < 0.12) {
+        if (weapon.seals[ci] === 'crit' && Math.random() < critChance) {
           isCrit = true;
           break;
         }
       }
     }
 
-    var critMult = isCrit ? 2.0 : 1.0;
+    var critMult = isCrit ? B('combat.critMultiplier', 2.0) : 1.0;
 
     // Final damage
     var finalDamage = Math.max(1, Math.floor(baseDamage * typeMultiplier * doskoiMult * buffMult * critMult));
@@ -134,18 +140,21 @@
   function calculateEnemyDamage(enemy, player, shield, game) {
     var attack = enemy.attack || 0;
 
-    // Random variance ±12.5%
-    var variance = 0.875 + Math.random() * 0.25;
+    // Random variance ±N%
+    var ev = B('combat.damageVariance', 0.125);
+    var variance = (1 - ev) + Math.random() * ev * 2;
 
-    // Shield defense (with diminishing returns above 20)
+    // Shield defense (with diminishing returns above cap)
     var shieldStrength = shield ? (shield.getEffectiveDefense ? shield.getEffectiveDefense() : (shield.defense || 0)) : 0;
     // Add blessed bonus
     if (shield && shield.blessed) shieldStrength += 3;
+    var defCap = B('combat.shieldDefenseCap', 20);
+    var defScale = B('combat.shieldDefenseScale', 0.6);
     var defense;
-    if (shieldStrength <= 20) {
+    if (shieldStrength <= defCap) {
       defense = shieldStrength;
     } else {
-      defense = 20 + (shieldStrength - 20) * 0.6;
+      defense = defCap + (shieldStrength - defCap) * defScale;
     }
 
     // Base damage
@@ -153,16 +162,17 @@
 
     // Damage reduction from seals (multiplicative)
     var reduction = 1.0;
+    var reductionMult = B('combat.reductionSealMultiplier', 0.7);
     if (shield && shield.seals) {
       var reductionSeals = countReductionSeals(shield);
       for (var i = 0; i < reductionSeals; i++) {
-        reduction *= 0.7;
+        reduction *= reductionMult;
       }
     }
 
     // Incense protection
     if (game && game.activeIncense && game.activeIncense.effect === 'protect') {
-      reduction *= 0.5;
+      reduction *= B('incense.protectReduction', 0.5);
     }
 
     // Critical hit check (痛恨)
@@ -171,7 +181,7 @@
       isCritical = true;
     }
 
-    var critMult = isCritical ? 1.5 : 1.0;
+    var critMult = isCritical ? B('combat.enemyCritMultiplier', 1.5) : 1.0;
 
     var finalDamage = Math.max(1, Math.floor(baseDamage * reduction * critMult));
 

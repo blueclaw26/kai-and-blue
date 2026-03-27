@@ -210,8 +210,8 @@ var Item = (function() {
   // Get sell price (50% of buy, cursed = 70%, blessed = 130%)
   Item.prototype.getSellPrice = function() {
     var sellPrice = Math.floor(this.getBuyPrice() / 2);
-    if (this.cursed) sellPrice = Math.floor(sellPrice * 0.7);
-    if (this.blessed) sellPrice = Math.floor(sellPrice * 1.3);
+    if (this.cursed) sellPrice = Math.floor(sellPrice * B('curseBlessing.cursedSellMultiplier', 0.7));
+    if (this.blessed) sellPrice = Math.floor(sellPrice * B('curseBlessing.blessedSellMultiplier', 1.3));
     return sellPrice;
   };
 
@@ -267,7 +267,7 @@ var Item = (function() {
           ui.addMessage(this.name + 'を飲んだ。呪いで' + curseDmg + 'ダメージ！', 'damage');
           if (window._game) window._game.addFloatingText(player.x, player.y, '-' + curseDmg, '#ef5350');
         } else {
-          var healValue = this.blessed ? this.value * 2 : this.value;
+          var healValue = this.blessed ? this.value * B('curseBlessing.blessedEffectMultiplier', 2.0) : this.value;
           if (this.blessed) {
             player.maxHp += 5;
             ui.addMessage(this.name + 'を飲んだ。祝福の力で最大HPが5上がった！', 'heal');
@@ -620,8 +620,8 @@ var Item = (function() {
 
     if (player.satiety >= maxSat) {
       // Already full — increase max satiety (ニギライズ)
-      var increase = (this.satiety >= 100) ? 10 : 5;
-      player.maxSatiety = Math.min(player.maxSatiety + increase, 200);
+      var increase = (this.satiety >= 100) ? B('player.eatFullBigBonus', 10) : B('player.eatFullSatietyBonus', 5);
+      player.maxSatiety = Math.min(player.maxSatiety + increase, B('player.maxSatietyCap', 200));
       // Satiety goes to new max + overflow from the food
       player.satiety = player.maxSatiety + Math.floor(this.satiety * 0.5);
       ui.addMessage('おにぎりを食べた。最大満腹度が' + increase + '上がった！', 'heal');
@@ -820,9 +820,11 @@ var Item = (function() {
       // Curse/blessing chance on floor drops
       if (!item.cursed && !item.blessed) {
         var curseRoll = Math.random();
-        if (curseRoll < 0.05) {
+        var cursedChance = B('curseBlessing.floorCursedChance', 0.05);
+        var blessedChance = B('curseBlessing.floorBlessedChance', 0.03);
+        if (curseRoll < cursedChance) {
           item.cursed = true;
-        } else if (curseRoll < 0.08) {
+        } else if (curseRoll < cursedChance + blessedChance) {
           item.blessed = true;
         }
       }
