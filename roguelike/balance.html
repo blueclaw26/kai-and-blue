@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>バランス調整 — 最果ての間</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --text-dim: #8b949e;
+      --accent: #4fc3f7;
+      --accent-dim: #1a3a4a;
+      --danger: #f85149;
+      --success: #3fb950;
+      --gold: #e8a44a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .app {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    h1 span { font-size: 14px; color: var(--text-dim); font-weight: 400; margin-left: 8px; }
+    .header-actions { display: flex; gap: 8px; }
+    button {
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    button:hover { background: #1f2937; border-color: var(--accent); }
+    button.primary { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+    button.danger { border-color: var(--danger); color: var(--danger); }
+    button.danger:hover { background: #2d1b1b; }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0;
+    }
+    .tab {
+      padding: 8px 16px;
+      cursor: pointer;
+      color: var(--text-dim);
+      border-bottom: 2px solid transparent;
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .param-group {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .param-group h3 {
+      font-size: 14px;
+      color: var(--gold);
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .param-row {
+      display: grid;
+      grid-template-columns: 180px 1fr 70px 60px;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 0;
+      border-bottom: 1px solid #21262d;
+    }
+    .param-row:last-child { border-bottom: none; }
+    .param-label {
+      font-size: 13px;
+      color: var(--text);
+    }
+    .param-label small {
+      display: block;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      height: 4px;
+    }
+    input[type="number"] {
+      width: 70px;
+      padding: 4px 6px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      text-align: right;
+    }
+    input[type="number"]:focus { outline: none; border-color: var(--accent); }
+    .default-val {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-align: center;
+    }
+    .modified input[type="number"] { border-color: var(--gold); color: var(--gold); }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      background: var(--success);
+      color: #000;
+      font-weight: 600;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 999;
+    }
+    .toast.show { opacity: 1; }
+
+    .diff-view {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      font-family: 'SF Mono', 'Consolas', monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      color: var(--text-dim);
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 12px;
+    }
+    .diff-view .changed { color: var(--gold); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>⚔ バランス調整<span>最果ての間</span></h1>
+      <div class="header-actions">
+        <button class="danger" onclick="resetAll()">🔄 デフォルトに戻す</button>
+        <button class="primary" onclick="saveAll()">💾 保存</button>
+      </div>
+    </header>
+
+    <div class="tabs" id="tabs">
+      <div class="tab active" data-tab="player">プレイヤー</div>
+      <div class="tab" data-tab="combat">戦闘</div>
+      <div class="tab" data-tab="enemies">敵</div>
+      <div class="tab" data-tab="traps">罠</div>
+      <div class="tab" data-tab="items">アイテム</div>
+      <div class="tab" data-tab="dungeon">ダンジョン</div>
+      <div class="tab" data-tab="render">描画</div>
+      <div class="tab" data-tab="diff">変更差分</div>
+    </div>
+
+    <div id="sections"></div>
+    <div class="toast" id="toast">保存しました</div>
+  </div>
+
+  <script src="src/balance_config.js"></script>
+  <script>
+    // Parameter definitions: [key, label, description, min, max, step]
+    var PARAM_DEFS = {
+      player: {
+        title: 'プレイヤー',
+        groups: [
+          { name: '初期ステータス', params: [
+            ['startHp', '初期HP', '', 1, 100, 1],
+            ['startAttack', '初期攻撃力', '', 1, 50, 1],
+            ['startDefense', '初期防御力', '', 0, 50, 1],
+            ['startSatiety', '初期満腹度', '', 10, 200, 5],
+            ['maxSatiety', '最大満腹度', '', 10, 200, 5],
+            ['startStrength', '初期ちから', '', 1, 30, 1],
+            ['maxStrength', '最大ちから', '', 1, 30, 1],
+            ['maxInventory', '持ち物上限', '', 5, 40, 1],
+          ]},
+          { name: '満腹度', params: [
+            ['hungerRate', '減少率', '1ターンあたり (0.1 = 10ターンで1)', 0.01, 1.0, 0.01],
+            ['hungerSealMultiplier', '腹印の倍率', '低いほど減りにくい', 0.1, 1.0, 0.1],
+            ['hungerBraceletMultiplier', 'ハラヘリの腕輪', '高いほど減りやすい', 1.0, 5.0, 0.5],
+            ['starvationDamage', '飢餓ダメージ', 'HP/ターン', 1, 10, 1],
+          ]},
+          { name: 'レベルアップ', params: [
+            ['levelUpHp', 'HP上昇量', '', 1, 20, 1],
+            ['levelUpAttack', '攻撃力上昇量', '', 0, 10, 1],
+          ]},
+        ]
+      },
+      combat: {
+        title: '戦闘',
+        groups: [
+          { name: '基本ダメージ', params: [
+            ['damageVariance', 'ダメージ振れ幅', 'random(0..N-1)', 1, 10, 1],
+            ['minDamage', '最低ダメージ', '', 0, 10, 1],
+          ]},
+          { name: '特殊効果', params: [
+            ['critChance', '会心率', '会心の印の確率', 0.05, 1.0, 0.05],
+            ['typeEffectMultiplier', '特効倍率', '竜/仏/吸の印', 1.0, 3.0, 0.1],
+            ['counterReflect', '返印反射率', 'ダメージの何%を返すか', 0.1, 1.0, 0.1],
+            ['strengthenedMultiplier', '強化状態の倍率', '', 1.0, 3.0, 0.1],
+            ['powerupAttackBonus', 'パワーアップ攻撃+', '', 1, 20, 1],
+          ]},
+        ]
+      },
+      enemies: {
+        title: '敵',
+        groups: [
+          { name: 'スポーン設定', params: [
+            ['maxPerFloor', '最大数/フロア', '', 5, 30, 1],
+            ['statScaleInterval', 'ステ上昇間隔', 'N階ごとにスケール', 1, 20, 1],
+            ['statScaleBonus', 'スケール倍率', '1段階ごとの上昇率', 0.05, 0.5, 0.05],
+            ['turnSpawnInterval', '自然湧きターン', 'Nターンごとに1体', 10, 100, 5],
+          ]},
+          { name: 'AI', params: [
+            ['visionRange', '視界距離', 'タイル数', 2, 15, 1],
+            ['wanderChance', '徘徊確率', 'プレイヤーが見えない時', 0.1, 1.0, 0.1],
+          ]},
+        ]
+      },
+      traps: {
+        title: '罠',
+        groups: [
+          { name: 'ダメージ', params: [
+            ['landmineDamage', '地雷', '', 5, 60, 5],
+            ['pitfallDamage', '落とし穴', '', 1, 30, 1],
+            ['poisonArrowDamage', '毒矢', '', 1, 20, 1],
+            ['arrowWoodDamage', '木の矢', '', 1, 15, 1],
+            ['arrowIronDamage', '鉄の矢', '', 1, 25, 1],
+          ]},
+          { name: '状態異常', params: [
+            ['sleepTurns', '睡眠ターン', '', 1, 20, 1],
+            ['confuseTurns', '混乱ターン', '', 1, 30, 1],
+            ['hungerDrain', '満腹度減少', 'デロデロの罠', 5, 80, 5],
+          ]},
+        ]
+      },
+      items: {
+        title: 'アイテム',
+        groups: [
+          { name: 'ドロップ', params: [
+            ['enemyDropRate', '敵ドロップ率', '', 0.01, 0.5, 0.01],
+            ['goldDropRate', 'ゴールド率', 'ドロップ内の割合', 0.01, 0.5, 0.01],
+          ]},
+          { name: 'その他', params: [
+            ['grassSatietyRestore', '草の満腹度回復', '', 0, 20, 1],
+          ]},
+        ]
+      },
+      dungeon: {
+        title: 'ダンジョン',
+        groups: [
+          { name: '基本', params: [
+            ['width', 'フロア幅', 'タイル数', 20, 80, 5],
+            ['height', 'フロア高さ', 'タイル数', 15, 50, 5],
+            ['maxFloor', '最大階数', '', 10, 200, 1],
+          ]},
+          { name: '特殊フロア', params: [
+            ['mazeMinFloor', '迷路開始階', '', 1, 50, 1],
+            ['mazeChance', '迷路確率', '', 0.01, 0.3, 0.01],
+            ['bigRoomMinFloor', '大部屋開始階', '', 1, 50, 1],
+            ['bigRoomChance', '大部屋確率', '', 0.01, 0.3, 0.01],
+          ]},
+          { name: '環境', params: [
+            ['poolChance', '水たまり確率', '部屋に生成される確率', 0.0, 0.5, 0.05],
+            ['lavaMinFloor', '溶岩開始階', '', 1, 50, 1],
+            ['lavaChance', '溶岩率', '水たまりが溶岩になる確率', 0.0, 1.0, 0.1],
+          ]},
+        ]
+      },
+      render: {
+        title: '描画',
+        groups: [
+          { name: '視界', params: [
+            ['fovRadius', 'FOV半径', '見える範囲', 2, 15, 1],
+            ['tileSize', 'タイルサイズ', 'px', 12, 48, 4],
+          ]},
+        ]
+      },
+    };
+
+    var currentTab = 'player';
+
+    function buildUI() {
+      var sections = document.getElementById('sections');
+      sections.innerHTML = '';
+
+      for (var tab in PARAM_DEFS) {
+        var def = PARAM_DEFS[tab];
+        var section = document.createElement('div');
+        section.className = 'section' + (tab === currentTab ? ' active' : '');
+        section.id = 'sec-' + tab;
+
+        for (var g = 0; g < def.groups.length; g++) {
+          var group = def.groups[g];
+          var groupEl = document.createElement('div');
+          groupEl.className = 'param-group';
+          groupEl.innerHTML = '<h3>' + group.name + '</h3>';
+
+          for (var p = 0; p < group.params.length; p++) {
+            var param = group.params[p];
+            var key = param[0], label = param[1], desc = param[2];
+            var min = param[3], max = param[4], step = param[5];
+            var val = getVal(tab, key);
+            var defVal = getDefault(tab, key);
+            var isModified = JSON.stringify(val) !== JSON.stringify(defVal);
+
+            var row = document.createElement('div');
+            row.className = 'param-row' + (isModified ? ' modified' : '');
+            row.dataset.tab = tab;
+            row.dataset.key = key;
+
+            row.innerHTML =
+              '<div class="param-label">' + label + (desc ? '<small>' + desc + '</small>' : '') + '</div>' +
+              '<input type="range" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '" ' +
+                'data-tab="' + tab + '" data-key="' + key + '">' +
+              '<input type="number" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '" ' +
+                'data-tab="' + tab + '" data-key="' + key + '">' +
+              '<div class="default-val">' + defVal + '</div>';
+
+            groupEl.appendChild(row);
+          }
+          section.appendChild(groupEl);
+        }
+        sections.appendChild(section);
+      }
+
+      // Diff section
+      var diffSection = document.createElement('div');
+      diffSection.className = 'section' + ('diff' === currentTab ? ' active' : '');
+      diffSection.id = 'sec-diff';
+      diffSection.innerHTML = '<div class="param-group"><h3>現在の変更点（デフォルトとの差分）</h3><div class="diff-view" id="diff-content"></div></div>';
+      sections.appendChild(diffSection);
+
+      // Wire events
+      sections.querySelectorAll('input[type="range"]').forEach(function(slider) {
+        slider.addEventListener('input', function() {
+          var numInput = slider.parentElement.querySelector('input[type="number"]');
+          numInput.value = slider.value;
+          setVal(slider.dataset.tab, slider.dataset.key, parseFloat(slider.value));
+          updateModified(slider.parentElement);
+        });
+      });
+      sections.querySelectorAll('input[type="number"]').forEach(function(numInput) {
+        numInput.addEventListener('input', function() {
+          var slider = numInput.parentElement.querySelector('input[type="range"]');
+          slider.value = numInput.value;
+          setVal(numInput.dataset.tab, numInput.dataset.key, parseFloat(numInput.value));
+          updateModified(numInput.parentElement);
+        });
+      });
+
+      if (currentTab === 'diff') updateDiff();
+    }
+
+    function getVal(tab, key) {
+      if (tab === 'traps' && BALANCE.traps.weights && BALANCE.traps.weights[key] !== undefined) {
+        return BALANCE.traps.weights[key];
+      }
+      return BALANCE[tab][key];
+    }
+
+    function getDefault(tab, key) {
+      if (tab === 'traps' && BALANCE._defaults.traps.weights && BALANCE._defaults.traps.weights[key] !== undefined) {
+        return BALANCE._defaults.traps.weights[key];
+      }
+      return BALANCE._defaults[tab][key];
+    }
+
+    function setVal(tab, key, val) {
+      if (tab === 'traps' && BALANCE.traps.weights && BALANCE.traps.weights[key] !== undefined) {
+        BALANCE.traps.weights[key] = val;
+        return;
+      }
+      BALANCE[tab][key] = val;
+    }
+
+    function updateModified(row) {
+      var tab = row.dataset.tab;
+      var key = row.dataset.key;
+      if (!tab) {
+        // try children
+        var inp = row.querySelector('input[data-tab]');
+        if (inp) { tab = inp.dataset.tab; key = inp.dataset.key; }
+      }
+      if (!tab) return;
+      var val = getVal(tab, key);
+      var def = getDefault(tab, key);
+      if (JSON.stringify(val) !== JSON.stringify(def)) {
+        row.classList.add('modified');
+      } else {
+        row.classList.remove('modified');
+      }
+    }
+
+    function updateDiff() {
+      var el = document.getElementById('diff-content');
+      if (!el) return;
+      var lines = [];
+      for (var tab in PARAM_DEFS) {
+        var def = PARAM_DEFS[tab];
+        for (var g = 0; g < def.groups.length; g++) {
+          for (var p = 0; p < def.groups[g].params.length; p++) {
+            var param = def.groups[g].params[p];
+            var key = param[0];
+            var val = getVal(tab, key);
+            var defVal = getDefault(tab, key);
+            if (JSON.stringify(val) !== JSON.stringify(defVal)) {
+              lines.push('<span class="changed">' + def.title + '.' + param[1] + ': ' + defVal + ' → ' + val + '</span>');
+            }
+          }
+        }
+      }
+      el.innerHTML = lines.length ? lines.join('\n') : '変更なし（すべてデフォルト）';
+    }
+
+    function saveAll() {
+      BALANCE.save();
+      showToast('保存しました');
+      if (currentTab === 'diff') updateDiff();
+    }
+
+    function resetAll() {
+      if (!confirm('すべてのパラメータをデフォルトに戻しますか？')) return;
+      BALANCE.reset();
+      buildUI();
+      showToast('デフォルトに戻しました');
+    }
+
+    function showToast(msg) {
+      var toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(function() { toast.classList.remove('show'); }, 2000);
+    }
+
+    // Tab switching
+    document.getElementById('tabs').addEventListener('click', function(e) {
+      var tab = e.target.closest('.tab');
+      if (!tab) return;
+      currentTab = tab.dataset.tab;
+      document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+      var sec = document.getElementById('sec-' + currentTab);
+      if (sec) sec.classList.add('active');
+      if (currentTab === 'diff') updateDiff();
+    });
+
+    buildUI();
+  </script>
+</body>
+</html>
