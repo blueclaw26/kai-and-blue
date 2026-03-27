@@ -75,6 +75,16 @@ var Game = (function() {
     this.playerInvisible = 0;
     // Auto-explore
     this.autoExploring = false;
+    // Foot menu
+    this.footMenuOpen = false;
+    this.footMenuItem = null;
+    this.footMenuOptions = [];
+    this.footMenuIndex = 0;
+    // Throw direction mode
+    this.throwMode = false;
+    this.throwModeItem = null;
+    // Equipment detail
+    this.equipDetailOpen = false;
     // Scene
     this.scene = 'village';
     // Village storage
@@ -888,6 +898,21 @@ var Game = (function() {
     };
   };
 
+  // === Wall Digging ===
+
+  Game.prototype.digWall = function(x, y) {
+    if (this.dungeon && this.dungeon.grid[y] && this.dungeon.grid[y][x] === Dungeon.TILE.WALL) {
+      // Don't dig border walls
+      if (x <= 0 || x >= this.dungeon.width - 1 || y <= 0 || y >= this.dungeon.height - 1) {
+        return false;
+      }
+      this.dungeon.grid[y][x] = Dungeon.TILE.CORRIDOR;
+      this.ui.addMessage('壁を掘った', 'system');
+      return true;
+    }
+    return false;
+  };
+
   // === Player Movement ===
 
   Game.prototype.movePlayer = function(dx, dy) {
@@ -895,6 +920,27 @@ var Game = (function() {
 
     var newX = this.player.x + dx;
     var newY = this.player.y + dy;
+
+    // Wall digging: doskoi state or pickaxe
+    if (newX >= 0 && newX < this.dungeon.width && newY >= 0 && newY < this.dungeon.height &&
+        this.dungeon.grid[newY][newX] === Dungeon.TILE.WALL) {
+      var hasPickaxe = this.player.weapon && this.player.weapon.special === 'dig';
+      if (hasPickaxe || this.player.doskoi) {
+        if (this.digWall(newX, newY)) {
+          if (hasPickaxe) {
+            if (!this.player.weapon._digUses) this.player.weapon._digUses = 30;
+            this.player.weapon._digUses--;
+            if (this.player.weapon._digUses <= 0) {
+              this.ui.addMessage('つるはしは壊れてしまった！', 'damage');
+              this.player.removeFromInventory(this.player.weapon);
+              this.player.weapon = null;
+              this.player._recalcStats();
+            }
+          }
+          return true; // Consumes turn but don't move into the tile
+        }
+      }
+    }
 
     var enemy = this.getEnemyAt(newX, newY);
     if (enemy) {
@@ -987,7 +1033,7 @@ var Game = (function() {
               this.ui.addMessage(item.getDisplayName() + 'を拾った', 'pickup');
             }
           } else {
-            this.ui.addMessage('持ち物がいっぱいで' + item.getDisplayName() + 'を拾えない', 'system');
+            this.ui.addMessage('持ち物がいっぱいで' + item.getDisplayName() + 'を拾えない（fで足元メニュー）', 'system');
           }
         }
       }

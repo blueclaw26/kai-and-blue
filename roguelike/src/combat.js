@@ -350,6 +350,22 @@
       this.ui.addMessage('最大満腹度が7下がった！', 'enemy_special');
     }
 
+    // Curse item (higher-rank slime family): curse a random inventory item
+    if (enemy.special === 'curse_item' && !enemy.sealed && !player.godMode && Math.random() < 0.3) {
+      var curseable = [];
+      for (var ci = 0; ci < player.inventory.length; ci++) {
+        if (!player.inventory[ci].cursed) {
+          curseable.push(ci);
+        }
+      }
+      if (curseable.length > 0) {
+        var curseIdx = curseable[Math.floor(Math.random() * curseable.length)];
+        var cursedItem = player.inventory[curseIdx];
+        cursedItem.cursed = true;
+        this.ui.addMessage(cursedItem.getDisplayName() + 'が呪われた！', 'enemy_special');
+      }
+    }
+
     // Erase seal (chidoro): erase a random seal from equipped weapon or shield
     if (enemy.special === 'erase_seal' && !enemy.sealed && !player.godMode && Math.random() < 0.2) {
       var sealTargets = [];
@@ -590,6 +606,54 @@
       'strength': null
     };
     return grassSealMap[grass.effect] || null;
+  };
+
+  // --- Gitan Throw (ギタン投げ) ---
+  Game.prototype.throwGold = function(dx, dy) {
+    var player = this.player;
+    var ui = this.ui;
+
+    var amount = Math.min(player.gold, 999);
+    if (amount <= 0) {
+      ui.addMessage('ギタンを持っていない', 'system');
+      return false;
+    }
+
+    // Trace line in direction
+    var x = player.x + dx;
+    var y = player.y + dy;
+    while (x >= 0 && x < this.dungeon.width && y >= 0 && y < this.dungeon.height) {
+      if (this.dungeon.grid[y][x] === Dungeon.TILE.WALL) break;
+      var enemy = this.getEnemyAt(x, y);
+      if (enemy) {
+        // 10% miss rate
+        if (Math.random() < 0.1) {
+          player.gold -= amount;
+          ui.addMessage(amount + 'ギタンを投げたが外れた！', 'system');
+          return true;
+        }
+        // Hit!
+        var damage = amount;
+        var died = enemy.takeDamage(damage);
+        player.gold -= amount;
+        ui.addMessage(amount + 'ギタンを投げた！' + enemy.name + 'に' + damage + 'ダメージ！', 'damage');
+        this.addFloatingText(x, y, '-' + damage, '#ffd700');
+        Sound.play('hit');
+        if (died) {
+          player.enemiesKilled++;
+          Sound.play('kill');
+          ui.addMessage(enemy.name + 'を倒した！ 経験値' + enemy.exp + '獲得', 'attack');
+          player.gainExp(enemy.exp, ui);
+        }
+        return true;
+      }
+      x += dx;
+      y += dy;
+    }
+    // Missed (hit wall or out of bounds)
+    player.gold -= amount;
+    ui.addMessage(amount + 'ギタンを投げたが壁に当たった...', 'system');
+    return true;
   };
 
   // --- Arrow shooting ---
@@ -946,7 +1010,7 @@
         ty += dy;
       }
       if (dugCount > 0) {
-        ui.addMessage('壁が崩れて通路ができた！', 'system');
+        ui.addMessage('トンネルの杖を振った！壁が崩れた！', 'system');
       } else {
         ui.addMessage('杖を振ったが何も起きなかった', 'system');
       }

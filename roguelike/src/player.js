@@ -46,6 +46,9 @@ var Player = (function() {
     // Sleep state
     this.sleepTurns = 0;
 
+    // Doskoi state (ドスコイ)
+    this.doskoi = false;
+
     // God mode (debug) — use isGodMode()/setGodMode() instead of direct access
     this._godMode = false;
 
@@ -70,10 +73,17 @@ var Player = (function() {
   Player.prototype._recalcStats = function() {
     var weaponAtk = this.weapon ? this.weapon.getEffectiveAttack() : 0;
     var shieldDef = this.shield ? this.shield.getEffectiveDefense() : 0;
+    // Blessed weapon/shield bonus: +3
+    if (this.weapon && this.weapon.blessed) weaponAtk += 3;
+    if (this.shield && this.shield.blessed) shieldDef += 3;
     this.attack = this.baseAttack + (this.strength || 8) + weaponAtk + (this.level - 1);
     this.defense = this.baseDefense + shieldDef + Math.floor((this.level - 1) / 2);
     if (this.powerupTurns > 0) {
       this.attack += B('combat.powerupAttackBonus', 5);
+    }
+    // Doskoi attack boost
+    if (this.doskoi) {
+      this.attack += 10;
     }
     // Bracelet: strength boost
     if (this.bracelet && this.bracelet.effect === 'strength_boost') {
@@ -207,6 +217,23 @@ var Player = (function() {
     }
   };
 
+  // Check and update doskoi state based on satiety thresholds
+  Player.prototype.checkDoskoi = function(ui) {
+    var threshold150 = Math.floor(this.maxSatiety * 1.5);
+    var threshold120 = Math.floor(this.maxSatiety * 1.2);
+
+    if (!this.doskoi && this.satiety >= threshold150) {
+      this.doskoi = true;
+      this._recalcStats();
+      if (ui) ui.addMessage('ドスコイ状態になった！', 'levelup');
+      if (window._game) window._game.addFloatingText(this.x, this.y, 'ドスコイ！', '#ffd700');
+    } else if (this.doskoi && this.satiety <= threshold120) {
+      this.doskoi = false;
+      this._recalcStats();
+      if (ui) ui.addMessage('ドスコイ状態が解けた...', 'system');
+    }
+  };
+
   Player.prototype.tickSatiety = function(ui) {
     // Check for hunger seal (腹) on shield — halves hunger rate
     // Hunger rate: 1 satiety per 10 turns (0.1 per turn). Hunger seal halves it. Hunger bracelet doubles it.
@@ -255,6 +282,9 @@ var Player = (function() {
       }
     }
 
+    // Check doskoi state on every satiety tick
+    this.checkDoskoi(ui);
+
     return 'ok';
   };
 
@@ -289,6 +319,10 @@ var Player = (function() {
   Player.prototype.equip = function(item, ui) {
     if (item.type === 'weapon') {
       if (this.weapon === item) {
+        if (item.cursed) {
+          ui.addMessage('呪われていて外せない！', 'damage');
+          return false;
+        }
         this.weapon = null;
         this._recalcStats();
         ui.addMessage(item.name + 'を外した', 'system');
@@ -301,6 +335,10 @@ var Player = (function() {
       return true;
     } else if (item.type === 'shield') {
       if (this.shield === item) {
+        if (item.cursed) {
+          ui.addMessage('呪われていて外せない！', 'damage');
+          return false;
+        }
         this.shield = null;
         this._recalcStats();
         ui.addMessage(item.name + 'を外した', 'system');
@@ -314,6 +352,10 @@ var Player = (function() {
     }
     if (item.type === 'bracelet') {
       if (this.bracelet === item) {
+        if (item.cursed) {
+          ui.addMessage('呪われていて外せない！', 'damage');
+          return false;
+        }
         this.bracelet = null;
         this._recalcStats();
         ui.addMessage(item.name + 'を外した', 'system');

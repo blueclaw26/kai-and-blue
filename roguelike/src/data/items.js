@@ -11,6 +11,9 @@ var ITEM_DATA = {
   club: { type: 'weapon', name: 'こん棒', char: '/', color: '#a1887f', attack: 2, slots: 7, minFloor: 1, weight: 4, price: 100 },
   dragon_sword: { type: 'weapon', name: 'ドラゴンキラー', char: '/', color: '#e53935', attack: 10, slots: 5, minFloor: 8, weight: 2, price: 5000 },
 
+  // Pickaxe (つるはし) — wall digging weapon
+  pickaxe: { type: 'weapon', name: 'つるはし', char: '/', color: '#795548', attack: 3, slots: 2, minFloor: 5, weight: 2, price: 1000, special: 'dig' },
+
   // Shields
   wooden_shield: { type: 'shield', name: '木甲の盾', char: '[', color: '#a1887f', defense: 2, slots: 3, minFloor: 1, weight: 10, price: 400 },
   iron_shield: { type: 'shield', name: '鉄甲の盾', char: '[', color: '#78909c', defense: 4, slots: 4, minFloor: 3, weight: 5, price: 1000 },
@@ -47,6 +50,7 @@ var ITEM_DATA = {
   scroll_blank: { type: 'scroll', name: '白紙の巻物', char: '?', color: '#fafafa', effect: 'blank', minFloor: 15, weight: 1, price: 5000 },
   scroll_great_hall: { type: 'scroll', name: '大部屋の巻物', char: '?', color: '#ff9800', effect: 'great_hall', minFloor: 5, weight: 2, price: 2000 },
   scroll_escape: { type: 'scroll', name: '脱出の巻物', char: '?', color: '#4caf50', effect: 'escape', minFloor: 1, weight: 2, price: 1000 },
+  scroll_purify: { type: 'scroll', name: 'おはらいの巻物', char: '?', color: '#e1bee7', effect: 'purify', minFloor: 3, weight: 4, price: 500 },
 
   // Food
   onigiri: { type: 'food', name: 'おにぎり', char: '%', color: '#fff176', satiety: 50, minFloor: 1, weight: 12, price: 100 },

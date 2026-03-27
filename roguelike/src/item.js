@@ -12,6 +12,7 @@ var Item = (function() {
     this.char = data.char;
     this.color = data.color;
     this.cursed = false;
+    this.blessed = false;
 
     // Pot properties
     if (data.capacity !== undefined) {
@@ -91,6 +92,12 @@ var Item = (function() {
     } else {
       name = this.name;
     }
+
+    // Curse/blessing prefix
+    var cursePrefix = '';
+    if (this.cursed) cursePrefix = '呪';
+    if (this.blessed) cursePrefix = '祝';
+    if (cursePrefix && this.identified) name = cursePrefix + name;
 
     // Pot display
     if (this.type === 'pot') {
@@ -238,16 +245,36 @@ var Item = (function() {
     }
     switch (this.effect) {
       case 'heal':
-        var healed = Math.min(this.value, player.maxHp - player.hp);
-        player.hp = Math.min(player.hp + this.value, player.maxHp);
-        Sound.play('heal');
-        ui.addMessage(this.name + 'を飲んだ。HPが' + healed + '回復した', 'heal');
-        if (window._game) window._game.addFloatingText(player.x, player.y, '+' + healed, '#66bb6a');
+        // Cursed: damage instead of heal. Blessed: double heal + max HP up
+        if (this.cursed) {
+          var curseDmg = Math.floor(this.value * 0.5);
+          player.hp = Math.max(1, player.hp - curseDmg);
+          ui.addMessage(this.name + 'を飲んだ。呪いで' + curseDmg + 'ダメージ！', 'damage');
+          if (window._game) window._game.addFloatingText(player.x, player.y, '-' + curseDmg, '#ef5350');
+        } else {
+          var healValue = this.blessed ? this.value * 2 : this.value;
+          if (this.blessed) {
+            player.maxHp += 5;
+            ui.addMessage(this.name + 'を飲んだ。祝福の力で最大HPが5上がった！', 'heal');
+          }
+          var healed = Math.min(healValue, player.maxHp - player.hp);
+          player.hp = Math.min(player.hp + healValue, player.maxHp);
+          Sound.play('heal');
+          ui.addMessage(this.name + 'を飲んだ。HPが' + healed + '回復した', 'heal');
+          if (window._game) window._game.addFloatingText(player.x, player.y, '+' + healed, '#66bb6a');
+        }
         return true;
       case 'strength':
-        player.strength = Math.min((player.strength || 8) + this.value, (player.maxStrength || 8));
-        ui.addMessage(this.name + 'を飲んだ。ちからが' + this.value + '上がった', 'heal');
-        player._recalcStats();
+        if (this.cursed) {
+          player.strength = Math.max(0, (player.strength || 8) - this.value);
+          ui.addMessage(this.name + 'を飲んだ。呪いでちからが下がった！', 'damage');
+          player._recalcStats();
+        } else {
+          var strVal = this.blessed ? this.value * 2 : this.value;
+          player.strength = Math.min((player.strength || 8) + strVal, (player.maxStrength || 8));
+          ui.addMessage(this.name + 'を飲んだ。ちからが' + strVal + '上がった', 'heal');
+          player._recalcStats();
+        }
         return true;
       case 'cure_poison':
         // Restore strength to max
@@ -439,6 +466,22 @@ var Item = (function() {
         }
         break;
 
+      case 'purify':
+        // おはらいの巻物: remove curses from all inventory items
+        var purifiedCount = 0;
+        for (var pi = 0; pi < player.inventory.length; pi++) {
+          if (player.inventory[pi].cursed) {
+            player.inventory[pi].cursed = false;
+            purifiedCount++;
+          }
+        }
+        if (purifiedCount > 0) {
+          ui.addMessage('持ち物の呪いが解けた！（' + purifiedCount + '個）', 'heal');
+        } else {
+          ui.addMessage('おはらいの巻物を読んだ。しかし呪われたアイテムがない', 'system');
+        }
+        break;
+
       case 'sanctuary':
         // Place a sanctuary tile at player position
         game.sanctuaryTiles.add(player.x + ',' + player.y);
@@ -555,10 +598,24 @@ var Item = (function() {
     }
 
     var maxSat = player.maxSatiety || 100;
-    var oldSatiety = player.satiety;
-    player.satiety = Math.min(player.satiety + this.satiety, maxSat);
-    var restored = Math.floor(player.satiety - oldSatiety);
-    ui.addMessage('おにぎりを食べた。美味しい！（満腹度+' + restored + '）', 'heal');
+
+    if (player.satiety >= maxSat) {
+      // Already full — increase max satiety (ニギライズ)
+      var increase = (this.satiety >= 100) ? 10 : 5;
+      player.maxSatiety = Math.min(player.maxSatiety + increase, 200);
+      player.satiety = player.maxSatiety;
+      ui.addMessage('おにぎりを食べた。最大満腹度が' + increase + '上がった！', 'heal');
+      if (window._game) window._game.addFloatingText(player.x, player.y, '満腹+' + increase, '#ffd54f');
+    } else {
+      var oldSatiety = player.satiety;
+      player.satiety = Math.min(player.satiety + this.satiety, maxSat);
+      var restored = Math.floor(player.satiety - oldSatiety);
+      ui.addMessage('おにぎりを食べた。美味しい！（満腹度+' + restored + '）', 'heal');
+    }
+
+    // Check doskoi state
+    player.checkDoskoi(ui);
+
     // Reset hungry warnings
     if (player.satiety > 10) {
       player._hungryWarned = false;
@@ -720,6 +777,16 @@ var Item = (function() {
 
       var selectedKey = pickItemForFloor(floorNum);
       var item = new Item(pos.x, pos.y, selectedKey);
+
+      // Curse/blessing chance on floor drops
+      if (!item.cursed && !item.blessed) {
+        var curseRoll = Math.random();
+        if (curseRoll < 0.05) {
+          item.cursed = true;
+        } else if (curseRoll < 0.08) {
+          item.blessed = true;
+        }
+      }
 
       // Floor-based identification chance
       if (!item.identified) {

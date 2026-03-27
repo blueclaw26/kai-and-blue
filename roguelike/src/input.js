@@ -54,6 +54,26 @@ var Input = (function() {
       return;
     }
 
+    // Foot menu mode
+    if (this.game.footMenuOpen) {
+      this._handleFootMenuKey(e);
+      return;
+    }
+
+    // Throw direction mode
+    if (this.game.throwMode) {
+      this._handleThrowModeKey(e);
+      return;
+    }
+
+    // Equipment detail mode
+    if (this.game.equipDetailOpen) {
+      e.preventDefault();
+      this.game.equipDetailOpen = false;
+      this.game.ui.hideInventory();
+      return;
+    }
+
     if (this.game.scene === 'village') {
       this._handleVillageKey(e);
       return;
@@ -222,6 +242,40 @@ var Input = (function() {
       this.game.inventoryOpen = true;
       this.game.inventorySelection = 0;
       this.game.ui.renderInventory(this.game);
+      return;
+    }
+
+    // Foot menu (f key) - open context menu for item at feet
+    if ((key === 'f' || key === 'F') && this.game.scene === 'dungeon') {
+      e.preventDefault();
+      var footItem = this.game.getItemAt(this.game.player.x, this.game.player.y);
+      if (footItem && !footItem.isGold) {
+        this.game.footMenuOpen = true;
+        this.game.footMenuItem = footItem;
+        this.game.footMenuOptions = this._getFootMenuOptions(footItem);
+        this.game.footMenuIndex = 0;
+        this.game.ui.renderFootMenu(this.game);
+        return;
+      } else {
+        this.game.ui.addMessage('足元には何もない', 'system');
+        return;
+      }
+    }
+
+    // Throw gold (ギタン投げ)
+    if (key === 'G' && !e.ctrlKey) {
+      e.preventDefault();
+      var game = this.game;
+      if (game.player.gold <= 0) {
+        game.ui.addMessage('ギタンを持っていない', 'system');
+        return;
+      }
+      game.ui.addMessage('どの方向にギタンを投げる？（方向キーで選択、Escでキャンセル） [' + Math.min(game.player.gold, 999) + 'G]', 'system');
+      game.directionMode = {
+        callback: function(dx, dy) {
+          return game.throwGold(dx, dy);
+        }
+      };
       return;
     }
 
@@ -669,6 +723,18 @@ var Input = (function() {
       return;
     }
 
+    // Equipment detail view (D key)
+    if (key === 'D' && player.inventory.length > 0) {
+      var detailItem = player.inventory[game.inventorySelection];
+      if (detailItem && (detailItem.type === 'weapon' || detailItem.type === 'shield')) {
+        game.inventoryOpen = false;
+        ui.hideInventory();
+        game.equipDetailOpen = true;
+        ui.renderEquipDetail(game, detailItem);
+        return;
+      }
+    }
+
     // Action keys take priority over slot selection
     if ((key === 'e' || key === 'E' || key === 'd' || key === 't') && player.inventory.length > 0) {
       var selectedItem = player.inventory[game.inventorySelection];
@@ -790,15 +856,210 @@ var Input = (function() {
       ui.hideInventory();
       var item = selectedItem;
       ui.addMessage('どの方向に投げる？（方向キーで選択、Escでキャンセル）', 'system');
-      game.directionMode = {
-        item: item,
-        callback: function(dx, dy) {
-          return game.throwItem(item, dx, dy);
-        }
-      };
-      this.turnManager.processTurn(function() { return false; });
+      game.throwMode = true;
+      game.throwModeItem = item;
       return;
     }
+  };
+
+  // --- Foot menu helpers ---
+  Input.prototype._getFootMenuOptions = function(item) {
+    var options = [];
+    switch (item.type) {
+      case 'grass':
+        options.push({ label: '飲む', action: 'drink' });
+        options.push({ label: '投げる', action: 'throw' });
+        options.push({ label: '拾う', action: 'pickup' });
+        break;
+      case 'scroll':
+        options.push({ label: '読む', action: 'read' });
+        options.push({ label: '投げる', action: 'throw' });
+        options.push({ label: '拾う', action: 'pickup' });
+        break;
+      case 'food':
+        options.push({ label: '食べる', action: 'eat' });
+        options.push({ label: '投げる', action: 'throw' });
+        options.push({ label: '拾う', action: 'pickup' });
+        break;
+      case 'staff':
+        options.push({ label: '振る', action: 'use' });
+        options.push({ label: '投げる', action: 'throw' });
+        options.push({ label: '拾う', action: 'pickup' });
+        break;
+      case 'weapon':
+      case 'shield':
+      case 'bracelet':
+        options.push({ label: '装備する', action: 'equip' });
+        options.push({ label: '投げる', action: 'throw' });
+        options.push({ label: '拾う', action: 'pickup' });
+        break;
+      case 'pot':
+        options.push({ label: '入れる', action: 'put_in_pot' });
+        options.push({ label: '投げる', action: 'throw' });
+        options.push({ label: '拾う', action: 'pickup' });
+        break;
+      case 'arrow':
+        options.push({ label: '撃つ', action: 'shoot' });
+        options.push({ label: '投げる', action: 'throw' });
+        options.push({ label: '拾う', action: 'pickup' });
+        break;
+      default:
+        options.push({ label: '拾う', action: 'pickup' });
+        break;
+    }
+    return options;
+  };
+
+  Input.prototype._handleFootMenuKey = function(e) {
+    e.preventDefault();
+    var game = this.game;
+    var key = e.key;
+
+    if (key === 'ArrowUp' || key === 'k') {
+      game.footMenuIndex = Math.max(0, game.footMenuIndex - 1);
+      game.ui.renderFootMenu(game);
+      return;
+    }
+    if (key === 'ArrowDown' || key === 'j') {
+      game.footMenuIndex = Math.min(game.footMenuOptions.length - 1, game.footMenuIndex + 1);
+      game.ui.renderFootMenu(game);
+      return;
+    }
+    if (key === 'Enter' || key === 'e') {
+      var option = game.footMenuOptions[game.footMenuIndex];
+      var item = game.footMenuItem;
+      game.footMenuOpen = false;
+      game.ui.hideInventory();
+      this._executeFootMenuAction(game, option, item);
+      return;
+    }
+    if (key === 'Escape') {
+      game.footMenuOpen = false;
+      game.ui.hideInventory();
+      return;
+    }
+  };
+
+  Input.prototype._executeFootMenuAction = function(game, option, item) {
+    var ui = game.ui;
+    var player = game.player;
+    var self = this;
+
+    switch (option.action) {
+      case 'pickup':
+        self.turnManager.processTurn(function() {
+          return game.pickUpItem();
+        });
+        break;
+      case 'drink':
+      case 'read':
+      case 'eat':
+      case 'use':
+        // Pick up the item first, then use it
+        if (!player.canPickUp()) {
+          ui.addMessage('持ち物がいっぱいだ', 'system');
+          return;
+        }
+        game.removeItem(item);
+        player.inventory.push(item);
+        self.turnManager.processTurn(function() {
+          return game.useItem(item);
+        });
+        break;
+      case 'equip':
+        // Pick up and equip
+        if (!player.canPickUp()) {
+          ui.addMessage('持ち物がいっぱいだ', 'system');
+          return;
+        }
+        game.removeItem(item);
+        player.inventory.push(item);
+        self.turnManager.processTurn(function() {
+          return player.equip(item, ui);
+        });
+        break;
+      case 'throw':
+        // Pick up and enter throw direction mode
+        if (!player.canPickUp()) {
+          ui.addMessage('持ち物がいっぱいだ', 'system');
+          return;
+        }
+        game.removeItem(item);
+        player.inventory.push(item);
+        ui.addMessage('どの方向に投げる？（方向キーで選択、Escでキャンセル）', 'system');
+        game.throwMode = true;
+        game.throwModeItem = item;
+        break;
+      case 'shoot':
+        // Pick up and shoot arrow
+        if (!player.canPickUp()) {
+          ui.addMessage('持ち物がいっぱいだ', 'system');
+          return;
+        }
+        game.removeItem(item);
+        player.inventory.push(item);
+        ui.addMessage('どの方向に撃つ？（方向キーで選択、Escでキャンセル）', 'system');
+        game.directionMode = {
+          item: item,
+          callback: function(dx, dy) {
+            game.shootArrow(item, dx, dy);
+          }
+        };
+        break;
+      case 'put_in_pot':
+        // Pick up the pot, then enter pot put mode
+        if (!player.canPickUp()) {
+          ui.addMessage('持ち物がいっぱいだ', 'system');
+          return;
+        }
+        if (!item.contents) item.contents = [];
+        if (item.contents.length >= item.capacity) {
+          ui.addMessage('壺がいっぱいだ', 'system');
+          return;
+        }
+        game.removeItem(item);
+        player.inventory.push(item);
+        game.potPutMode = { pot: item };
+        game.inventoryOpen = true;
+        game.inventorySelection = 0;
+        ui.addMessage('どのアイテムを入れる？', 'system');
+        ui.renderInventory(game);
+        break;
+    }
+  };
+
+  // --- Throw direction mode (8-directional) ---
+  Input.prototype._handleThrowModeKey = function(e) {
+    e.preventDefault();
+    var game = this.game;
+    var key = e.key;
+    var code = e.code;
+
+    if (key === 'Escape') {
+      game.throwMode = false;
+      game.throwModeItem = null;
+      game.ui.addMessage('キャンセルした', 'system');
+      return;
+    }
+
+    var dir = this._getDirectionFromKey(key, code);
+    if (dir) {
+      var item = game.throwModeItem;
+      game.throwMode = false;
+      game.throwModeItem = null;
+      this.turnManager.processTurn(function() {
+        return game.throwItem(item, dir.dx, dir.dy);
+      });
+    }
+  };
+
+  Input.prototype._getDirectionFromKey = function(key, code) {
+    // Use KEY_MAP which already has full 8-direction support
+    var dir = KEY_MAP[code] || KEY_MAP[key];
+    if (dir) {
+      return { dx: dir[0], dy: dir[1] };
+    }
+    return null;
   };
 
   // --- Dash movement ---

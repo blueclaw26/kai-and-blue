@@ -245,6 +245,11 @@ var UI = (function() {
         html += '<span class="inv-name" style="color:' + nameColor + ';">' + escapeHtml(item.getDisplayName()) + '</span>';
         if (equipped) html += '<span class="equipped-tag">[装備中]</span>';
         html += '</div>';
+
+        // Show pot contents when pot is selected
+        if (isSelected && item.type === 'pot' && item.contents) {
+          html += this.renderPotContents(item);
+        }
       }
     }
     html += '</div>';
@@ -266,7 +271,8 @@ var UI = (function() {
     } else {
       var selectedItem2 = player.inventory.length > 0 ? player.inventory[sel] : null;
       var potHint = (selectedItem2 && selectedItem2.type === 'pot') ? ' <span>[p]</span>入れる <span>[o]</span>出す' : '';
-      html += '<span>[e]</span>使う <span>[E]</span>装備 <span>[d]</span>置く <span>[t]</span>投げる <span>[s]</span>整理' + potHint + ' <span>[↑↓]</span>選択 <span>[ESC]</span>戻る';
+      var detailHint = (selectedItem2 && (selectedItem2.type === 'weapon' || selectedItem2.type === 'shield')) ? ' <span>[D]</span>詳細' : '';
+      html += '<span>[e]</span>使う <span>[E]</span>装備 <span>[d]</span>置く <span>[t]</span>投げる <span>[s]</span>整理' + potHint + detailHint + ' <span>[↑↓]</span>選択 <span>[ESC]</span>戻る';
     }
     html += '</div>';
 
@@ -331,6 +337,112 @@ var UI = (function() {
 
     box.innerHTML = html;
     this.inventoryEl.style.display = 'flex';
+  };
+
+  // Render foot menu popup
+  UI.prototype.renderFootMenu = function(game) {
+    var box = this.inventoryBox;
+    var item = game.footMenuItem;
+    var options = game.footMenuOptions;
+    var sel = game.footMenuIndex;
+
+    var html = '<div class="inventory-title">' + escapeHtml(item.getDisplayName()) + '</div>';
+    html += '<div class="inv-items">';
+
+    for (var i = 0; i < options.length; i++) {
+      var isSelected = (i === sel);
+      html += '<div class="inv-item' + (isSelected ? ' selected' : '') + '">';
+      html += '<span class="inv-name">' + (isSelected ? '> ' : '  ') + escapeHtml(options[i].label) + '</span>';
+      html += '</div>';
+    }
+
+    html += '</div>';
+    html += '<div class="inv-actions">';
+    html += '<span>[Enter/e]</span>決定 <span>[↑↓]</span>選択 <span>[ESC]</span>キャンセル';
+    html += '</div>';
+
+    box.innerHTML = html;
+    this.inventoryEl.style.display = 'flex';
+  };
+
+  // Render equipment detail view
+  UI.prototype.renderEquipDetail = function(game, item) {
+    var box = this.inventoryBox;
+    var isWeapon = (item.type === 'weapon');
+
+    var name = item.getDisplayName();
+    var baseStat = isWeapon ? (item.attack - (item.plus || 0)) : (item.defense - (item.plus || 0));
+    var totalStat = isWeapon ? item.getEffectiveAttack() : item.getEffectiveDefense();
+    var statLabel = isWeapon ? '攻撃力' : '防御力';
+
+    var html = '<div class="inventory-title">' + escapeHtml(name) + '</div>';
+    html += '<div class="inv-items" style="padding:8px 12px;">';
+
+    // Stat line
+    html += '<div style="color:#e0e0e0;margin-bottom:8px;">' + statLabel + ': ' + totalStat;
+    if (item.plus !== 0) {
+      html += ' (' + baseStat + (item.plus >= 0 ? '+' : '') + item.plus + ')';
+    }
+    html += '</div>';
+
+    // Seal display
+    var maxSeals = item.slots || 3;
+    var seals = item.seals || [];
+    var sealStr = '';
+    for (var i = 0; i < maxSeals; i++) {
+      if (i < seals.length) {
+        var sd = SEAL_DATA[seals[i]];
+        var sealName = sd ? sd.name : '?';
+        sealStr += '<span style="color:#fff;background:#555;padding:1px 4px;margin:0 2px;border-radius:2px;">' + sealName + '</span>';
+      } else {
+        sealStr += '<span style="color:#666;background:#333;padding:1px 4px;margin:0 2px;border-radius:2px;">　</span>';
+      }
+    }
+    html += '<div style="margin-bottom:4px;">印: ' + sealStr + '</div>';
+    html += '<div style="color:#888;margin-bottom:12px;">残り印枠: ' + (maxSeals - seals.length) + '</div>';
+
+    // Seal descriptions
+    if (seals.length > 0) {
+      html += '<div style="border-top:1px solid #333;padding-top:8px;">';
+      for (var j = 0; j < seals.length; j++) {
+        var sealData = SEAL_DATA[seals[j]];
+        if (sealData) {
+          html += '<div style="color:#b0b8c8;margin:2px 0;">';
+          html += '<span style="color:#e8a44a;">' + sealData.name + '</span>: ' + escapeHtml(sealData.desc);
+          html += '</div>';
+        }
+      }
+      html += '</div>';
+    }
+
+    html += '</div>';
+    html += '<div class="inv-actions">';
+    html += '<span>[任意キー]</span>閉じる';
+    html += '</div>';
+
+    box.innerHTML = html;
+    this.inventoryEl.style.display = 'flex';
+  };
+
+  // Render pot contents in inventory
+  UI.prototype.renderPotContents = function(pot) {
+    var html = '';
+    if (!pot.contents || pot.contents.length === 0) {
+      html += '<div style="color:#666;padding:2px 24px;font-size:12px;">└ (空)</div>';
+    } else {
+      for (var i = 0; i < pot.contents.length; i++) {
+        var ci = pot.contents[i];
+        var prefix = (i === pot.contents.length - 1) ? '└' : '├';
+        html += '<div style="color:#aaa;padding:1px 24px;font-size:12px;">';
+        html += prefix + ' <span style="color:' + ci.color + ';">' + ci.char + '</span> ' + escapeHtml(ci.getDisplayName());
+        html += '</div>';
+      }
+      var remaining = pot.capacity - pot.contents.length;
+      if (remaining > 0) {
+        html += '<div style="color:#666;padding:1px 24px;font-size:12px;">└ (空き ' + remaining + ')</div>';
+      }
+    }
+    return html;
   };
 
   UI.prototype.showGameOver = function(floor, level) {
