@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>環境分離の設計と実装 — Kai & Blue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back">&larr; ホームに戻る</a>
+
+    <header>
+      <h1>環境分離の設計と実装</h1>
+      <p class="subtitle">コメントアウトから卒業し、production/staging分離に至るまで</p>
+    </header>
+
+    <section>
+      <div class="learn">
+        <span class="learn-label">ここで学ぶこと:</span>
+        <span class="term" data-explain="開発・テスト・本番など目的別にシステムを分けること。同じコードを異なる設定で動かせる。">環境分離</span>
+        <span class="term" data-explain="アプリケーションの外側から設定値を注入する仕組み。コード変更なしで振る舞いを変えられる。">環境変数</span>
+        <span class="term" data-explain="Platform as a Service。サーバー管理不要でアプリをデプロイできるクラウドサービス。">PaaS</span>
+        <span class="term" data-explain="コードの変更を自動でテスト・デプロイする仕組み。gitブランチと連携して環境ごとに自動デプロイ。">CI/CD</span>
+        <span class="term" data-explain="ドメイン名をIPアドレスに変換する仕組み。独自ドメインの設定に使う。">DNS</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>きっかけ — コメントアウトの限界</h2>
+      <p>最初のやり方は単純だった。テスト時にはコードの一部をコメントアウトし、本番デプロイ時に戻す。それだけ。</p>
+      <pre><code>// テスト時はここをコメントアウト
+// if (!verifyIdentity(user)) return res.status(403).send('認証失敗');
+
+// テスト時はこっちを有効に
+res.status(200).send('OK'); // 常にパス</code></pre>
+      <p>問題は明らかだった。</p>
+      <ul>
+        <li>本番デプロイ時にコメントを戻し忘れる → テスト設定のまま公開</li>
+        <li>どこをコメントアウトしたか覚えていない</li>
+        <li>複数ファイルにまたがるとさらに危険</li>
+      </ul>
+      <p>決定打はAIサブエージェントによるリファクタリング中の事故だった。サブエージェントは本番DBと開発DBの区別がつかない。大規模なコード変更の過程で、本番データベースが初期化されてしまった。</p>
+      <p>構造的に事故を防ぐ仕組みが必要だと痛感した。</p>
+    </section>
+
+    <section>
+      <h2>環境変数という解決策</h2>
+      <p>環境変数を使えば、コードを一切変えずに振る舞いを変えられる。</p>
+      <pre><code>// コード内での分岐
+if (process.env.SKIP_EKYC === '1') {
+  // 本人確認をスキップ（staging環境のみ）
+} else {
+  // 通常の本人確認フロー（production環境）
+}</code></pre>
+      <p>テスト用の環境変数はstaging環境にだけ設定する。productionには設定しない。つまり、productionでは自動的に安全な方に倒れる。</p>
+
+      <div class="step">
+        <h3>テスト用環境変数</h3>
+        <table class="env-table">
+          <tr><th>変数名</th><th>用途</th><th>production</th><th>staging</th></tr>
+          <tr><td><code>SKIP_EKYC</code></td><td>本人確認スキップ</td><td>未設定（通常フロー）</td><td><code>1</code></td></tr>
+          <tr><td><code>SKIP_COOLDOWN</code></td><td>クールダウン無効</td><td>未設定（65日制限）</td><td><code>1</code></td></tr>
+          <tr><td><code>RESET_TOKEN</code></td><td>データリセットAPI</td><td>未設定（API無効）</td><td>設定済み</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>インフラの変遷</h2>
+
+      <div class="step">
+        <span class="step-number">Phase 1</span>
+        <h3>VPS + SQLite</h3>
+        <p>手動デプロイ。環境は1つ。sshでサーバーに入ってgit pullして再起動。</p>
+        <div class="infra-flow">
+          <span class="flow-box">開発PC</span>
+          <span class="flow-arrow">→ ssh →</span>
+          <span class="flow-box">VPS (SQLite)</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Phase 2</span>
+        <h3>PaaS + PostgreSQL</h3>
+        <p>GitHubへのpushで自動デプロイ。DBもマネージドに。でもまだ環境は1つ。</p>
+        <div class="infra-flow">
+          <span class="flow-box">GitHub</span>
+          <span class="flow-arrow">→ auto →</span>
+          <span class="flow-box">PaaS (PostgreSQL)</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-number">Phase 3</span>
+        <h3>PaaS Pro Plan + Environments</h3>
+        <p>production/staging分離。ブランチごとに自動デプロイ先が分かれる。</p>
+        <div class="infra-flow">
+          <span class="flow-box">GitHub main</span>
+          <span class="flow-arrow">→ auto →</span>
+          <span class="flow-box highlight-prod">Production</span>
+        </div>
+        <div class="infra-flow">
+          <span class="flow-box">GitHub dev</span>
+          <span class="flow-arrow">→ auto →</span>
+          <span class="flow-box highlight-staging">Staging</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>ブランチ戦略</h2>
+      <p>gitのブランチとデプロイ先を対応させる。</p>
+      <ul>
+        <li><strong>main</strong>ブランチ → production環境に自動デプロイ</li>
+        <li><strong>dev</strong>ブランチ → staging環境に自動デプロイ</li>
+      </ul>
+      <p>開発はdevで行い、確認できたらmainにマージ。AI（サブエージェント）もdevブランチで作業し、staging環境でテスト、問題なければmainにマージする。</p>
+      <p>これにより、AIが本番を直接触ることがなくなる。構造的に安全。</p>
+    </section>
+
+    <section>
+      <h2>Kaiが学んだこと</h2>
+      <ul>
+        <li>「環境分離は大企業だけのもの」は間違い。個人開発でも必須</li>
+        <li>事故が起きてから対策するのではなく、構造的に事故を防ぐ</li>
+        <li>環境変数は「設定のコード外出し」という単純な概念</li>
+        <li>PaaSのEnvironments機能で、個人でも簡単に実現できる</li>
+        <li>AIと開発する場合、AIが本番を壊せない構造が特に重要</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>使用技術</h2>
+      <div class="tech-list">
+        <a href="../tech/#paas">PaaS</a>
+        <a href="../tech/#postgresql">PostgreSQL</a>
+        <a href="../tech/#git">Git</a>
+        <a href="../tech/#cicd">CI/CD</a>
+        <a href="../tech/#dns">DNS</a>
+      </div>
+    </section>
+  </div>
+
+  <script>
+document.querySelectorAll('.term').forEach(term => {
+  term.addEventListener('click', () => {
+    const existing = term.nextElementSibling;
+    if (existing && existing.classList.contains('term-explain')) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('.term-explain').forEach(el => el.remove());
+    const explain = document.createElement('div');
+    explain.className = 'term-explain';
+    explain.textContent = term.dataset.explain;
+    term.parentNode.insertBefore(explain, term.nextSibling);
+  });
+});
+  </script>
+</body>
+</html>
