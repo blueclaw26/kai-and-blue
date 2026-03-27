@@ -86,7 +86,14 @@ var ITEM_DATA = {
   // Arrows (矢)
   arrow_wood: { type: 'arrow', name: '木の矢', char: ')', color: '#a1887f', damage: 3, minFloor: 1, weight: 6, price: 50 },
   arrow_iron: { type: 'arrow', name: '鉄の矢', char: ')', color: '#78909c', damage: 7, minFloor: 4, weight: 4, price: 100 },
-  arrow_silver: { type: 'arrow', name: '銀の矢', char: ')', color: '#e0e0e0', damage: 12, minFloor: 8, weight: 2, price: 200 }
+  arrow_silver: { type: 'arrow', name: '銀の矢', char: ')', color: '#e0e0e0', damage: 12, minFloor: 8, weight: 2, price: 200 },
+
+  // Incense (お香)
+  incense_sight: { type: 'incense', name: '視界不良のお香', char: '&', color: '#78909c', effect: 'blind_enemies', duration: 30, minFloor: 10, weight: 2, price: 3000 },
+  incense_calm: { type: 'incense', name: '身かわしのお香', char: '&', color: '#4dd0e1', effect: 'evasion', duration: 30, minFloor: 8, weight: 2, price: 2500 },
+  incense_fire_resist: { type: 'incense', name: '耐熱耐爆のお香', char: '&', color: '#ff8a65', effect: 'fire_resist', duration: 50, minFloor: 15, weight: 1, price: 4000 },
+  incense_protect: { type: 'incense', name: '守りのお香', char: '&', color: '#a5d6a7', effect: 'protect', duration: 40, minFloor: 12, weight: 1, price: 3500 },
+  incense_sleep: { type: 'incense', name: '睡眠よけのお香', char: '&', color: '#ce93d8', effect: 'sleep_resist', duration: 40, minFloor: 10, weight: 2, price: 2000 }
 };
 
 // Unidentified name pools - shuffled per run
@@ -94,7 +101,8 @@ var UNIDENTIFIED_NAMES = {
   grass: ['青い草', '赤い草', '黄色い草', '緑の草', '紫の草', '白い草', '黒い草', '橙の草', '金色の草', '銀の草', '茶色い草', '灰色の草'],
   scroll: ['漢字の巻物', 'ひらがなの巻物', 'カタカナの巻物', '記号の巻物', '右上がりの巻物', '左下がりの巻物', '太字の巻物', '細字の巻物', '丸文字の巻物', '達筆の巻物', '暗号の巻物', '古代文字の巻物'],
   staff: ['短い杖', '長い杖', '太い杖', '細い杖', '赤い杖', '青い杖', '白い杖', '黒い杖', '金の杖', '銀の杖'],
-  pot: ['丸い壺', '四角い壺', '細長い壺', '平たい壺', '光る壺', '古びた壺']
+  pot: ['丸い壺', '四角い壺', '細長い壺', '平たい壺', '光る壺', '古びた壺'],
+  incense: ['赤いお香', '青いお香', '緑のお香', '紫のお香', '白いお香', '黒いお香']
 };
 
 // Identification globals — initialized per run in initIdentification()
@@ -115,7 +123,7 @@ function initIdentification() {
   window.FAKE_NAME_MAP = {};
 
   // Group item keys by category
-  var groups = { grass: [], scroll: [], staff: [] };
+  var groups = { grass: [], scroll: [], staff: [], incense: [] };
   for (var key in ITEM_DATA) {
     var d = ITEM_DATA[key];
     if (groups[d.type]) {

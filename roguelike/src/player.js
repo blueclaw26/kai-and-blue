@@ -383,7 +383,8 @@ var Player = (function() {
       'scroll': 5,
       'staff': 6,
       'pot': 7,
-      'food': 8
+      'food': 8,
+      'incense': 9
     };
 
     this.inventory.sort(function(a, b) {

@@ -26,7 +26,7 @@ var Item = (function() {
       if (data.damage !== undefined) this.damage = data.damage;
     }
 
-    // Identification: weapons, shields, food, bracelets, arrows, and 脱出の巻物 are always identified
+    // Identification: weapons, shields, food, bracelets, arrows, and special scrolls are always identified
     if (this.type === 'weapon' || this.type === 'shield' || this.type === 'food' || this.type === 'bracelet' || this.type === 'arrow' || dataKey === 'scroll_escape' || dataKey === 'scroll_blank') {
       this.identified = true;
     } else {
@@ -43,6 +43,7 @@ var Item = (function() {
     if (data.uses !== undefined) this.uses = data.uses;
     if (data.special !== undefined) this.special = data.special;
     if (data.price !== undefined) this.price = data.price;
+    if (data.duration !== undefined) this.duration = data.duration;
 
     // Pickaxe durability
     if (data.special === 'dig') {
@@ -197,14 +198,21 @@ var Item = (function() {
     return (this.defense || 0) + (this.plus || 0);
   };
 
-  // Get buy price
+  // Get buy price (base price + modifier bonus for weapons/shields)
   Item.prototype.getBuyPrice = function() {
-    return this.price || 100;
+    var base = this.price || 100;
+    if ((this.type === 'weapon' || this.type === 'shield') && this.modifier) {
+      base += this.modifier * 200;
+    }
+    return base;
   };
 
-  // Get sell price (50% of buy)
+  // Get sell price (50% of buy, cursed = 70%, blessed = 130%)
   Item.prototype.getSellPrice = function() {
-    return Math.floor(this.getBuyPrice() / 2);
+    var sellPrice = Math.floor(this.getBuyPrice() / 2);
+    if (this.cursed) sellPrice = Math.floor(sellPrice * 0.7);
+    if (this.blessed) sellPrice = Math.floor(sellPrice * 1.3);
+    return sellPrice;
   };
 
   Item.prototype.use = function(game, player) {
@@ -219,6 +227,8 @@ var Item = (function() {
         return this._useFood(game, player);
       case 'staff':
         return this._useStaff(game, player);
+      case 'incense':
+        return this._useIncense(game, player);
       case 'arrow':
         return this._useArrow(game, player);
       case 'pot':
@@ -288,8 +298,12 @@ var Item = (function() {
         ui.addMessage(this.name + 'を飲んだ。ちからが回復した', 'heal');
         return true;
       case 'sleep_self':
-        player.sleepTurns = this.value || 5;
-        ui.addMessage(this.name + 'を飲んだ。眠くなった...', 'damage');
+        if (game.activeIncense && game.activeIncense.effect === 'sleep_resist') {
+          ui.addMessage(this.name + 'を飲んだ。...しかしお香の効果で眠らなかった！', 'system');
+        } else {
+          player.sleepTurns = this.value || 5;
+          ui.addMessage(this.name + 'を飲んだ。眠くなった...', 'damage');
+        }
         return true;
       case 'confuse_self':
         player.addStatusEffect('confused', this.value || 10, ui);
@@ -633,6 +647,24 @@ var Item = (function() {
     if (player.satiety > 50) {
       player._hunger50Warned = false;
     }
+    return true;
+  };
+
+  Item.prototype._useIncense = function(game, player) {
+    var ui = game.ui;
+    // Using incense identifies it
+    if (!this.identified) {
+      var fakeName = this.getDisplayName();
+      this.identify();
+      ui.addMessage('それは' + this.name + 'だった！', 'pickup');
+    }
+    var data = ITEM_DATA[this.dataKey];
+    game.activeIncense = {
+      effect: this.effect,
+      remainingTurns: data.duration,
+      name: this.name
+    };
+    ui.addMessage(this.name + 'の煙が広がった！', 'heal');
     return true;
   };
 

@@ -170,6 +170,12 @@ var FLOOR_TABLE = {
     [15, 99, 'scroll_blank', 1],
     [3, 99, 'scroll_purify', 3],
     // Pickaxe
-    [5, 99, 'pickaxe', 2]
+    [5, 99, 'pickaxe', 2],
+    // Incense (お香)
+    [8, 99, 'incense_calm', 1],
+    [10, 99, 'incense_sight', 1],
+    [10, 99, 'incense_sleep', 1],
+    [12, 99, 'incense_protect', 1],
+    [15, 99, 'incense_fire_resist', 1]
   ]
 };

@@ -56,6 +56,8 @@ var Game = (function() {
     this.blankScrollSelection = 0;
     // Dungeon NPCs
     this.dungeonNPCs = [];
+    // Active incense (お香)
+    this.activeIncense = null; // { effect: string, remainingTurns: number, name: string }
     // Merchant/blacksmith modes
     this.merchantMode = null;
     this.merchantSelection = 0;
@@ -550,6 +552,7 @@ var Game = (function() {
     this.sightBoost = 0;
     this.playerInvisible = 0;
     this.autoExploring = false;
+    this.activeIncense = null;
 
     if (!this.player) {
       this.player = new Player(this.dungeon.playerStart.x, this.dungeon.playerStart.y);
@@ -982,10 +985,14 @@ var Game = (function() {
       if (steppedTile === Dungeon.TILE.LAVA) {
         if (!(this.player.bracelet && this.player.bracelet.effect === 'float')) {
           if (!this.player.godMode && !this.player.hasStatusEffect('invincible')) {
-            this.player.hp -= 5;
-            this.ui.addMessage('溶岩で5ダメージ！', 'damage');
-            this.addFloatingText(newX, newY, '-5', '#f44336');
-            if (this._checkPlayerDeath()) return true;
+            if (this.activeIncense && this.activeIncense.effect === 'fire_resist') {
+              this.ui.addMessage('お香の効果で溶岩のダメージを無効化した！', 'system');
+            } else {
+              this.player.hp -= 5;
+              this.ui.addMessage('溶岩で5ダメージ！', 'damage');
+              this.addFloatingText(newX, newY, '-5', '#f44336');
+              if (this._checkPlayerDeath()) return true;
+            }
           }
         }
       }
@@ -1022,7 +1029,9 @@ var Game = (function() {
           this.removeItem(item);
           this.ui.addMessage(item.goldAmount + 'ギタンを拾った', 'pickup');
         } else if (item.shopItem && !this.shopkeeperHostile) {
-          this.ui.addMessage(item.getDisplayName() + 'がある（' + item.getBuyPrice() + 'ギタン / gで手に取る）', 'system');
+          var displayName = item.getDisplayName();
+          var priceStr = item.getBuyPrice() + 'G';
+          this.ui.addMessage(displayName + 'がある（' + priceStr + ' / gで手に取る）', 'system');
         } else {
           if (this.player.inventory.length < 20) {
             var idx = this.items.indexOf(item);
@@ -1088,6 +1097,15 @@ var Game = (function() {
       this.playerInvisible--;
       if (this.playerInvisible === 0) {
         this.ui.addMessage('透明の効果が切れた', 'system');
+      }
+    }
+
+    // Incense countdown
+    if (this.activeIncense) {
+      this.activeIncense.remainingTurns--;
+      if (this.activeIncense.remainingTurns <= 0) {
+        this.ui.addMessage(this.activeIncense.name + 'の効果が切れた', 'system');
+        this.activeIncense = null;
       }
     }
 

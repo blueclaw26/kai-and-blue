@@ -126,6 +126,11 @@ var Enemy = (function() {
     // Skull Dragon: floor-wide fire every 3 turns
     if (this.special === 'floorfire' && !this.sealed) {
       if (this._turnCount % 3 === 0) {
+        // Fire resist incense negates fire damage
+        if (game.activeIncense && game.activeIncense.effect === 'fire_resist') {
+          game.ui.addMessage('どこからか炎が飛んできた！ お香の効果で炎を無効化した！', 'system');
+          return;
+        }
         var fireDmg = 20;
         // Check for dragon_resist seal on shield
         var hasDragonResist = (player.shield && player.shield.seals && player.shield.seals.indexOf('dragon_resist') !== -1) ||
@@ -151,6 +156,11 @@ var Enemy = (function() {
     if (this.special === 'firebreath' && !this.sealed && dist <= 8) {
       if ((dx === 0 || dy === 0) && this._hasLineOfSight(game, this.x, this.y, player.x, player.y)) {
         var fireDmg = 15 + Math.floor(Math.random() * 6); // 15-20
+        // Fire resist incense negates fire damage
+        if (game.activeIncense && game.activeIncense.effect === 'fire_resist') {
+          game.ui.addMessage('ドラゴンが火を吐いた！ お香の効果で炎を無効化した！', 'system');
+          return;
+        }
         var hasDragonResistBreath = (player.shield && player.shield.seals && player.shield.seals.indexOf('dragon_resist') !== -1) ||
                                     (player.shield && player.shield.special === 'dragon_resist');
         if (hasDragonResistBreath) {
@@ -173,6 +183,16 @@ var Enemy = (function() {
     // Arrow shot (boy_cart, child_tank): shoots arrow in straight line
     if (this.special === 'arrow_shot' && !this.sealed && dist <= 5) {
       if ((dx === 0 || dy === 0) && this._hasLineOfSight(game, this.x, this.y, player.x, player.y)) {
+        // Evasion incense: arrow misses and drops on the ground
+        if (game.activeIncense && game.activeIncense.effect === 'evasion') {
+          var arrowKey = this.enemyId === 'child_tank' ? 'arrow_iron' : 'arrow_wood';
+          var droppedArrow = new Item(player.x, player.y, arrowKey);
+          droppedArrow.count = 1;
+          game.items.push(droppedArrow);
+          game.ui.addMessage('お香の効果で矢が逸れた！ 足元に落ちた', 'system');
+          Sound.play('arrow');
+          return;
+        }
         var arrowDmg = this.enemyId === 'child_tank' ? 6 : 3;
         game.ui.addMessage(this.name + 'が矢を放った！ ' + arrowDmg + 'ダメージ', 'enemy_special');
         if (!player.godMode) player.hp -= arrowDmg;
@@ -191,6 +211,11 @@ var Enemy = (function() {
     // Bomb shot (oyaji_tank): shoots bomb for 20 fixed damage
     if (this.special === 'bomb_shot' && !this.sealed && dist <= 5) {
       if ((dx === 0 || dy === 0) && this._hasLineOfSight(game, this.x, this.y, player.x, player.y)) {
+        // Fire resist incense negates explosion damage
+        if (game.activeIncense && game.activeIncense.effect === 'fire_resist') {
+          game.ui.addMessage('オヤジ戦車は大砲を撃った！ お香の効果で爆風を無効化した！', 'system');
+          return;
+        }
         var bombDmg = 20;
         var hasBlastRes = (player.shield && player.shield.seals && player.shield.seals.indexOf('blast_resist') !== -1) ||
                           (player.shield && player.shield.special === 'blast_resist');
@@ -274,8 +299,12 @@ var Enemy = (function() {
           game.ui.addMessage(this.name + 'が杖を振った！ レベルが3下がった！', 'enemy_special');
         } else if (magicRoll < 0.5) {
           // Sleep 10 turns
-          player.sleepTurns = 10;
-          game.ui.addMessage(this.name + 'が杖を振った！ 深い眠りに落ちた！', 'enemy_special');
+          if (game.activeIncense && game.activeIncense.effect === 'sleep_resist') {
+            game.ui.addMessage(this.name + 'が杖を振った！ ...しかしお香の効果で眠らなかった！', 'system');
+          } else {
+            player.sleepTurns = 10;
+            game.ui.addMessage(this.name + 'が杖を振った！ 深い眠りに落ちた！', 'enemy_special');
+          }
         } else if (magicRoll < 0.75) {
           // Confuse 10 turns
           player.addStatusEffect('confused', 10, game.ui);
@@ -417,6 +446,12 @@ var Enemy = (function() {
 
   // Can this enemy see the player? (same room or within FOV range)
   Enemy.prototype._canSeePlayer = function(game) {
+    // Blind enemies incense: vision reduced to 1 tile
+    if (game.activeIncense && game.activeIncense.effect === 'blind_enemies') {
+      var bdx = Math.abs(game.player.x - this.x);
+      var bdy = Math.abs(game.player.y - this.y);
+      return (bdx <= 1 && bdy <= 1);
+    }
     // Same room check
     if (this._inSameRoom(game)) return true;
     // Within visionRange tiles with line of sight

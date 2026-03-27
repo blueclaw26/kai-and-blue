@@ -903,6 +903,11 @@ var Input = (function() {
         options.push({ label: '投げる', action: 'throw' });
         options.push({ label: '拾う', action: 'pickup' });
         break;
+      case 'incense':
+        options.push({ label: '焚く', action: 'use' });
+        options.push({ label: '投げる', action: 'throw' });
+        options.push({ label: '拾う', action: 'pickup' });
+        break;
       default:
         options.push({ label: '拾う', action: 'pickup' });
         break;

@@ -181,6 +181,18 @@ var UI = (function() {
     var effectsEl = document.getElementById('status-effects');
     if (effectsEl) {
       var effectText = p.getStatusEffectText ? p.getStatusEffectText() : '';
+      // Show active incense
+      if (game.activeIncense) {
+        var incenseLabels = {
+          'blind_enemies': '👁 視界不良',
+          'evasion': '💨 身かわし',
+          'fire_resist': '🔥 耐熱耐爆',
+          'protect': '🛡 守り',
+          'sleep_resist': '😴 睡眠よけ'
+        };
+        var incenseLabel = incenseLabels[game.activeIncense.effect] || game.activeIncense.name;
+        effectText += (effectText ? ' ' : '') + incenseLabel + '(' + game.activeIncense.remainingTurns + ')';
+      }
       effectsEl.textContent = effectText;
     }
 

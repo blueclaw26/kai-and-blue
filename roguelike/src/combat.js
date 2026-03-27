@@ -230,6 +230,10 @@
     }
 
     if (player.godMode || player.hasStatusEffect('invincible')) damage = 0;
+    // Protect incense: 50% damage reduction
+    if (damage > 0 && this.activeIncense && this.activeIncense.effect === 'protect') {
+      damage = Math.max(1, Math.floor(damage * 0.5));
+    }
     if (damage > 0) {
       Sound.play('damage');
       this.addFloatingText(player.x, player.y, '-' + damage, '#ef5350');
@@ -1224,13 +1228,19 @@
     switch (trap.effect) {
       case 'explosion':
         var blastDmg = B('traps.landmineDamage', 20);
-        var hasBlastResist = (player.shield && player.shield.seals && player.shield.seals.indexOf('blast_resist') !== -1) ||
-                             (player.shield && player.shield.special === 'blast_resist');
-        if (hasBlastResist) {
-          blastDmg = Math.floor(blastDmg * 0.5);
-          ui.addMessage('地雷が爆発した！ [爆]印が爆風を防いだ！ ' + blastDmg + 'ダメージ', 'damage');
+        // Fire resist incense negates explosion damage
+        if (this.activeIncense && this.activeIncense.effect === 'fire_resist') {
+          ui.addMessage('地雷が爆発した！ お香の効果で爆風を無効化した！', 'system');
+          blastDmg = 0;
         } else {
-          ui.addMessage('地雷が爆発した！ ' + blastDmg + 'ダメージ', 'damage');
+          var hasBlastResist = (player.shield && player.shield.seals && player.shield.seals.indexOf('blast_resist') !== -1) ||
+                               (player.shield && player.shield.special === 'blast_resist');
+          if (hasBlastResist) {
+            blastDmg = Math.floor(blastDmg * 0.5);
+            ui.addMessage('地雷が爆発した！ [爆]印が爆風を防いだ！ ' + blastDmg + 'ダメージ', 'damage');
+          } else {
+            ui.addMessage('地雷が爆発した！ ' + blastDmg + 'ダメージ', 'damage');
+          }
         }
         if (!player.godMode) player.hp -= blastDmg;
         for (var i = 0; i < this.enemies.length; i++) {
@@ -1281,8 +1291,12 @@
         break;
 
       case 'sleep':
-        ui.addMessage('睡眠ガスを吸い込んだ！', 'damage');
-        player.sleepTurns = B('traps.sleepTurns', 5);
+        if (this.activeIncense && this.activeIncense.effect === 'sleep_resist') {
+          ui.addMessage('睡眠ガスを吸い込んだ！ ...しかしお香の効果で眠らなかった！', 'system');
+        } else {
+          ui.addMessage('睡眠ガスを吸い込んだ！', 'damage');
+          player.sleepTurns = B('traps.sleepTurns', 5);
+        }
         break;
 
       case 'confuse':

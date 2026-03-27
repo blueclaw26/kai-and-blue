@@ -148,7 +148,8 @@ var Renderer = (function() {
     food: 'food',
     pot: 'pot',
     bracelet: 'bracelet',
-    arrow: 'arrow'
+    arrow: 'arrow',
+    incense: 'incense'
   };
 
   function Renderer(canvas, minimapCanvas) {

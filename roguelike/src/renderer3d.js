@@ -1492,6 +1492,19 @@ var Renderer3D = (function() {
       ie.mesh.rotation.y += 0.02;
       ie.mesh.visible = true;
       this._itemMeshes[iKey] = ie.mesh;
+
+      // Shop price label (CSS2D)
+      if (item.shopItem && !game.shopkeeperHostile && this.css2dRenderer) {
+        if (!ie.mesh.userData._priceLabel) {
+          var priceDiv = document.createElement('div');
+          priceDiv.textContent = item.getBuyPrice() + 'G';
+          priceDiv.style.cssText = 'color:#ffd700;font-size:12px;font-weight:bold;text-shadow:1px 1px 2px black;pointer-events:none;';
+          var priceLabel = new THREE.CSS2DObject(priceDiv);
+          priceLabel.position.set(0, 0.8, 0);
+          ie.mesh.add(priceLabel);
+          ie.mesh.userData._priceLabel = priceLabel;
+        }
+      }
     }
 
     // --- Traps ---

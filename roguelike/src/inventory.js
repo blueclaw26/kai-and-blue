@@ -60,7 +60,7 @@
     item.y = this.player.y;
     this.items.push(item);
 
-    // If dropping in shop room → sell offer
+    // If dropping in shop room → sell offer (with price identification)
     if (this.isInShop(this.player.x, this.player.y) && !this.shopkeeperHostile && this.getShopkeeper()) {
       var sellPrice = item.getSellPrice();
       this.ui.addMessage('店主「' + item.getDisplayName() + 'を' + sellPrice + 'ギタンで買い取るよ」(y/n)', 'system');
