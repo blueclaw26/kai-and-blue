@@ -3,85 +3,200 @@
 (function() {
   'use strict';
 
-  // --- Player attack with weapon specials ---
-  Game.prototype.playerAttack = function(enemy) {
-    var player = this.player;
-    var dmgVar = B('combat.damageVariance', 3);
-    var rawDmg = player.attack - enemy.defense + Math.floor(Math.random() * dmgVar) - 1;
-    var damage = Math.max(B('combat.minDamage', 1), rawDmg);
+  // --- Shiren 6 Damage Formula Helpers ---
 
-    // Apply seal effects from equipped weapon
-    if (player.weapon) {
-      var seals = player.weapon.seals || [];
-      var sealMultiplier = 1;
-      var sealMessages = [];
-      var typeEffMult = B('combat.typeEffectMultiplier', 1.5);
+  // Count effective seals on weapon against enemy type (additive: each adds +0.5 multiplier)
+  function countEffectiveSeals(weapon, enemy) {
+    var count = 0;
+    var seals = weapon.seals || [];
+    for (var i = 0; i < seals.length; i++) {
+      switch (seals[i]) {
+        case 'dragon':
+          if (DRAGON_TYPE_ENEMIES[enemy.enemyId]) count++;
+          break;
+        case 'ghost':
+          if (GHOST_TYPE_ENEMIES[enemy.enemyId]) count++;
+          break;
+        case 'drain':
+          if (enemy.special) count++;
+          break;
+      }
+    }
+    // Legacy special property support
+    if (seals.length === 0 && weapon.special) {
+      if (weapon.special === 'dragon' && DRAGON_TYPE_ENEMIES[enemy.enemyId]) count++;
+      if (weapon.special === 'ghost' && GHOST_TYPE_ENEMIES[enemy.enemyId]) count++;
+      if (weapon.special === 'drain' && enemy.special) count++;
+    }
+    return count;
+  }
 
+  // Count damage reduction seals on shield
+  function countReductionSeals(shield) {
+    var count = 0;
+    var seals = shield.seals || [];
+    for (var i = 0; i < seals.length; i++) {
+      // counter seal provides damage reduction as well
+      if (seals[i] === 'counter') count++;
+    }
+    return count;
+  }
+
+  // Shiren 6 player damage formula (与ダメージ)
+  function calculatePlayerDamage(player, weapon, enemy, game) {
+    var strength = player.strength || 8;
+    var level = player.level || 1;
+
+    // Strength attack = raw strength value
+    var strengthAttack = strength;
+
+    // Weapon attack = weapon strength × (0.75 + strength/32)
+    var weaponStrength = weapon ? (weapon.getEffectiveAttack ? weapon.getEffectiveAttack() : (weapon.attack || 0)) : 0;
+    var weaponAttack = weaponStrength * (0.75 + strength / 32);
+
+    // Level attack (tiered formula)
+    var levelAttack;
+    if (level <= 5) {
+      levelAttack = 1 + (level - 1) * 1.5;
+    } else if (level <= 13) {
+      levelAttack = 7.5 + (level - 5) * 1;
+    } else {
+      levelAttack = 15.5 + (level - 13) * 0.5;
+    }
+
+    var totalAttack = strengthAttack + weaponAttack + levelAttack;
+
+    // Random variance ±12.5%
+    var variance = 0.875 + Math.random() * 0.25;
+
+    // Enemy defense (halved)
+    var defense = (enemy.defense || 0) / 2;
+
+    // Base damage
+    var baseDamage = Math.max(1, Math.floor(totalAttack * variance - defense + 1));
+
+    // Type effectiveness multiplier (additive: each type adds 0.5)
+    var typeMultiplier = 1.0;
+    var sealMessages = [];
+    if (weapon && weapon.seals) {
+      var effectiveSeals = countEffectiveSeals(weapon, enemy);
+      typeMultiplier += effectiveSeals * 0.5;
+      // Generate messages for effective seals
+      var seals = weapon.seals;
       for (var si = 0; si < seals.length; si++) {
         switch (seals[si]) {
           case 'dragon':
-            if (DRAGON_TYPE_ENEMIES[enemy.enemyId]) {
-              sealMultiplier *= typeEffMult;
-              sealMessages.push('竜特効！');
-            }
+            if (DRAGON_TYPE_ENEMIES[enemy.enemyId]) sealMessages.push('竜特効！');
             break;
           case 'ghost':
-            if (GHOST_TYPE_ENEMIES[enemy.enemyId]) {
-              sealMultiplier *= typeEffMult;
-              sealMessages.push('仏特効！');
-            }
+            if (GHOST_TYPE_ENEMIES[enemy.enemyId]) sealMessages.push('仏特効！');
             break;
           case 'drain':
-            if (enemy.special) {
-              sealMultiplier *= typeEffMult;
-              sealMessages.push('吸特効！');
-            }
-            break;
-          case 'crit':
-            if (Math.random() < B('combat.critChance', 0.25)) {
-              sealMultiplier *= 1.5;
-              sealMessages.push('会心の一撃！');
-            }
+            if (enemy.special) sealMessages.push('吸特効！');
             break;
         }
       }
-
-      // Legacy special property support (for items without seals)
-      if (seals.length === 0 && player.weapon.special) {
-        switch (player.weapon.special) {
-          case 'drain':
-            if (enemy.special) sealMultiplier = 1.5;
-            break;
-          case 'ghost':
-            if (GHOST_TYPE_ENEMIES[enemy.enemyId]) sealMultiplier = 1.5;
-            break;
-          case 'dragon':
-            if (DRAGON_TYPE_ENEMIES[enemy.enemyId]) sealMultiplier = 1.5;
-            break;
-        }
-        if (sealMultiplier > 1) sealMessages.push('特効！');
-      }
-
-      if (sealMultiplier > 1) {
-        damage = Math.floor(damage * sealMultiplier);
-        for (var mi = 0; mi < sealMessages.length; mi++) {
-          this.ui.addMessage(sealMessages[mi], 'attack');
-        }
-      }
+    } else if (weapon && weapon.special) {
+      var legacyEffective = countEffectiveSeals(weapon, enemy);
+      typeMultiplier += legacyEffective * 0.5;
+      if (legacyEffective > 0) sealMessages.push('特効！');
     }
 
-    var died = enemy.takeDamage(damage);
+    // Doskoi multiplier
+    var doskoiMult = player.doskoi ? 1.5 : 1.0;
 
-    // Check for crit seal
+    // Buff multipliers (from incense, etc.)
+    var buffMult = 1.0;
+    if (game && game.activeIncense && game.activeIncense.effect === 'attack_boost') buffMult *= 2.0;
+    if (player.powerupTurns > 0) buffMult *= 1.5;
+    if (player.hasStatusEffect('strengthened')) buffMult *= B('combat.strengthenedMultiplier', 1.5);
+
+    // Critical hit check (会心 seal: ~12% chance per seal)
     var isCrit = false;
-    if (player.weapon && player.weapon.seals) {
-      for (var ci = 0; ci < player.weapon.seals.length; ci++) {
-        if (player.weapon.seals[ci] === 'crit' && sealMultiplier > 1) {
+    if (weapon && weapon.seals) {
+      for (var ci = 0; ci < weapon.seals.length; ci++) {
+        if (weapon.seals[ci] === 'crit' && Math.random() < 0.12) {
           isCrit = true;
           break;
         }
       }
     }
+
+    var critMult = isCrit ? 2.0 : 1.0;
+
+    // Final damage
+    var finalDamage = Math.max(1, Math.floor(baseDamage * typeMultiplier * doskoiMult * buffMult * critMult));
+
+    return { damage: finalDamage, isCrit: isCrit, sealMessages: sealMessages };
+  }
+
+  // Shiren 6 enemy damage formula (被ダメージ)
+  function calculateEnemyDamage(enemy, player, shield, game) {
+    var attack = enemy.attack || 0;
+
+    // Random variance ±12.5%
+    var variance = 0.875 + Math.random() * 0.25;
+
+    // Shield defense (with diminishing returns above 20)
+    var shieldStrength = shield ? (shield.getEffectiveDefense ? shield.getEffectiveDefense() : (shield.defense || 0)) : 0;
+    // Add blessed bonus
+    if (shield && shield.blessed) shieldStrength += 3;
+    var defense;
+    if (shieldStrength <= 20) {
+      defense = shieldStrength;
+    } else {
+      defense = 20 + (shieldStrength - 20) * 0.6;
+    }
+
+    // Base damage
+    var baseDamage = Math.max(1, Math.floor(attack * variance - defense + 1));
+
+    // Damage reduction from seals (multiplicative)
+    var reduction = 1.0;
+    if (shield && shield.seals) {
+      var reductionSeals = countReductionSeals(shield);
+      for (var i = 0; i < reductionSeals; i++) {
+        reduction *= 0.7;
+      }
+    }
+
+    // Incense protection
+    if (game && game.activeIncense && game.activeIncense.effect === 'protect') {
+      reduction *= 0.5;
+    }
+
+    // Critical hit check (痛恨)
+    var isCritical = false;
+    if (enemy.special === 'critical' && Math.random() < 0.25) {
+      isCritical = true;
+    }
+
+    var critMult = isCritical ? 1.5 : 1.0;
+
+    var finalDamage = Math.max(1, Math.floor(baseDamage * reduction * critMult));
+
+    return { damage: finalDamage, isCritical: isCritical };
+  }
+
+  // --- Player attack with weapon specials (Shiren 6 formula) ---
+  Game.prototype.playerAttack = function(enemy) {
+    var player = this.player;
+    var weapon = player.weapon;
+
+    var result = calculatePlayerDamage(player, weapon, enemy, this);
+    var damage = result.damage;
+    var isCrit = result.isCrit;
+    var sealMessages = result.sealMessages;
+
+    // Show seal messages
+    for (var mi = 0; mi < sealMessages.length; mi++) {
+      this.ui.addMessage(sealMessages[mi], 'attack');
+    }
+    if (isCrit) {
+      this.ui.addMessage('会心の一撃！', 'attack');
+    }
+
+    var died = enemy.takeDamage(damage);
 
     Sound.play('attack');
     this.ui.addMessage(enemy.name + 'に ' + damage + ' ダメージを与えた！', 'attack');
@@ -193,67 +308,67 @@
       }
     }
 
-    // Critical hit check
-    var isCritical = false;
-    if (enemy.special === 'critical' && Math.random() < 0.25) {
-      isCritical = true;
-    }
+    // Double attack: enemies with doubleAttack hit twice
+    var attackCount = enemy.doubleAttack ? 2 : 1;
 
-    var rawDmg = enemy.attack - player.defense + Math.floor(Math.random() * B('combat.damageVariance', 3)) - 1;
-    var damage = Math.max(B('combat.minDamage', 1), rawDmg);
+    for (var atkIdx = 0; atkIdx < attackCount; atkIdx++) {
+      if (player.hp <= 0) break;
 
-    if (isCritical) {
-      damage *= 2;
-      this.ui.addMessage(enemy.name + 'の痛恨の一撃！ ' + damage + 'ダメージ！', 'enemy_special');
-    } else {
-      this.ui.addMessage(enemy.name + 'の攻撃！ ' + damage + 'ダメージを受けた', 'damage');
-    }
+      // Calculate damage using Shiren 6 formula (includes critical and incense reduction)
+      var dmgResult = calculateEnemyDamage(enemy, player, player.shield, this);
+      var damage = dmgResult.damage;
+      var isCritical = dmgResult.isCritical;
 
-    // Apply shield seal effects
-    if (player.shield && player.shield.seals) {
-      var shieldSeals = player.shield.seals;
-      for (var ssi = 0; ssi < shieldSeals.length; ssi++) {
-        if (shieldSeals[ssi] === 'counter' && !enemy.dead) {
-          var counterDmg = Math.max(1, Math.floor(damage * B('combat.counterReflect', 0.3)));
-          var counterDied = enemy.takeDamage(counterDmg);
-          this.ui.addMessage('[返]印の反撃！ ' + enemy.name + 'に' + counterDmg + 'ダメージ', 'attack');
-          if (counterDied) {
-            player.enemiesKilled++;
-            if (enemy.swallowedItems && enemy.swallowedItems.length > 0) {
-              this._dropMazerunItems(enemy, this.ui);
+      if (isCritical) {
+        this.ui.addMessage(enemy.name + 'の痛恨の一撃！ ' + damage + 'ダメージ！', 'enemy_special');
+      } else {
+        this.ui.addMessage(enemy.name + 'の攻撃！ ' + damage + 'ダメージを受けた', 'damage');
+      }
+
+      // Apply shield seal effects (counter)
+      if (player.shield && player.shield.seals) {
+        var shieldSeals = player.shield.seals;
+        for (var ssi = 0; ssi < shieldSeals.length; ssi++) {
+          if (shieldSeals[ssi] === 'counter' && !enemy.dead) {
+            var counterDmg = Math.max(1, Math.floor(damage * B('combat.counterReflect', 0.3)));
+            var counterDied = enemy.takeDamage(counterDmg);
+            this.ui.addMessage('[返]印の反撃！ ' + enemy.name + 'に' + counterDmg + 'ダメージ', 'attack');
+            if (counterDied) {
+              player.enemiesKilled++;
+              if (enemy.swallowedItems && enemy.swallowedItems.length > 0) {
+                this._dropMazerunItems(enemy, this.ui);
+              }
+              this.ui.addMessage(enemy.name + 'を倒した！ 経験値' + enemy.exp + '獲得', 'attack');
+              player.gainExp(enemy.exp, this.ui);
             }
-            this.ui.addMessage(enemy.name + 'を倒した！ 経験値' + enemy.exp + '獲得', 'attack');
-            player.gainExp(enemy.exp, this.ui);
           }
         }
       }
-    }
 
-    if (player.godMode || player.hasStatusEffect('invincible')) damage = 0;
-    // Protect incense: 50% damage reduction
-    if (damage > 0 && this.activeIncense && this.activeIncense.effect === 'protect') {
-      damage = Math.max(1, Math.floor(damage * 0.5));
-    }
-    if (damage > 0) {
-      Sound.play('damage');
-      this.addFloatingText(player.x, player.y, '-' + damage, '#ef5350');
-      // Red tint animation on player
-      this.animations.push({ type: 'red_tint', x: player.x, y: player.y, frame: 0, maxFrames: 4, data: {} });
-      // Screen shake on heavy damage or critical
-      if (isCritical) {
-        this.shakeFrames = 8;
-      } else if (damage > 10) {
-        this.shakeFrames = 5;
-      } else {
-        this.shakeFrames = 2;
+      if (player.godMode || player.hasStatusEffect('invincible')) damage = 0;
+
+      if (damage > 0) {
+        Sound.play('damage');
+        this.addFloatingText(player.x, player.y, '-' + damage, '#ef5350');
+        // Red tint animation on player
+        this.animations.push({ type: 'red_tint', x: player.x, y: player.y, frame: 0, maxFrames: 4, data: {} });
+        // Screen shake on heavy damage or critical
+        if (isCritical) {
+          this.shakeFrames = 8;
+        } else if (damage > 10) {
+          this.shakeFrames = 5;
+        } else {
+          this.shakeFrames = 2;
+        }
       }
-    }
-    player.hp -= damage;
+      player.hp -= damage;
+
+    } // end double attack loop
 
     // --- Enemy specials on attack ---
 
     // Gamara: steal gold
-    if (enemy.special === 'steal_gold' && !enemy.sealed && !player.godMode && damage > 0) {
+    if (enemy.special === 'steal_gold' && !enemy.sealed && !player.godMode) {
       var stealAmount = Math.min(player.gold, 10 + Math.floor(Math.random() * 41));
       if (stealAmount > 0) {
         player.gold -= stealAmount;
@@ -456,6 +571,8 @@
     enemy.defense = data.defense;
     enemy.exp = data.exp;
     enemy.special = data.special;
+    enemy.speed = data.speed || 1;
+    enemy.doubleAttack = data.doubleAttack || false;
     if (data.swallowCapacity) {
       enemy.swallowCapacity = data.swallowCapacity;
       if (!enemy.swallowedItems) enemy.swallowedItems = [];

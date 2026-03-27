@@ -184,7 +184,7 @@ var ENEMY_DATA = {
     char: 'N',
     color: '#1565c0',
     hp: 70,
-    attack: 20,
+    attack: 45,
     defense: 12,
     exp: 80,
     minFloor: 55,
@@ -228,7 +228,7 @@ var ENEMY_DATA = {
     char: 'R',
     color: '#33691e',
     hp: 70,
-    attack: 18,
+    attack: 40,
     defense: 10,
     exp: 80,
     minFloor: 60,
@@ -273,7 +273,7 @@ var ENEMY_DATA = {
     char: 'Z',
     color: '#455a64',
     hp: 100,
-    attack: 15,
+    attack: 35,
     defense: 20,
     exp: 60,
     minFloor: 50,
@@ -348,7 +348,7 @@ var ENEMY_DATA = {
     char: 'K',
     color: '#37474f',
     hp: 90,
-    attack: 25,
+    attack: 50,
     defense: 18,
     exp: 120,
     minFloor: 66,
@@ -436,7 +436,7 @@ var ENEMY_DATA = {
     char: 'P',
     color: '#004d40',
     hp: 80,
-    attack: 22,
+    attack: 40,
     defense: 15,
     exp: 100,
     minFloor: 66,
@@ -479,9 +479,9 @@ var ENEMY_DATA = {
     familyRank: 3,
     char: 'A',
     color: '#d32f2f',
-    hp: 80,
-    attack: 25,
-    defense: 12,
+    hp: 100,
+    attack: 50,
+    defense: 15,
     exp: 120,
     minFloor: 80,
     maxFloor: 99,
@@ -515,7 +515,9 @@ var ENEMY_DATA = {
     exp: 100,
     minFloor: 45,
     maxFloor: 65,
-    special: 'critical'
+    special: 'critical',
+    speed: 2,
+    doubleAttack: true
   },
 
   // === 死神系 (family: 'reaper') ===
@@ -545,7 +547,8 @@ var ENEMY_DATA = {
     exp: 150,
     minFloor: 50,
     maxFloor: 80,
-    special: 'wallpass'
+    special: 'wallpass',
+    speed: 2
   },
   dark_lord: {
     name: '冥王',
@@ -559,7 +562,9 @@ var ENEMY_DATA = {
     exp: 200,
     minFloor: 80,
     maxFloor: 99,
-    special: 'wallpass'
+    special: 'wallpass',
+    speed: 2,
+    doubleAttack: true
   },
 
   // === サソリ系 (family: 'scorpion') ===
@@ -598,7 +603,7 @@ var ENEMY_DATA = {
     char: 'S',
     color: '#33691e',
     hp: 85,
-    attack: 22,
+    attack: 45,
     defense: 15,
     exp: 80,
     minFloor: 48,
@@ -628,7 +633,7 @@ var ENEMY_DATA = {
     char: 'Y',
     color: '#0097a7',
     hp: 65,
-    attack: 18,
+    attack: 40,
     defense: 10,
     exp: 50,
     minFloor: 45,
@@ -689,7 +694,7 @@ var ENEMY_DATA = {
     char: 'E',
     color: '#bf360c',
     hp: 120,
-    attack: 30,
+    attack: 55,
     defense: 20,
     exp: 160,
     minFloor: 70,

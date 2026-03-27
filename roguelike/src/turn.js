@@ -63,16 +63,9 @@ var TurnManager = (function() {
         this.ui.showGameOver(this.game.floorNum, p.level);
       }
 
-      // Natural HP regen only when satiety > 0
-      if (!this.game.gameOver && p.satiety > 0 && p.hp < p.maxHp && p.hp > 0) {
-        if (!p._regenCounter) p._regenCounter = 0;
-        var regenIncrement = (p.bracelet && p.bracelet.effect === 'regen') ? 2 : 1;
-        p._regenCounter += regenIncrement;
-        var regenRate = Math.max(2, Math.floor(p.maxHp / 5));
-        if (p._regenCounter >= regenRate) {
-          p.hp = Math.min(p.maxHp, p.hp + 1);
-          p._regenCounter = 0;
-        }
+      // Natural HP recovery (Shiren 6 style: scales with level)
+      if (!this.game.gameOver) {
+        p.naturalHeal();
       }
 
       // Enemy turns

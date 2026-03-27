@@ -1121,7 +1121,9 @@ var Game = (function() {
           this.checkEnemyTrap(this.enemies[i]);
         }
 
-        if (!this.enemies[i].dead && this.enemies[i].doubleSpeed && !this.gameOver) {
+        // Double speed: enemies with speed >= 2 or doubleSpeed flag take a second action
+        var enemySpeed = this.enemies[i].speed || 1;
+        if (!this.enemies[i].dead && (enemySpeed >= 2 || this.enemies[i].doubleSpeed) && !this.gameOver) {
           var oldX2 = this.enemies[i].x;
           var oldY2 = this.enemies[i].y;
           this.enemies[i].act(this);

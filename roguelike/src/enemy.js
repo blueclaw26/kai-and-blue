@@ -9,7 +9,8 @@ var Enemy = (function() {
     this.attack = data.attack;
     this.defense = data.defense;
     this.exp = data.exp;
-    this.speed = 1;
+    this.speed = data.speed || 1;           // 1 = normal, 2 = double speed (倍速)
+    this.doubleAttack = data.doubleAttack || false; // true = attacks twice when adjacent (2回攻撃)
     this.dead = false;
     this.confused = 0;
     this.special = data.special || null;
@@ -131,7 +132,7 @@ var Enemy = (function() {
           game.ui.addMessage('どこからか炎が飛んできた！ お香の効果で炎を無効化した！', 'system');
           return;
         }
-        var fireDmg = 20;
+        var fireDmg = 30; // Fixed 30 damage (ignores defense)
         // Check for dragon_resist seal on shield
         var hasDragonResist = (player.shield && player.shield.seals && player.shield.seals.indexOf('dragon_resist') !== -1) ||
                               (player.shield && player.shield.special === 'dragon_resist');

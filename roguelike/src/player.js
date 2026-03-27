@@ -415,6 +415,19 @@ var Player = (function() {
     });
   };
 
+  // Shiren 6 natural HP recovery per turn
+  // Fast recovery: scales with level, makes deep-floor recovery viable
+  Player.prototype.naturalHeal = function() {
+    if (this.hp < this.maxHp && this.hp > 0 && this.satiety > 0) {
+      var healRate = Math.max(1, Math.floor(this.level / 7) + 1);
+      // Regen bracelet doubles heal rate
+      if (this.bracelet && this.bracelet.effect === 'regen') {
+        healRate *= 2;
+      }
+      this.hp = Math.min(this.hp + healRate, this.maxHp);
+    }
+  };
+
   Player.prototype.tickBuffs = function() {
     if (this.powerupTurns > 0) {
       this.powerupTurns--;
