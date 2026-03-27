@@ -44,6 +44,11 @@ var Item = (function() {
     if (data.special !== undefined) this.special = data.special;
     if (data.price !== undefined) this.price = data.price;
 
+    // Pickaxe durability
+    if (data.special === 'dig') {
+      this._digUses = 30;
+    }
+
     // Seal system: weapons and shields have seal slots
     if (this.type === 'weapon' || this.type === 'shield') {
       this.seals = [];
@@ -603,12 +608,14 @@ var Item = (function() {
       // Already full — increase max satiety (ニギライズ)
       var increase = (this.satiety >= 100) ? 10 : 5;
       player.maxSatiety = Math.min(player.maxSatiety + increase, 200);
-      player.satiety = player.maxSatiety;
+      // Satiety goes to new max + overflow from the food
+      player.satiety = player.maxSatiety + Math.floor(this.satiety * 0.5);
       ui.addMessage('おにぎりを食べた。最大満腹度が' + increase + '上がった！', 'heal');
       if (window._game) window._game.addFloatingText(player.x, player.y, '満腹+' + increase, '#ffd54f');
     } else {
       var oldSatiety = player.satiety;
-      player.satiety = Math.min(player.satiety + this.satiety, maxSat);
+      // Allow satiety to exceed max (overflow for doskoi)
+      player.satiety = player.satiety + this.satiety;
       var restored = Math.floor(player.satiety - oldSatiety);
       ui.addMessage('おにぎりを食べた。美味しい！（満腹度+' + restored + '）', 'heal');
     }

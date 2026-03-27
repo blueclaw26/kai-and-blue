@@ -146,12 +146,14 @@ var UI = (function() {
     var levelTextEl = document.getElementById('level-text');
     if (levelTextEl) levelTextEl.textContent = 'Lv.' + p.level;
 
-    // Satiety
+    // Satiety (show actual/max, supports values above max for doskoi)
     var satTextEl = document.getElementById('satiety-text');
     if (satTextEl) {
       var sat = Math.floor(p.satiety);
-      satTextEl.textContent = '🍙 ' + sat;
-      satTextEl.style.color = sat > 30 ? '#b0b8c8' : sat > 10 ? '#ffa726' : '#ef5350';
+      var maxSat = p.maxSatiety || 100;
+      var doskoiTag = p.doskoi ? ' [ドスコイ]' : '';
+      satTextEl.textContent = '🍙 ' + sat + '/' + maxSat + doskoiTag;
+      satTextEl.style.color = p.doskoi ? '#ffd700' : sat > 30 ? '#b0b8c8' : sat > 10 ? '#ffa726' : '#ef5350';
     }
 
     // Gold
@@ -241,6 +243,8 @@ var UI = (function() {
         html += '<div class="inv-item' + (isSelected ? ' selected' : '') + '">';
         html += '<span class="inv-slot">' + SLOT_LETTERS[i] + ')</span>';
         var nameColor = item.identified ? '#e0e0e0' : '#ffd54f';
+        if (item.cursed) nameColor = '#ef5350';
+        if (item.blessed) nameColor = '#ffd700';
         html += '<span class="inv-char" style="color:' + item.color + ';">' + item.char + '</span>';
         html += '<span class="inv-name" style="color:' + nameColor + ';">' + escapeHtml(item.getDisplayName()) + '</span>';
         if (equipped) html += '<span class="equipped-tag">[装備中]</span>';

@@ -163,6 +163,7 @@ var Player = (function() {
       }
     }
     if (this.sleepTurns > 0) parts.push('[睡眠]');
+    if (this.doskoi) parts.push('[ドスコイ]');
     if (this.bracelet) parts.push('[' + this.bracelet.name + ']');
     return parts.join(' ');
   };

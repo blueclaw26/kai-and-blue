@@ -167,6 +167,9 @@ var FLOOR_TABLE = {
     [6, 99, 'scroll_sanctuary', 2],
     [5, 99, 'scroll_great_hall', 2],
     [1, 99, 'scroll_escape', 2],
-    [15, 99, 'scroll_blank', 1]
+    [15, 99, 'scroll_blank', 1],
+    [3, 99, 'scroll_purify', 3],
+    // Pickaxe
+    [5, 99, 'pickaxe', 2]
   ]
 };

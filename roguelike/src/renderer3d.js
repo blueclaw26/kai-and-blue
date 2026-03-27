@@ -1281,6 +1281,35 @@ var Renderer3D = (function() {
     }
     pe.mesh.visible = true;
 
+    // Doskoi visual: 1.3x scale + yellow tint
+    if (player.doskoi) {
+      pe.mesh.scale.setScalar(1.3);
+      if (!pe.mesh.userData._doskoiTinted) {
+        pe.mesh.userData._doskoiTinted = true;
+        pe.mesh.traverse(function(child) {
+          if (child.isMesh && child.material) {
+            if (!child.userData._origColor) {
+              child.userData._origColor = child.material.color ? child.material.color.clone() : null;
+            }
+            child.material = child.material.clone();
+            child.material.emissive = new THREE.Color(0x665500);
+            child.material.emissiveIntensity = 0.4;
+          }
+        });
+      }
+    } else {
+      pe.mesh.scale.setScalar(1.0);
+      if (pe.mesh.userData._doskoiTinted) {
+        pe.mesh.userData._doskoiTinted = false;
+        pe.mesh.traverse(function(child) {
+          if (child.isMesh && child.material && child.userData._origColor) {
+            child.material.emissive = new THREE.Color(0x000000);
+            child.material.emissiveIntensity = 0;
+          }
+        });
+      }
+    }
+
     // Cape wave animation (Issue 4)
     if (pe.mesh.userData._cape) {
       var capeWave = Math.sin(now * 0.005) * 0.12;
