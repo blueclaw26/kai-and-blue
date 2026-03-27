@@ -58,11 +58,12 @@ var Item = (function() {
       if (data.modifier !== undefined) {
         this.modifier = data.modifier;
       } else {
-        // Random modifier for floor drops: +0 (50%), +1 (25%), +2 (15%), +3 (10%)
+        // Random modifier for floor drops using BALANCE weights
+        var modWeights = B('items.modifierWeights', [0.5, 0.75, 0.9, 1.0]);
         var roll = Math.random();
-        if (roll < 0.5) this.modifier = 0;
-        else if (roll < 0.75) this.modifier = 1;
-        else if (roll < 0.90) this.modifier = 2;
+        if (roll < modWeights[0]) this.modifier = 0;
+        else if (roll < modWeights[1]) this.modifier = 1;
+        else if (roll < modWeights[2]) this.modifier = 2;
         else this.modifier = 3;
       }
       // Apply modifier to base stats
@@ -224,9 +225,10 @@ var Item = (function() {
 
   Item.prototype._useGrass = function(game, player) {
     var ui = game.ui;
-    // Drinking grass restores 2 satiety (like Shiren)
+    // Drinking grass restores satiety (like Shiren)
+    var grassSatiety = B('items.grassSatietyRestore', 2);
     if (player.satiety < player.maxSatiety) {
-      player.satiety = Math.min(player.satiety + 2, player.maxSatiety);
+      player.satiety = Math.min(player.satiety + grassSatiety, player.maxSatiety);
     }
     // Using grass identifies it
     if (!this.identified) {
@@ -666,16 +668,15 @@ var Item = (function() {
   Item.spawnForFloor = function(dungeon, floorNum, playerStartRoom) {
     var items = [];
 
-    // Floor item count: varies by depth
-    var minCount, maxCount;
-    if (floorNum <= 10) {
-      minCount = 5; maxCount = 7;
-    } else if (floorNum <= 30) {
-      minCount = 4; maxCount = 6;
-    } else if (floorNum <= 60) {
-      minCount = 3; maxCount = 5;
-    } else {
-      minCount = 2; maxCount = 4;
+    // Floor item count from BALANCE count table
+    var itemCountTable = B('items.countTable', [[1,10,5,7],[11,30,4,6],[31,60,3,5],[61,99,2,4]]);
+    var minCount = 3, maxCount = 5;
+    for (var ci = 0; ci < itemCountTable.length; ci++) {
+      if (floorNum >= itemCountTable[ci][0] && floorNum <= itemCountTable[ci][1]) {
+        minCount = itemCountTable[ci][2];
+        maxCount = itemCountTable[ci][3];
+        break;
+      }
     }
     var count = minCount + Math.floor(Math.random() * (maxCount - minCount + 1));
 

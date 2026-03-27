@@ -194,3 +194,16 @@ var BALANCE = (function() {
 
   return config;
 })();
+
+// Safe accessor for BALANCE values with fallback defaults.
+// Usage: B('player.startHp', 15)
+function B(path, defaultVal) {
+  if (typeof BALANCE === 'undefined') return defaultVal;
+  var parts = path.split('.');
+  var obj = BALANCE;
+  for (var i = 0; i < parts.length; i++) {
+    if (obj === undefined || obj === null) return defaultVal;
+    obj = obj[parts[i]];
+  }
+  return (obj !== undefined && obj !== null) ? obj : defaultVal;
+}

@@ -362,8 +362,8 @@ var Enemy = (function() {
     if (canSee) {
       this._moveTowardPlayerBFS(game);
     } else {
-      // Wander: 50% stay still, 50% random move
-      if (Math.random() < 0.5) {
+      // Wander: wanderChance to move, else stay still
+      if (Math.random() < B('enemies.wanderChance', 0.5)) {
         this._moveRandom(game);
       }
     }
@@ -419,10 +419,10 @@ var Enemy = (function() {
   Enemy.prototype._canSeePlayer = function(game) {
     // Same room check
     if (this._inSameRoom(game)) return true;
-    // Within 6 tiles with line of sight
+    // Within visionRange tiles with line of sight
     var dx = Math.abs(game.player.x - this.x);
     var dy = Math.abs(game.player.y - this.y);
-    if (dx + dy <= 6) return true;
+    if (dx + dy <= B('enemies.visionRange', 6)) return true;
     return false;
   };
 
@@ -649,20 +649,17 @@ var Enemy = (function() {
   Enemy.spawnForFloor = function(dungeon, floorNum, playerStartRoom, extinctEnemies) {
     var enemies = [];
 
-    var count;
-    if (floorNum <= 5) {
-      count = 3 + Math.floor(Math.random() * 3); // 3-5
-    } else if (floorNum <= 15) {
-      count = 4 + Math.floor(Math.random() * 3); // 4-6
-    } else if (floorNum <= 30) {
-      count = 5 + Math.floor(Math.random() * 3); // 5-7
-    } else if (floorNum <= 50) {
-      count = 6 + Math.floor(Math.random() * 4); // 6-9
-    } else if (floorNum <= 75) {
-      count = 7 + Math.floor(Math.random() * 4); // 7-10
-    } else {
-      count = 8 + Math.floor(Math.random() * 5); // 8-12
+    // Determine enemy count from BALANCE spawn table
+    var spawnTable = B('enemies.spawnTable', [[1,5,3,5],[6,15,4,6],[16,30,5,7],[31,50,6,9],[51,75,7,10],[76,99,8,12]]);
+    var minCount = 3, maxCount = 5;
+    for (var si = 0; si < spawnTable.length; si++) {
+      if (floorNum >= spawnTable[si][0] && floorNum <= spawnTable[si][1]) {
+        minCount = spawnTable[si][2];
+        maxCount = spawnTable[si][3];
+        break;
+      }
     }
+    var count = minCount + Math.floor(Math.random() * (maxCount - minCount + 1));
 
     var availableRooms = [];
     var pCenter = {
@@ -710,9 +707,11 @@ var Enemy = (function() {
       // Stat scaling
       var floorsAbove = floorNum - template.minFloor;
       if (floorsAbove > 0) {
-        var scaleTiers = Math.floor(floorsAbove / 5);
+        var scaleInterval = B('enemies.statScaleInterval', 5);
+        var scaleBonus = B('enemies.statScaleBonus', 0.1);
+        var scaleTiers = Math.floor(floorsAbove / scaleInterval);
         if (scaleTiers > 0) {
-          var bonus = 1 + scaleTiers * 0.1;
+          var bonus = 1 + scaleTiers * scaleBonus;
           enemy.hp = Math.floor(enemy.hp * bonus);
           enemy.maxHp = enemy.hp;
           enemy.attack = Math.floor(enemy.attack * bonus);
@@ -765,9 +764,11 @@ var Enemy = (function() {
 
     var floorsAbove = floorNum - template.minFloor;
     if (floorsAbove > 0) {
-      var scaleTiers = Math.floor(floorsAbove / 5);
+      var scaleInterval = B('enemies.statScaleInterval', 5);
+      var scaleBonus = B('enemies.statScaleBonus', 0.1);
+      var scaleTiers = Math.floor(floorsAbove / scaleInterval);
       if (scaleTiers > 0) {
-        var bonus = 1 + scaleTiers * 0.1;
+        var bonus = 1 + scaleTiers * scaleBonus;
         enemy.hp = Math.floor(enemy.hp * bonus);
         enemy.maxHp = enemy.hp;
         enemy.attack = Math.floor(enemy.attack * bonus);

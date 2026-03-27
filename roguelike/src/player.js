@@ -2,29 +2,29 @@
 var Player = (function() {
   'use strict';
 
-  var MAX_INVENTORY = 20;
+  var MAX_INVENTORY = B('player.maxInventory', 20);
   // EXP curve: ~1.4x multiplier for levels beyond the table
   var EXP_THRESHOLDS = [0, 10, 25, 50, 90, 150, 230, 340, 480, 650, 910, 1274, 1784, 2498, 3497, 4896, 6854, 9596, 13434, 18808];
 
   function Player(x, y) {
     Entity.call(this, x, y, '@', '#4fc3f7', 'Player');
-    this.hp = 15;
-    this.maxHp = 15;
-    this.baseAttack = 2;
-    this.attack = 2;
-    this.baseDefense = 1;
-    this.defense = 1;
+    this.hp = B('player.startHp', 15);
+    this.maxHp = B('player.startHp', 15);
+    this.baseAttack = B('player.startAttack', 2);
+    this.attack = B('player.startAttack', 2);
+    this.baseDefense = B('player.startDefense', 1);
+    this.defense = B('player.startDefense', 1);
     this.level = 1;
     this.exp = 0;
     this.floor = 1;
-    this.satiety = 100;
-    this.maxSatiety = 100;
+    this.satiety = B('player.startSatiety', 100);
+    this.maxSatiety = B('player.maxSatiety', 100);
     this._satietyAccum = 0;
     this._hungryWarned = false;
 
     // Strength system
-    this.strength = 8;
-    this.maxStrength = 8;
+    this.strength = B('player.startStrength', 8);
+    this.maxStrength = B('player.maxStrength', 8);
 
     // Gold
     this.gold = 0;
@@ -73,15 +73,15 @@ var Player = (function() {
     this.attack = this.baseAttack + (this.strength || 8) + weaponAtk + (this.level - 1);
     this.defense = this.baseDefense + shieldDef + Math.floor((this.level - 1) / 2);
     if (this.powerupTurns > 0) {
-      this.attack += 5;
+      this.attack += B('combat.powerupAttackBonus', 5);
     }
     // Bracelet: strength boost
     if (this.bracelet && this.bracelet.effect === 'strength_boost') {
-      this.attack += 5;
+      this.attack += B('combat.powerupAttackBonus', 5);
     }
     // Strengthened status effect
     if (this.hasStatusEffect('strengthened')) {
-      this.attack = Math.floor(this.attack * 1.5);
+      this.attack = Math.floor(this.attack * B('combat.strengthenedMultiplier', 1.5));
     }
   };
 
@@ -183,11 +183,13 @@ var Player = (function() {
 
   Player.prototype.gainExp = function(amount, ui) {
     this.exp += amount;
+    var lvHpGain = B('player.levelUpHp', 3);
+    var lvAtkGain = B('player.levelUpAttack', 1);
     while (this.level < EXP_THRESHOLDS.length && this.exp >= EXP_THRESHOLDS[this.level]) {
       this.level++;
-      this.maxHp += 3;
-      this.hp = Math.min(this.hp + 3, this.maxHp);
-      this.baseAttack += 1;
+      this.maxHp += lvHpGain;
+      this.hp = Math.min(this.hp + lvHpGain, this.maxHp);
+      this.baseAttack += lvAtkGain;
       this.baseDefense += (this.level % 2 === 0) ? 1 : 0;
       // Max satiety bonus at milestone levels
       if (this.level === 5 || this.level === 10 || this.level === 15 || this.level === 20) {
@@ -209,8 +211,9 @@ var Player = (function() {
     // Check for hunger seal (腹) on shield — halves hunger rate
     // Hunger rate: 1 satiety per 10 turns (0.1 per turn). Hunger seal halves it. Hunger bracelet doubles it.
     var hasHungerSeal = this.shield && this.shield.seals && this.shield.seals.indexOf('hunger') !== -1;
-    var baseHungerRate = hasHungerSeal ? 0.05 : 0.1;
-    var hungerRate = (this.bracelet && this.bracelet.effect === 'hunger') ? baseHungerRate * 2 : baseHungerRate;
+    var rawRate = B('player.hungerRate', 0.1);
+    var baseHungerRate = hasHungerSeal ? rawRate * B('player.hungerSealMultiplier', 0.5) : rawRate;
+    var hungerRate = (this.bracelet && this.bracelet.effect === 'hunger') ? baseHungerRate * B('player.hungerBraceletMultiplier', 2) : baseHungerRate;
     this._satietyAccum += hungerRate;
     if (this._satietyAccum >= 1) {
       this._satietyAccum -= 1;
@@ -244,7 +247,7 @@ var Player = (function() {
     if (this.satiety <= 0) {
       if (ui) ui.addMessage('お腹が空いて力が出ない...', 'damage');
       if (!this.godMode) {
-        this.hp -= 1;
+        this.hp -= B('player.starvationDamage', 1);
         if (this.hp <= 0) {
           this.hp = 0;
           return 'dead';

@@ -2,8 +2,8 @@
 var Renderer = (function() {
   'use strict';
 
-  var TILE_SIZE = 24;
-  var FOV_RADIUS = 6;
+  var TILE_SIZE = B('render.tileSize', 24);
+  var FOV_RADIUS = B('render.fovRadius', 6);
 
   var COLORS = {
     wall: '#333',
@@ -182,7 +182,7 @@ var Renderer = (function() {
   // Legacy computeFOV kept for scroll effect compatibility (returns object with string keys)
   function computeFOV(px, py, dungeon) {
     var visible = {};
-    var FOV_R = 6;
+    var FOV_R = B('render.fovRadius', 6);
     for (var dy = -FOV_R; dy <= FOV_R; dy++) {
       for (var dx = -FOV_R; dx <= FOV_R; dx++) {
         if (dx * dx + dy * dy <= FOV_R * FOV_R) {

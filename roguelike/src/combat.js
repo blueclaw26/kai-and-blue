@@ -6,37 +6,39 @@
   // --- Player attack with weapon specials ---
   Game.prototype.playerAttack = function(enemy) {
     var player = this.player;
-    var rawDmg = player.attack - enemy.defense + Math.floor(Math.random() * 3) - 1;
-    var damage = Math.max(1, rawDmg);
+    var dmgVar = B('combat.damageVariance', 3);
+    var rawDmg = player.attack - enemy.defense + Math.floor(Math.random() * dmgVar) - 1;
+    var damage = Math.max(B('combat.minDamage', 1), rawDmg);
 
     // Apply seal effects from equipped weapon
     if (player.weapon) {
       var seals = player.weapon.seals || [];
       var sealMultiplier = 1;
       var sealMessages = [];
+      var typeEffMult = B('combat.typeEffectMultiplier', 1.5);
 
       for (var si = 0; si < seals.length; si++) {
         switch (seals[si]) {
           case 'dragon':
             if (DRAGON_TYPE_ENEMIES[enemy.enemyId]) {
-              sealMultiplier *= 1.5;
+              sealMultiplier *= typeEffMult;
               sealMessages.push('竜特効！');
             }
             break;
           case 'ghost':
             if (GHOST_TYPE_ENEMIES[enemy.enemyId]) {
-              sealMultiplier *= 1.5;
+              sealMultiplier *= typeEffMult;
               sealMessages.push('仏特効！');
             }
             break;
           case 'drain':
             if (enemy.special) {
-              sealMultiplier *= 1.5;
+              sealMultiplier *= typeEffMult;
               sealMessages.push('吸特効！');
             }
             break;
           case 'crit':
-            if (Math.random() < 0.25) {
+            if (Math.random() < B('combat.critChance', 0.25)) {
               sealMultiplier *= 1.5;
               sealMessages.push('会心の一撃！');
             }
@@ -145,9 +147,11 @@
       if (!enemy.isShopkeeper) {
         var shouldDrop = enemy.guaranteedDrop || (ENEMY_DATA[enemy.enemyId] && ENEMY_DATA[enemy.enemyId].guaranteedDrop);
         var dropRoll = Math.random();
-        if (shouldDrop || dropRoll < 0.15) {
-          // guaranteed or 15% chance: drop something
-          if (!shouldDrop && Math.random() < 0.15) {
+        var enemyDropRate = B('items.enemyDropRate', 0.15);
+        var goldDropRate = B('items.goldDropRate', 0.15);
+        if (shouldDrop || dropRoll < enemyDropRate) {
+          // guaranteed or enemyDropRate% chance: drop something
+          if (!shouldDrop && Math.random() < goldDropRate) {
             // ~2% overall: drop gold
             var goldAmount = Math.floor(10 + Math.random() * (20 + this.floorNum * 10));
             var goldItem = this._createGoldItem(enemy.x, enemy.y, goldAmount);
@@ -195,8 +199,8 @@
       isCritical = true;
     }
 
-    var rawDmg = enemy.attack - player.defense + Math.floor(Math.random() * 3) - 1;
-    var damage = Math.max(1, rawDmg);
+    var rawDmg = enemy.attack - player.defense + Math.floor(Math.random() * B('combat.damageVariance', 3)) - 1;
+    var damage = Math.max(B('combat.minDamage', 1), rawDmg);
 
     if (isCritical) {
       damage *= 2;
@@ -210,7 +214,7 @@
       var shieldSeals = player.shield.seals;
       for (var ssi = 0; ssi < shieldSeals.length; ssi++) {
         if (shieldSeals[ssi] === 'counter' && !enemy.dead) {
-          var counterDmg = Math.max(1, Math.floor(damage * 0.3));
+          var counterDmg = Math.max(1, Math.floor(damage * B('combat.counterReflect', 0.3)));
           var counterDied = enemy.takeDamage(counterDmg);
           this.ui.addMessage('[返]印の反撃！ ' + enemy.name + 'に' + counterDmg + 'ダメージ', 'attack');
           if (counterDied) {
@@ -385,7 +389,7 @@
 
     // Counter shield (legacy special property check)
     if (player.shield && player.shield.special === 'counter' && !enemy.dead) {
-      var counterDmg2 = Math.max(1, Math.floor(damage * 0.3));
+      var counterDmg2 = Math.max(1, Math.floor(damage * B('combat.counterReflect', 0.3)));
       var died = enemy.takeDamage(counterDmg2);
       this.ui.addMessage('バトルカウンターの反撃！ ' + enemy.name + 'に' + counterDmg2 + 'ダメージ', 'attack');
       if (died) {
@@ -1155,7 +1159,7 @@
 
     switch (trap.effect) {
       case 'explosion':
-        var blastDmg = 20;
+        var blastDmg = B('traps.landmineDamage', 20);
         var hasBlastResist = (player.shield && player.shield.seals && player.shield.seals.indexOf('blast_resist') !== -1) ||
                              (player.shield && player.shield.special === 'blast_resist');
         if (hasBlastResist) {
@@ -1191,7 +1195,7 @@
 
       case 'pitfall':
         ui.addMessage('落とし穴に落ちた！', 'damage');
-        if (!player.godMode) player.hp -= 5;
+        if (!player.godMode) player.hp -= B('traps.pitfallDamage', 5);
         if (this._checkPlayerDeath()) break;
         if (this.floorNum >= 99) {
           this.victory = true;
@@ -1206,7 +1210,7 @@
 
       case 'poison':
         ui.addMessage('毒矢が飛んできた！ ちからが下がった', 'damage');
-        if (!player.godMode) player.hp -= 5;
+        if (!player.godMode) player.hp -= B('traps.poisonArrowDamage', 5);
         player.strength = Math.max(0, (player.strength || 8) - 1);
         player._recalcStats();
         this._checkPlayerDeath();
@@ -1214,17 +1218,17 @@
 
       case 'sleep':
         ui.addMessage('睡眠ガスを吸い込んだ！', 'damage');
-        player.sleepTurns = 5;
+        player.sleepTurns = B('traps.sleepTurns', 5);
         break;
 
       case 'confuse':
         ui.addMessage('目が回った！', 'damage');
-        player.addStatusEffect('confused', 10, ui);
+        player.addStatusEffect('confused', B('traps.confuseTurns', 10), ui);
         break;
 
       case 'hunger':
         ui.addMessage('デロデロの罠！ 満腹度が下がった', 'damage');
-        player.satiety = Math.max(0, player.satiety - 30);
+        player.satiety = Math.max(0, player.satiety - B('traps.hungerDrain', 30));
         for (var k = 0; k < player.inventory.length; k++) {
           var inv = player.inventory[k];
           if (inv.type === 'food' && (inv.dataKey === 'onigiri' || inv.dataKey === 'big_onigiri')) {
@@ -1279,7 +1283,7 @@
       case 'arrow_iron':
         var isIron = trap.effect === 'arrow_iron';
         var arrowName = isIron ? '鉄の矢' : '木の矢';
-        var arrowDmg = isIron ? 7 : 3;
+        var arrowDmg = isIron ? B('traps.arrowIronDamage', 7) : B('traps.arrowWoodDamage', 3);
         var arrowDataKey = isIron ? 'arrow_iron' : 'arrow_wood';
         ui.addMessage(arrowName + 'が飛んできた！ ' + arrowDmg + 'ダメージ', 'damage');
         if (!player.godMode) player.hp -= arrowDmg;

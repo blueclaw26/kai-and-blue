@@ -17,10 +17,10 @@ var Trap = (function() {
 
   var TRAP_KEYS = Object.keys(TRAP_DATA);
 
-  // Trap type weights (pitfall is very rare ~3%)
-  var TRAP_WEIGHTS = {
+  // Trap type weights (configurable via BALANCE)
+  var TRAP_WEIGHTS = B('traps.weights', {
     landmine:        8,
-    pitfall:         2,  // ~3% — very rare
+    pitfall:         2,
     poison_arrow:    8,
     sleep:           10,
     spin:            10,
@@ -29,7 +29,7 @@ var Trap = (function() {
     rust:            8,
     arrow_trap_wood: 8,
     arrow_trap_iron: 6
-  };
+  });
 
   function Trap(x, y, type) {
     var data = TRAP_DATA[type];
@@ -63,11 +63,16 @@ var Trap = (function() {
   // Spawn traps for a floor
   Trap.spawnForFloor = function(dungeon, floorNum, existingItems) {
     var traps = [];
-    // Reduced trap count: F1-20: 2-4, F21-50: 3-5, F51-99: 4-6
-    var minTraps, maxTraps;
-    if (floorNum <= 20) { minTraps = 2; maxTraps = 4; }
-    else if (floorNum <= 50) { minTraps = 3; maxTraps = 5; }
-    else { minTraps = 4; maxTraps = 6; }
+    // Trap count from BALANCE count table
+    var trapCountTable = B('traps.countTable', [[1,20,2,4],[21,50,3,5],[51,99,4,6]]);
+    var minTraps = 2, maxTraps = 4;
+    for (var ti = 0; ti < trapCountTable.length; ti++) {
+      if (floorNum >= trapCountTable[ti][0] && floorNum <= trapCountTable[ti][1]) {
+        minTraps = trapCountTable[ti][2];
+        maxTraps = trapCountTable[ti][3];
+        break;
+      }
+    }
     var count = minTraps + Math.floor(Math.random() * (maxTraps - minTraps + 1));
 
     // Collect occupied positions

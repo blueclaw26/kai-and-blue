@@ -368,10 +368,10 @@ var Dungeon = (function() {
     floorNum = floorNum || 1;
 
     // Special floor type rolls
-    if (floorNum >= 8 && Math.random() < 0.05) {
+    if (floorNum >= B('dungeon.mazeMinFloor', 8) && Math.random() < B('dungeon.mazeChance', 0.05)) {
       return generateMaze(width, height);
     }
-    if (floorNum >= 5 && Math.random() < 0.05) {
+    if (floorNum >= B('dungeon.bigRoomMinFloor', 5) && Math.random() < B('dungeon.bigRoomChance', 0.05)) {
       return generateBigRoom(width, height);
     }
 
@@ -407,11 +407,11 @@ var Dungeon = (function() {
       }
     }
 
-    // Water/lava pools: 10% of rooms get a small pool in the center
+    // Water/lava pools: poolChance of rooms get a small pool in the center
     for (var pi = 0; pi < rooms.length; pi++) {
-      if (rooms[pi].w >= 5 && rooms[pi].h >= 5 && Math.random() < 0.10) {
+      if (rooms[pi].w >= 5 && rooms[pi].h >= 5 && Math.random() < B('dungeon.poolChance', 0.10)) {
         var pr = rooms[pi];
-        var poolType = (floorNum >= 20 && Math.random() < 0.4) ? TILE.LAVA : TILE.WATER;
+        var poolType = (floorNum >= B('dungeon.lavaMinFloor', 20) && Math.random() < B('dungeon.lavaChance', 0.4)) ? TILE.LAVA : TILE.WATER;
         var cx = Math.floor(pr.x + pr.w / 2);
         var cy = Math.floor(pr.y + pr.h / 2);
         // Small 2x2 pool
@@ -467,9 +467,15 @@ var Dungeon = (function() {
       }
     }
 
-    // Monster House: chance scales with depth
-    // F3-10: 8%, F11-30: 12%, F31-60: 18%, F61-99: 25%
-    var mhChance = floorNum >= 61 ? 0.25 : floorNum >= 31 ? 0.18 : floorNum >= 11 ? 0.12 : 0.08;
+    // Monster House: chance scales with depth (configurable via BALANCE)
+    var mhTable = B('dungeon.monsterHouseTable', [[3,10,0.08],[11,30,0.12],[31,60,0.18],[61,99,0.25]]);
+    var mhChance = 0;
+    for (var mhi = 0; mhi < mhTable.length; mhi++) {
+      if (floorNum >= mhTable[mhi][0] && floorNum <= mhTable[mhi][1]) {
+        mhChance = mhTable[mhi][2];
+        break;
+      }
+    }
     var monsterHouseRoom = null;
     if (floorNum >= 3 && Math.random() < mhChance && rooms.length > 2) {
       // Pick a room that isn't the start room and isn't too small

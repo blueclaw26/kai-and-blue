@@ -3,8 +3,8 @@
 var Game = (function() {
   'use strict';
 
-  var MAX_FLOOR = 99;
-  var MAX_ENEMIES_PER_FLOOR = 15;
+  var MAX_FLOOR = B('dungeon.maxFloor', 99);
+  var MAX_ENEMIES_PER_FLOOR = B('enemies.maxPerFloor', 15);
 
   function Game() {
     this.dungeon = null;
@@ -516,7 +516,7 @@ var Game = (function() {
     if (window._renderer && window._renderer.resetCamera) {
       window._renderer.resetCamera();
     }
-    this.dungeon = Dungeon.generateFloor(40, 30, this.floorNum);
+    this.dungeon = Dungeon.generateFloor(B('dungeon.width', 40), B('dungeon.height', 30), this.floorNum);
     this.explored = [];
     this.visible = [];
     for (var iy = 0; iy < this.dungeon.height; iy++) {
@@ -596,7 +596,7 @@ var Game = (function() {
       this.ui.addMessage('ここからが本当の戦いだ...', 'system');
     }
 
-    // Shop frequency: F2-10: 15%, F11-30: 20%, F31+: 15%
+    // Shop frequency: F2-10: 15%, F11-30: 20%, F31+: 15% (can tune later via BALANCE)
     var shopChance = this.floorNum <= 10 ? 0.15 : this.floorNum <= 30 ? 0.20 : 0.15;
     if (this.floorNum > 1 && this.dungeon.floorType === 'normal' && Math.random() < shopChance) {
       this._generateShop(startRoom);
@@ -1083,7 +1083,8 @@ var Game = (function() {
 
     if (!this.gameOver && !this.victory) {
       var livingCount = this.livingEnemyCount();
-      // Natural enemy spawn rate: scales with floor depth
+      // Natural enemy spawn: every N turns (BALANCE turnSpawnInterval)
+      // Legacy fallback: probabilistic per-turn spawn
       var spawnRate = this.floorNum <= 30 ? 0.02 : this.floorNum <= 60 ? 0.03 : 0.05;
       if (livingCount < MAX_ENEMIES_PER_FLOOR && Math.random() < spawnRate) {
         var newEnemy = Enemy.spawnOneEnemy(this);
