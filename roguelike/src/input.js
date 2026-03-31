@@ -1252,7 +1252,7 @@ var Input = (function() {
         var borderLeft = isSelected ? '3px solid #4fc3f7' : '3px solid transparent';
         html += '<div style="padding:4px 8px;margin:2px 0;background:' + bgColor + ';border-left:' + borderLeft + ';">';
         html += '<span style="color:#888;">' + SLOT_LETTERS[i] + ')</span> ';
-        html += '<span style="color:' + item.color + ';">' + item.char + '</span> ';
+        html += '<span style="color:' + item.color + ';">' + escapeHtml(item.char) + '</span> ';
         html += '<span style="color:#e0e0e0;">' + escapeHtml(item.getDisplayName()) + '</span>';
         html += '</div>';
       }
@@ -1575,7 +1575,7 @@ var Input = (function() {
       var borderLeft = isSelected ? '3px solid #4fc3f7' : '3px solid transparent';
       html += '<div style="padding:4px 8px;margin:2px 0;background:' + bgColor + ';border-left:' + borderLeft + ';">';
       html += '<span style="color:#888;">' + SLOT_LETTERS[i] + ')</span> ';
-      html += '<span style="color:' + item.color + ';">' + item.char + '</span> ';
+      html += '<span style="color:' + item.color + ';">' + escapeHtml(item.char) + '</span> ';
       html += escapeHtml(item.getDisplayName()) + equipped;
       html += '</div>';
     }

@@ -182,7 +182,7 @@
       var borderLeft = isSelected ? '3px solid #d4a574' : '3px solid transparent';
       html += '<div style="padding:4px 8px;margin:2px 0;background:' + bgColor + ';border-left:' + borderLeft + ';">';
       html += '<span style="color:#888;">' + SLOT_LETTERS[i] + ')</span> ';
-      html += '<span style="color:' + entry.item.color + ';">' + entry.item.char + '</span> ';
+      html += '<span style="color:' + entry.item.color + ';">' + escapeHtml(entry.item.char) + '</span> ';
       html += '<span style="color:#e0e0e0;">' + escapeHtml(entry.item.getDisplayName()) + '</span>';
       html += ' <span style="color:#ffd700;">' + entry.price + 'G</span>';
       html += '</div>';

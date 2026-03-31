@@ -257,7 +257,7 @@ var UI = (function() {
         var nameColor = item.identified ? '#e0e0e0' : '#ffd54f';
         if (item.cursed) nameColor = '#ef5350';
         if (item.blessed) nameColor = '#ffd700';
-        html += '<span class="inv-char" style="color:' + item.color + ';">' + item.char + '</span>';
+        html += '<span class="inv-char" style="color:' + item.color + ';">' + escapeHtml(item.char) + '</span>';
         html += '<span class="inv-name" style="color:' + nameColor + ';">' + escapeHtml(item.getDisplayName()) + '</span>';
         if (equipped) html += '<span class="equipped-tag">[装備中]</span>';
         html += '</div>';
@@ -424,7 +424,7 @@ var UI = (function() {
         var sealData = SEAL_DATA[seals[j]];
         if (sealData) {
           html += '<div style="color:#b0b8c8;margin:2px 0;">';
-          html += '<span style="color:#e8a44a;">' + sealData.name + '</span>: ' + escapeHtml(sealData.desc);
+          html += '<span style="color:#e8a44a;">' + escapeHtml(sealData.name) + '</span>: ' + escapeHtml(sealData.desc);
           html += '</div>';
         }
       }
@@ -450,7 +450,7 @@ var UI = (function() {
         var ci = pot.contents[i];
         var prefix = (i === pot.contents.length - 1) ? '└' : '├';
         html += '<div style="color:#aaa;padding:1px 24px;font-size:12px;">';
-        html += prefix + ' <span style="color:' + ci.color + ';">' + ci.char + '</span> ' + escapeHtml(ci.getDisplayName());
+        html += prefix + ' <span style="color:' + ci.color + ';">' + escapeHtml(ci.char) + '</span> ' + escapeHtml(ci.getDisplayName());
         html += '</div>';
       }
       var remaining = pot.capacity - pot.contents.length;
